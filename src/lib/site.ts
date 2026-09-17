@@ -16,6 +16,8 @@ export const site = {
   },
   geo: { lat: 3.3996, lng: 101.5584 },
   hours: { days: "Monday–Saturday", opens: "10:00", closes: "19:00", closed: "Sunday" },
+  // Real figures from the owner's Google Business Profile — never invent a rating or review count.
+  google: { rating: 4.1, reviewCount: 67, url: "https://share.google/nyn2T6MXEyIGxYOcw" },
 } as const;
 
 export function whatsappLink(message = "Hi Ria Pet Mart, I have a question.") {

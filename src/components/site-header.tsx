@@ -12,14 +12,14 @@ const nav = [
 
 export function SiteHeader() {
   return (
-    <header className="sticky top-0 z-40 border-b-2 border-ink bg-ground/95 backdrop-blur">
+    <header className="sticky top-0 z-40 border-b-2 border-rust/20 bg-cream/95 backdrop-blur">
       <div className="mx-auto flex max-w-6xl items-center gap-4 px-4 py-3">
         <Link href="/" className="flex items-center gap-2" aria-label="Ria Pet Mart home">
-          <span className="grid size-10 place-items-center rounded-full border-2 border-ink bg-tangerine">
+          <span className="grid size-10 place-items-center rounded-full bg-terracotta text-cream shadow-[2px_2px_0_0_var(--color-choc)]">
             <PawPrint className="size-5" aria-hidden />
           </span>
-          <span className="font-display text-xl font-extrabold leading-none tracking-tight">
-            ria<span className="text-grape">petmart</span>
+          <span className="font-bubble text-xl font-extrabold leading-none tracking-tight text-choc">
+            ria<span className="text-rust">petmart</span>
           </span>
         </Link>
 
@@ -29,7 +29,7 @@ export function SiteHeader() {
               <li key={item.href}>
                 <Link
                   href={item.href}
-                  className="rounded-full px-3 py-2 text-sm font-semibold text-ink-2 hover:bg-sunk hover:text-ink"
+                  className="rounded-full px-3 py-2 text-sm font-semibold text-choc-2 hover:bg-peach/50 hover:text-choc"
                 >
                   {item.label}
                 </Link>
@@ -40,7 +40,7 @@ export function SiteHeader() {
 
         <Link
           href="/cart"
-          className="btn-chunk ml-auto bg-sunshine px-4 text-sm md:ml-2"
+          className="btn-bubble ml-auto bg-terracotta px-4 text-sm text-cream md:ml-2"
           aria-label="Cart, 0 items"
         >
           <ShoppingBag className="size-5" aria-hidden />
@@ -55,7 +55,7 @@ export function SiteHeader() {
             <li key={item.href} className="shrink-0">
               <Link
                 href={item.href}
-                className="inline-flex min-h-11 items-center rounded-full border-2 border-line bg-surface px-4 text-sm font-semibold"
+                className="inline-flex min-h-11 items-center rounded-full border-2 border-peach bg-cream px-4 text-sm font-semibold text-choc"
               >
                 {item.label}
               </Link>
