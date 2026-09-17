@@ -1,8 +1,11 @@
-import { ArrowRight, Cat, Dog, PawPrint, Rabbit } from "lucide-react";
+import { ArrowRight, PawPrint } from "lucide-react";
+import Image from "next/image";
 import Link from "next/link";
 
 const arch =
   "group relative flex min-h-52 flex-col items-center justify-end gap-2 overflow-hidden rounded-t-full rounded-b-3xl border-2 border-choc p-6 pb-5 text-center shadow-[5px_5px_0_0_var(--color-choc)] transition-transform duration-200 hover:-translate-y-1";
+const archSticker = "absolute drop-shadow-[0_1px_3px_rgba(0,0,0,0.45)]";
+const cardSizes = "(max-width: 768px) 100vw, (max-width: 1024px) 50vw, 33vw";
 
 /** Editorial photo-collage grid: doubles as the real "shop by pet" and Clearance links. */
 export function PetCollage() {
@@ -27,9 +30,15 @@ export function PetCollage() {
         </div>
 
         <Link href="/shop?pet=dog" className={`${arch} bg-rust text-cream`}>
-          <PawPrint aria-hidden className="absolute right-5 top-5 size-7 rotate-[16deg] text-cream/70" />
-          <Dog className="mb-2 size-20" aria-hidden strokeWidth={1.5} />
-          <span className="rounded-full border-2 border-choc bg-cream px-3 py-1 text-xs font-bold text-choc">
+          <Image
+            src="/images/pets/card-dog.png"
+            alt="A cheerful border collie with perked ears"
+            fill
+            sizes={cardSizes}
+            className="object-cover object-top"
+          />
+          <PawPrint aria-hidden className={`${archSticker} right-5 top-5 size-7 rotate-[16deg] text-cream/85`} />
+          <span className="relative rounded-full border-2 border-choc bg-cream px-3 py-1 text-xs font-bold text-choc">
             For dogs
           </span>
         </Link>
@@ -37,9 +46,15 @@ export function PetCollage() {
 
       <div className="grid gap-4 md:grid-cols-3">
         <Link href="/shop?pet=cat" className={`${arch} bg-rust text-cream`}>
-          <PawPrint aria-hidden className="absolute left-5 top-5 size-6 rotate-[-12deg] text-cream/70" />
-          <Cat className="mb-2 size-16" aria-hidden strokeWidth={1.5} />
-          <span className="rounded-full border-2 border-choc bg-cream px-3 py-1 text-xs font-bold text-choc">
+          <Image
+            src="/images/pets/card-cat.png"
+            alt="A curious tabby cat sitting upright"
+            fill
+            sizes={cardSizes}
+            className="object-cover object-top"
+          />
+          <PawPrint aria-hidden className={`${archSticker} left-5 top-5 size-6 rotate-[-12deg] text-cream/85`} />
+          <span className="relative rounded-full border-2 border-choc bg-cream px-3 py-1 text-xs font-bold text-choc">
             For cats
           </span>
         </Link>
@@ -56,9 +71,15 @@ export function PetCollage() {
         </div>
 
         <Link href="/shop?pet=small_pet" className={`${arch} bg-rust text-cream`}>
-          <PawPrint aria-hidden className="absolute right-5 top-6 size-6 rotate-[10deg] text-cream/70" />
-          <Rabbit className="mb-2 size-16" aria-hidden strokeWidth={1.5} />
-          <span className="rounded-full border-2 border-choc bg-cream px-3 py-1 text-xs font-bold text-choc">
+          <Image
+            src="/images/pets/card-small-pet.png"
+            alt="An alert grey rabbit with ears up"
+            fill
+            sizes={cardSizes}
+            className="object-cover object-top"
+          />
+          <PawPrint aria-hidden className={`${archSticker} right-5 top-6 size-6 rotate-[10deg] text-cream/85`} />
+          <span className="relative rounded-full border-2 border-choc bg-cream px-3 py-1 text-xs font-bold text-choc">
             Small pets
           </span>
         </Link>

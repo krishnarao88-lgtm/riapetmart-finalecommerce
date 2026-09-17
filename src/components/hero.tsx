@@ -1,7 +1,8 @@
 "use client";
 
-import { ArrowRight, Bone, Dog, MessageCircle, PawPrint } from "lucide-react";
+import { ArrowRight, Bone, MessageCircle, PawPrint } from "lucide-react";
 import { MotionConfig, motion } from "motion/react";
+import Image from "next/image";
 import Link from "next/link";
 import { whatsappLink } from "@/lib/site";
 
@@ -44,12 +45,18 @@ export function Hero() {
             </div>
           </div>
 
-          {/* Warm photo-card composition: stands in for real hero photography (see the
-              generated image prompts) until the owner supplies or generates shots. */}
+          {/* Warm photo-card composition, topped by the generated hero portrait. */}
           <div className="relative mx-auto aspect-square w-full max-w-sm">
             <div className="absolute right-0 top-4 h-4/5 w-4/5 rounded-3xl bg-peach" aria-hidden />
-            <div className="absolute left-0 top-0 grid h-[88%] w-[78%] place-items-center rounded-t-full rounded-b-3xl border-2 border-choc bg-rust shadow-[6px_6px_0_0_var(--color-choc)]">
-              <Dog className="size-24 text-cream/90" aria-hidden strokeWidth={1.5} />
+            <div className="absolute left-0 top-0 h-[88%] w-[78%] overflow-hidden rounded-t-full rounded-b-3xl border-2 border-choc bg-rust shadow-[6px_6px_0_0_var(--color-choc)]">
+              <Image
+                src="/images/pets/hero-dog.png"
+                alt="A happy golden retriever sitting against a warm terracotta backdrop"
+                fill
+                priority
+                sizes="(max-width: 768px) 100vw, 384px"
+                className="object-cover object-top"
+              />
             </div>
 
             <motion.span
