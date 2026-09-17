@@ -50,6 +50,12 @@ const storeJsonLd = {
     },
   ],
   currenciesAccepted: "MYR",
+  aggregateRating: {
+    "@type": "AggregateRating",
+    ratingValue: site.google.rating,
+    reviewCount: site.google.reviewCount,
+    bestRating: 5,
+  },
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {

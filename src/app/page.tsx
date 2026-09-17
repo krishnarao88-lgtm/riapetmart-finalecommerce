@@ -1,6 +1,8 @@
 import { Bike, PackageCheck, ShieldCheck, Store } from "lucide-react";
 import { Hero } from "@/components/hero";
 import { PetCollage } from "@/components/pet-collage";
+import { TrustStats } from "@/components/trust-stats";
+import { createClient } from "@/lib/supabase/server";
 
 const promises = [
   { Icon: Bike, title: "Same-day delivery", body: "Selangor, KL and Putrajaya by Lalamove." },
@@ -9,13 +11,20 @@ const promises = [
   { Icon: ShieldCheck, title: "Secure checkout", body: "FPX, cards, GrabPay, Apple Pay and Google Pay." },
 ];
 
-export default function Home() {
+export default async function Home() {
+  const supabase = await createClient();
+  const { count } = await supabase
+    .from("products")
+    .select("id", { count: "exact", head: true })
+    .eq("status", "published");
+
   return (
     <>
       <Hero />
+      <TrustStats publishedProductCount={count ?? 0} />
       <PetCollage />
 
-      <section aria-label="Why shop with us" className="mx-auto max-w-6xl px-4 pb-14">
+      <section aria-label="Why shop with us" className="mx-auto max-w-6xl px-4 pb-14 pt-6">
         <ul className="grid gap-4 rounded-3xl border-2 border-choc bg-cream p-5 sm:grid-cols-2 lg:grid-cols-4">
           {promises.map(({ Icon, title, body }) => (
             <li key={title} className="flex gap-3">
