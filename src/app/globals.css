@@ -1,0 +1,87 @@
+@import "tailwindcss";
+
+/* Ria Pet Mart design tokens: five working colours on a lilac-white ground, chunky rounded shapes. */
+@theme {
+  --color-ground: #f6f5fb;
+  --color-surface: #ffffff;
+  --color-sunk: #edebf5;
+  --color-line: #dedaea;
+  --color-ink: #1e1b3a;
+  --color-ink-2: #55506f;
+  --color-ink-3: #6f6a8a;
+
+  --color-tangerine: #ff7a1a;
+  --color-lagoon: #00a99b;
+  --color-sunshine: #ffc933;
+  --color-berry: #e8457d;
+  --color-grape: #6c4df6;
+
+  --color-ok-bg: #ddf5ef;
+  --color-ok-fg: #05695f;
+  --color-warn-bg: #fff1cc;
+  --color-warn-fg: #7a5300;
+  --color-bad-bg: #fde1ea;
+  --color-bad-fg: #a31f4e;
+
+  --font-display: var(--font-bricolage), "Avenir Next", system-ui, sans-serif;
+  --font-sans: var(--font-figtree), "Segoe UI", system-ui, sans-serif;
+
+  --radius-chunk: 1.25rem;
+  --shadow-chunk: 4px 4px 0 0 var(--color-ink);
+  --shadow-chunk-sm: 2px 2px 0 0 var(--color-ink);
+}
+
+:root {
+  color-scheme: light;
+}
+
+body {
+  background: var(--color-ground);
+  color: var(--color-ink);
+}
+
+h1,
+h2,
+h3 {
+  text-wrap: balance;
+}
+
+:focus-visible {
+  outline: 3px solid var(--color-grape);
+  outline-offset: 2px;
+}
+
+/* Chunky button: lifts on hover, presses down on tap. */
+@utility btn-chunk {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  min-height: 2.75rem;
+  padding-inline: 1.25rem;
+  border: 2px solid var(--color-ink);
+  border-radius: 999px;
+  font-weight: 700;
+  box-shadow: var(--shadow-chunk-sm);
+  transition:
+    transform 150ms ease-out,
+    box-shadow 150ms ease-out;
+  cursor: pointer;
+  &:hover {
+    transform: translate(-1px, -1px);
+    box-shadow: 3px 3px 0 0 var(--color-ink);
+  }
+  &:active {
+    transform: translate(2px, 2px);
+    box-shadow: 0 0 0 0 var(--color-ink);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+  }
+}
