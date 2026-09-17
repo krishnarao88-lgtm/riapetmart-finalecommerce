@@ -16,6 +16,19 @@
   --color-berry: #e8457d;
   --color-grape: #6c4df6;
 
+  /* Warm editorial palette for the storefront shell (header, footer, homepage collage).
+     Admin keeps the vibrant tokens above — it's an internal tool, not the brand surface. */
+  --color-terracotta: #d9814a;
+  --color-terracotta-deep: #c06a37;
+  --color-rust: #a8452b;
+  --color-peach: #f0c9a0;
+  --color-cream: #fbf1e2;
+  --color-choc: #2e1d14;
+  --color-choc-2: #6b5540;
+
+  --font-bubble: var(--font-baloo), ui-rounded, "SF Pro Rounded", sans-serif;
+  --font-editorial: var(--font-fraunces), Georgia, "Times New Roman", serif;
+
   --color-ok-bg: #ddf5ef;
   --color-ok-fg: #05695f;
   --color-warn-bg: #fff1cc;
@@ -36,8 +49,8 @@
 }
 
 body {
-  background: var(--color-ground);
-  color: var(--color-ink);
+  background: var(--color-cream);
+  color: var(--color-choc);
 }
 
 h1,
@@ -74,6 +87,33 @@ h3 {
   &:active {
     transform: translate(2px, 2px);
     box-shadow: 0 0 0 0 var(--color-ink);
+  }
+}
+
+/* Same lift-and-press interaction as btn-chunk, but bordered in the warm palette's
+   dark ink so storefront buttons (terracotta/rust/peach) don't pick up navy edges. */
+@utility btn-bubble {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  min-height: 2.75rem;
+  padding-inline: 1.25rem;
+  border: 2px solid var(--color-choc);
+  border-radius: 999px;
+  font-weight: 700;
+  box-shadow: 2px 2px 0 0 var(--color-choc);
+  transition:
+    transform 150ms ease-out,
+    box-shadow 150ms ease-out;
+  cursor: pointer;
+  &:hover {
+    transform: translate(-1px, -1px);
+    box-shadow: 3px 3px 0 0 var(--color-choc);
+  }
+  &:active {
+    transform: translate(2px, 2px);
+    box-shadow: 0 0 0 0 var(--color-choc);
   }
 }
 

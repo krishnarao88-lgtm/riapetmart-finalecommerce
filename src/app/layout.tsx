@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from "next";
-import { Bricolage_Grotesque, Figtree } from "next/font/google";
+import { Baloo_2, Bricolage_Grotesque, Figtree, Fraunces } from "next/font/google";
 import { SiteFooter } from "@/components/site-footer";
 import { SiteHeader } from "@/components/site-header";
 import { site } from "@/lib/site";
@@ -7,6 +7,14 @@ import "./globals.css";
 
 const bricolage = Bricolage_Grotesque({ variable: "--font-bricolage", subsets: ["latin"] });
 const figtree = Figtree({ variable: "--font-figtree", subsets: ["latin"] });
+// Storefront-only faces: a bubbly wordmark face and a warm editorial serif for the homepage collage.
+const baloo = Baloo_2({ variable: "--font-baloo", subsets: ["latin"], weight: ["600", "700", "800"] });
+const fraunces = Fraunces({
+  variable: "--font-fraunces",
+  subsets: ["latin"],
+  weight: ["500", "600"],
+  style: ["normal", "italic"],
+});
 
 export const metadata: Metadata = {
   metadataBase: new URL(site.url),
@@ -16,7 +24,7 @@ export const metadata: Metadata = {
   alternates: { canonical: "/" },
 };
 
-export const viewport: Viewport = { themeColor: "#f6f5fb" };
+export const viewport: Viewport = { themeColor: "#d9814a" };
 
 const storeJsonLd = {
   "@context": "https://schema.org",
@@ -46,7 +54,10 @@ const storeJsonLd = {
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
-    <html lang="en-MY" className={`${bricolage.variable} ${figtree.variable} antialiased`}>
+    <html
+      lang="en-MY"
+      className={`${bricolage.variable} ${figtree.variable} ${baloo.variable} ${fraunces.variable} antialiased`}
+    >
       <body className="flex min-h-dvh flex-col font-sans">
         <script
           type="application/ld+json"
