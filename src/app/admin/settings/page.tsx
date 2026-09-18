@@ -1,14 +1,27 @@
+import { CheckCircle2, XCircle } from "lucide-react";
 import type { Metadata } from "next";
+import { headers } from "next/headers";
 import { AdminNav } from "@/components/admin/admin-nav";
 import { SettingsForm, type SettingsValues } from "@/components/admin/settings-form";
 import { requireAdmin } from "@/lib/auth";
+import { isEasyParcelConnected } from "@/lib/shipping/easyparcel";
 
 export const metadata: Metadata = { title: "Settings", robots: { index: false } };
 
 type Tier = { max_days: number; discount: number };
 
-export default async function SettingsPage() {
+export default async function SettingsPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ easyparcel?: string }>;
+}) {
+  const { easyparcel } = await searchParams;
   const { supabase } = await requireAdmin();
+  const connected = await isEasyParcelConnected().catch(() => false);
+  const h = await headers();
+  const origin = h.get("origin") ?? `https://${h.get("host")}`;
+  const clientId = process.env.EASYPARCEL_CLIENT_ID ?? "";
+  const authorizeUrl = `https://api.easyparcel.com/oauth/login?client_id=${clientId}&redirect_uri=${encodeURIComponent(`${origin}/api/easyparcel/callback`)}`;
   const { data } = await supabase.from("settings").select("key, value");
   const byKey = new Map((data ?? []).map((row) => [row.key, row.value as Record<string, unknown>]));
 
@@ -44,6 +57,35 @@ export default async function SettingsPage() {
         <h1 className="font-display text-3xl font-extrabold tracking-tight">Settings</h1>
         <p className="text-ink-2">These take effect immediately, with no new deployment needed.</p>
       </div>
+      <div className="grid gap-3 rounded-[var(--radius-chunk)] border-2 border-ink bg-surface p-5">
+        <h2 className="font-display text-xl font-extrabold">Carrier connections</h2>
+        {easyparcel === "connected" && (
+          <p className="rounded-xl bg-ok-bg px-3 py-2 text-sm font-medium text-ok-fg">EasyParcel connected.</p>
+        )}
+        {easyparcel === "error" && (
+          <p className="rounded-xl bg-bad-bg px-3 py-2 text-sm font-medium text-bad-fg">
+            Couldn&apos;t connect EasyParcel. Try again.
+          </p>
+        )}
+        <div className="flex items-center justify-between gap-3">
+          <span className="flex items-center gap-2 font-semibold">
+            {connected ? (
+              <CheckCircle2 className="size-5 text-ok-fg" aria-hidden />
+            ) : (
+              <XCircle className="size-5 text-bad-fg" aria-hidden />
+            )}
+            EasyParcel (nationwide courier rates)
+          </span>
+          <a href={authorizeUrl} className="btn-chunk bg-tangerine px-4 py-2 text-sm">
+            {connected ? "Reconnect" : "Connect EasyParcel"}
+          </a>
+        </div>
+        <p className="flex items-center gap-2 text-sm text-ink-2">
+          <CheckCircle2 className="size-4 text-ok-fg" aria-hidden />
+          Lalamove (same-day quotes) — connected via API key, no login needed.
+        </p>
+      </div>
+
       <SettingsForm values={values} />
     </div>
   );

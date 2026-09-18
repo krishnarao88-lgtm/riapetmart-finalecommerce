@@ -1,16 +1,53 @@
 "use client";
 
-import { CreditCard, Minus, Plus, ShoppingBag, Trash2 } from "lucide-react";
+import { CreditCard, Loader2, MapPinned, Truck } from "lucide-react";
+import { Minus, Plus, ShoppingBag, Trash2 } from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";
 import { useCart } from "@/lib/cart-context";
 import { formatMyr } from "@/lib/pricing";
 import { site, whatsappLink } from "@/lib/site";
 
+const MY_STATES = [
+  "Johor", "Kedah", "Kelantan", "Melaka", "Negeri Sembilan", "Pahang",
+  "Pulau Pinang", "Perak", "Perlis", "Selangor", "Terengganu", "Sabah",
+  "Sarawak", "Kuala Lumpur", "Labuan", "Putrajaya",
+];
+
+type ShippingOption = { method: "pickup" | "lalamove" | "easyparcel"; label: string; price: number };
+
 export default function CartPage() {
   const { lines, subtotal, setQty, remove } = useCart();
   const [paying, setPaying] = useState(false);
   const [payError, setPayError] = useState<string | null>(null);
+
+  const [address, setAddress] = useState({ addressLine: "", city: "", postcode: "", state: "Selangor" });
+  const [quoting, setQuoting] = useState(false);
+  const [quoteError, setQuoteError] = useState<string | null>(null);
+  const [shippingOptions, setShippingOptions] = useState<ShippingOption[] | null>(null);
+  const [selectedShipping, setSelectedShipping] = useState<ShippingOption | null>(null);
+
+  async function getShippingOptions() {
+    setQuoting(true);
+    setQuoteError(null);
+    setShippingOptions(null);
+    setSelectedShipping(null);
+    try {
+      const res = await fetch("/api/shipping-quote", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ lines: lines.map((l) => ({ variantId: l.variantId, qty: l.qty })), ...address }),
+      });
+      const data = await res.json();
+      if (!res.ok || !data.options) throw new Error(data.error ?? "Could not get delivery options");
+      setShippingOptions(data.options);
+      setSelectedShipping(data.options[0]);
+    } catch (err) {
+      setQuoteError(err instanceof Error ? err.message : "Could not get delivery options");
+    } finally {
+      setQuoting(false);
+    }
+  }
 
   async function payNow() {
     setPaying(true);
@@ -19,7 +56,10 @@ export default function CartPage() {
       const res = await fetch("/api/checkout", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ lines: lines.map((l) => ({ variantId: l.variantId, qty: l.qty })) }),
+        body: JSON.stringify({
+          lines: lines.map((l) => ({ variantId: l.variantId, qty: l.qty })),
+          shipping: selectedShipping ? { ...selectedShipping, ...address } : undefined,
+        }),
       });
       const data = await res.json();
       if (!res.ok || !data.url) throw new Error(data.error ?? "Checkout failed");
@@ -105,19 +145,100 @@ export default function CartPage() {
         ))}
       </ul>
 
-      <div className="mt-6 flex items-center justify-between rounded-2xl border-2 border-choc bg-cream p-4">
-        <span className="font-bold text-choc">Subtotal</span>
-        <span className="text-xl font-bold text-choc">{formatMyr(subtotal)}</span>
+      <div className="mt-6 grid gap-3 rounded-2xl border-2 border-choc bg-surface p-4">
+        <h2 className="flex items-center gap-2 font-bold text-choc">
+          <MapPinned className="size-5 text-rust" aria-hidden />
+          Delivery address
+        </h2>
+        <input
+          value={address.addressLine}
+          onChange={(e) => setAddress((a) => ({ ...a, addressLine: e.target.value }))}
+          placeholder="Address line"
+          className="rounded-xl border-2 border-choc/40 px-3 py-2"
+        />
+        <div className="grid grid-cols-2 gap-3">
+          <input
+            value={address.city}
+            onChange={(e) => setAddress((a) => ({ ...a, city: e.target.value }))}
+            placeholder="City"
+            className="rounded-xl border-2 border-choc/40 px-3 py-2"
+          />
+          <input
+            value={address.postcode}
+            onChange={(e) => setAddress((a) => ({ ...a, postcode: e.target.value }))}
+            placeholder="Postcode"
+            className="rounded-xl border-2 border-choc/40 px-3 py-2"
+          />
+        </div>
+        <select
+          value={address.state}
+          onChange={(e) => setAddress((a) => ({ ...a, state: e.target.value }))}
+          className="rounded-xl border-2 border-choc/40 px-3 py-2"
+        >
+          {MY_STATES.map((s) => (
+            <option key={s} value={s}>
+              {s}
+            </option>
+          ))}
+        </select>
+        <button
+          type="button"
+          onClick={getShippingOptions}
+          disabled={quoting || !address.addressLine || !address.postcode}
+          className="btn-bubble bg-choc px-6 py-2.5 text-cream disabled:opacity-60"
+        >
+          {quoting ? <Loader2 className="size-4 animate-spin" aria-hidden /> : <Truck className="size-4" aria-hidden />}
+          {quoting ? "Getting delivery options…" : "Get delivery options"}
+        </button>
+        {quoteError && <p className="text-sm font-medium text-bad-fg">{quoteError}</p>}
+
+        {shippingOptions && (
+          <fieldset className="grid gap-2">
+            <legend className="text-sm font-semibold text-choc-2">Choose delivery</legend>
+            {shippingOptions.map((opt) => (
+              <label
+                key={opt.method}
+                className="flex cursor-pointer items-center justify-between gap-2 rounded-xl border-2 border-choc/30 px-3 py-2 has-[:checked]:border-terracotta has-[:checked]:bg-peach/30"
+              >
+                <span className="flex items-center gap-2">
+                  <input
+                    type="radio"
+                    name="shipping"
+                    checked={selectedShipping?.method === opt.method}
+                    onChange={() => setSelectedShipping(opt)}
+                  />
+                  {opt.label}
+                </span>
+                <span className="font-bold">{opt.price > 0 ? formatMyr(opt.price) : "Free"}</span>
+              </label>
+            ))}
+          </fieldset>
+        )}
+      </div>
+
+      <div className="mt-4 grid gap-1 rounded-2xl border-2 border-choc bg-cream p-4">
+        <div className="flex items-center justify-between text-choc-2">
+          <span>Subtotal</span>
+          <span>{formatMyr(subtotal)}</span>
+        </div>
+        <div className="flex items-center justify-between text-choc-2">
+          <span>Delivery</span>
+          <span>{selectedShipping ? (selectedShipping.price > 0 ? formatMyr(selectedShipping.price) : "Free") : "—"}</span>
+        </div>
+        <div className="flex items-center justify-between border-t border-choc/20 pt-1 font-bold text-choc">
+          <span>Total</span>
+          <span className="text-xl">{formatMyr(subtotal + (selectedShipping?.price ?? 0))}</span>
+        </div>
       </div>
 
       <button
         type="button"
         onClick={payNow}
-        disabled={paying}
+        disabled={paying || !selectedShipping}
         className="btn-bubble mt-4 flex w-full items-center justify-center bg-terracotta px-6 py-3 text-cream disabled:opacity-60"
       >
         <CreditCard className="size-5" aria-hidden />
-        {paying ? "Redirecting to payment…" : "Pay by card or FPX"}
+        {paying ? "Redirecting to payment…" : selectedShipping ? "Pay by card or FPX" : "Choose delivery to continue"}
       </button>
       {payError && (
         <p role="alert" className="mt-2 text-center text-sm font-medium text-bad-fg">
