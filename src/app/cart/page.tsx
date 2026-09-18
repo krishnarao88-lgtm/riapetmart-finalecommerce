@@ -1,13 +1,34 @@
 "use client";
 
-import { Minus, Plus, ShoppingBag, Trash2 } from "lucide-react";
+import { CreditCard, Minus, Plus, ShoppingBag, Trash2 } from "lucide-react";
 import Link from "next/link";
+import { useState } from "react";
 import { useCart } from "@/lib/cart-context";
 import { formatMyr } from "@/lib/pricing";
 import { site, whatsappLink } from "@/lib/site";
 
 export default function CartPage() {
   const { lines, subtotal, setQty, remove } = useCart();
+  const [paying, setPaying] = useState(false);
+  const [payError, setPayError] = useState<string | null>(null);
+
+  async function payNow() {
+    setPaying(true);
+    setPayError(null);
+    try {
+      const res = await fetch("/api/checkout", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ lines: lines.map((l) => ({ variantId: l.variantId, qty: l.qty })) }),
+      });
+      const data = await res.json();
+      if (!res.ok || !data.url) throw new Error(data.error ?? "Checkout failed");
+      window.location.href = data.url;
+    } catch (err) {
+      setPayError(err instanceof Error ? err.message : "Checkout failed");
+      setPaying(false);
+    }
+  }
 
   if (lines.length === 0) {
     return (
@@ -89,16 +110,33 @@ export default function CartPage() {
         <span className="text-xl font-bold text-choc">{formatMyr(subtotal)}</span>
       </div>
 
+      <button
+        type="button"
+        onClick={payNow}
+        disabled={paying}
+        className="btn-bubble mt-4 flex w-full items-center justify-center bg-terracotta px-6 py-3 text-cream disabled:opacity-60"
+      >
+        <CreditCard className="size-5" aria-hidden />
+        {paying ? "Redirecting to payment…" : "Pay by card or FPX"}
+      </button>
+      {payError && (
+        <p role="alert" className="mt-2 text-center text-sm font-medium text-bad-fg">
+          {payError}
+        </p>
+      )}
+
+      <p className="mt-4 text-center text-sm text-choc-2">or</p>
+
       <a
         href={whatsappLink(orderText)}
         target="_blank"
         rel="noopener noreferrer"
-        className="btn-bubble mt-4 flex w-full items-center justify-center bg-terracotta px-6 py-3 text-cream"
+        className="btn-bubble mt-2 flex w-full items-center justify-center bg-surface px-6 py-3 text-choc"
       >
         Order via WhatsApp
       </a>
       <p className="mt-2 text-center text-sm text-choc-2">
-        We&apos;ll confirm price, delivery and payment with you on WhatsApp.
+        Prefer to arrange delivery and pay directly? We&apos;ll confirm on WhatsApp instead.
       </p>
     </div>
   );
