@@ -92,16 +92,24 @@ export async function isEasyParcelConnected(): Promise<boolean> {
   return !!data;
 }
 
+type EasyParcelQuotation = {
+  courier: { courier_name: string };
+  pricing: { total_amount: number; currency: string };
+};
+type EasyParcelResponse = {
+  data?: { status: string; quotations?: EasyParcelQuotation[] }[];
+};
+
 export async function getEasyParcelQuote(
   receiverPostcode: string,
   receiverState: string,
   weightKg: number,
 ): Promise<{ price: number; courierName: string } | null> {
   const token = await getValidAccessToken();
-  if (!token) throw new Error("EasyParcel: no access token stored");
+  if (!token) return null;
 
   const receiverCode = MY_STATE_CODES[receiverState];
-  if (!receiverCode) throw new Error(`EasyParcel: unknown state "${receiverState}"`);
+  if (!receiverCode) return null;
 
   const res = await fetch(`${API_BASE}/shipment/quotations`, {
     method: "POST",
@@ -116,13 +124,13 @@ export async function getEasyParcelQuote(
       ],
     }),
   });
-  // TEMP DEBUG: throw with the upstream body instead of silently returning
-  // null, so the real failure surfaces through the route's debug field.
-  if (!res.ok) throw new Error(`EasyParcel ${res.status}: ${await res.text()}`);
+  if (!res.ok) {
+    console.error(`EasyParcel quote failed: ${res.status} ${await res.text()}`);
+    return null;
+  }
 
-  const data = await res.json();
-  const cheapest = (data?.quotations as { total_amount: number; courier_name: string }[] | undefined)
-    ?.sort((a, b) => a.total_amount - b.total_amount)[0];
-  if (!cheapest) throw new Error(`EasyParcel: no couriers in response: ${JSON.stringify(data)}`);
-  return { price: cheapest.total_amount, courierName: cheapest.courier_name };
+  const data = (await res.json()) as EasyParcelResponse;
+  const quotations = data.data?.[0]?.quotations ?? [];
+  const cheapest = [...quotations].sort((a, b) => a.pricing.total_amount - b.pricing.total_amount)[0];
+  return cheapest ? { price: cheapest.pricing.total_amount, courierName: cheapest.courier.courier_name } : null;
 }

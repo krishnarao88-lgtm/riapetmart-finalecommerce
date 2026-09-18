@@ -41,22 +41,17 @@ export async function POST(req: Request) {
   const options: ShippingOption[] = [];
   const isSameDayZone = delivery.same_day_states?.includes(state) ?? false;
   const fullAddress = `${addressLine}, ${city}, ${postcode} ${state}, Malaysia`;
-  // TEMP DEBUG: surfaced in the response while wiring up carrier credentials.
-  // Remove this field once Lalamove/EasyParcel are confirmed working.
-  let debug: string | undefined;
 
   try {
     if (isSameDayZone && delivery.lalamove_enabled !== false) {
       const quote = await getLalamoveQuote(fullAddress, weightKg);
       if (quote) options.push({ method: "lalamove", label: "Same-day delivery (Lalamove)", price: quote.price });
-      else debug = "lalamove: no quote returned";
     } else if (delivery.easyparcel_enabled !== false) {
       const quote = await getEasyParcelQuote(postcode, state, weightKg);
       if (quote) options.push({ method: "easyparcel", label: `Courier — ${quote.courierName}`, price: quote.price });
-      else debug = "easyparcel: no quote returned";
     }
   } catch (err) {
-    debug = `carrier error: ${err instanceof Error ? err.message : String(err)}`;
+    console.error("Shipping quote failed:", err);
   }
 
   if (delivery.pickup_enabled !== false) {
@@ -64,7 +59,7 @@ export async function POST(req: Request) {
   }
 
   if (options.length === 0) {
-    return NextResponse.json({ error: "No delivery option available for this address", debug }, { status: 422 });
+    return NextResponse.json({ error: "No delivery option available for this address" }, { status: 422 });
   }
-  return NextResponse.json({ options, debug });
+  return NextResponse.json({ options });
 }
