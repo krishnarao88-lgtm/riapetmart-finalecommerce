@@ -98,10 +98,10 @@ export async function getEasyParcelQuote(
   weightKg: number,
 ): Promise<{ price: number; courierName: string } | null> {
   const token = await getValidAccessToken();
-  if (!token) return null;
+  if (!token) throw new Error("EasyParcel: no access token stored");
 
   const receiverCode = MY_STATE_CODES[receiverState];
-  if (!receiverCode) return null;
+  if (!receiverCode) throw new Error(`EasyParcel: unknown state "${receiverState}"`);
 
   const res = await fetch(`${API_BASE}/shipment/quotations`, {
     method: "POST",
@@ -116,7 +116,9 @@ export async function getEasyParcelQuote(
       ],
     }),
   });
-  if (!res.ok) return null;
+  // TEMP DEBUG: throw with the upstream body instead of silently returning
+  // null, so the real failure surfaces through the route's debug field.
+  if (!res.ok) throw new Error(`EasyParcel ${res.status}: ${await res.text()}`);
 
   const data = await res.json();
   const cheapest = (data?.quotations as { total_amount: number; courier_name: string }[] | undefined)
