@@ -1,10 +1,19 @@
 import type { MetadataRoute } from "next";
 import { site } from "@/lib/site";
+import { createClient } from "@/lib/supabase/server";
 
-// ponytail: static pages only; Stage 3 adds product and category URLs from the database.
-export default function sitemap(): MetadataRoute.Sitemap {
-  return ["", "/shop", "/about", "/contact"].map((path) => ({
+export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
+  const supabase = await createClient();
+  const { data: products } = await supabase.from("products").select("slug").eq("status", "published");
+
+  const staticPages = ["", "/shop", "/about", "/contact"].map((path) => ({
     url: `${site.url}${path}`,
-    changeFrequency: path === "/shop" ? "daily" : "monthly",
+    changeFrequency: (path === "/shop" ? "daily" : "monthly") as "daily" | "monthly",
   }));
+  const productPages = (products ?? []).map((p) => ({
+    url: `${site.url}/shop/${p.slug}`,
+    changeFrequency: "weekly" as const,
+  }));
+
+  return [...staticPages, ...productPages];
 }
