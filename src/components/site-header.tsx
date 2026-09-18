@@ -1,5 +1,6 @@
-import { PawPrint, ShoppingBag } from "lucide-react";
+import { PawPrint } from "lucide-react";
 import Link from "next/link";
+import { CartBadge } from "@/components/cart-badge";
 
 const nav = [
   { href: "/shop", label: "Shop all" },
@@ -38,14 +39,7 @@ export function SiteHeader() {
           </ul>
         </nav>
 
-        <Link
-          href="/cart"
-          className="btn-bubble ml-auto bg-terracotta px-4 text-sm text-cream md:ml-2"
-          aria-label="Cart, 0 items"
-        >
-          <ShoppingBag className="size-5" aria-hidden />
-          <span className="tabular-nums">0</span>
-        </Link>
+        <CartBadge />
       </div>
 
       {/* Phones: nav scrolls sideways inside its own strip, never the page. */}

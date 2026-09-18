@@ -1,16 +1,17 @@
 import { Boxes, FileSpreadsheet, LogOut, Percent, Settings } from "lucide-react";
 import type { Metadata } from "next";
+import Link from "next/link";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { signOut } from "./actions";
 
 export const metadata: Metadata = { title: "Admin", robots: { index: false } };
 
-const upcoming = [
-  { Icon: Boxes, title: "Products & stock", body: "Variants, batches and expiry dates." },
-  { Icon: Percent, title: "Pricing", body: "Cost price and margin slider." },
-  { Icon: FileSpreadsheet, title: "Import & export", body: "Excel, CSV and PDF." },
-  { Icon: Settings, title: "Settings", body: "Short-dated discounts and delivery." },
+const sections = [
+  { Icon: Boxes, title: "Products & stock", body: "Variants, batches and expiry dates.", href: "/admin/products" },
+  { Icon: Percent, title: "Pricing", body: "Cost price and margin slider.", href: "/admin/products" },
+  { Icon: FileSpreadsheet, title: "Import & export", body: "Excel, CSV and PDF.", href: "/admin/import" },
+  { Icon: Settings, title: "Settings", body: "Short-dated discounts and delivery.", href: "/admin/settings" },
 ];
 
 export default async function AdminHome() {
@@ -39,14 +40,16 @@ export default async function AdminHome() {
 
       {isAdmin ? (
         <ul className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          {upcoming.map(({ Icon, title, body }) => (
-            <li key={title} className="grid gap-3 rounded-[var(--radius-chunk)] border-2 border-ink bg-surface p-5">
-              <Icon className="size-7 text-grape" aria-hidden />
-              <span className="font-display text-xl font-extrabold">{title}</span>
-              <span className="text-sm text-ink-2">{body}</span>
-              <span className="w-fit rounded-full bg-warn-bg px-2.5 py-1 text-xs font-bold text-warn-fg">
-                Coming in Stage 2
-              </span>
+          {sections.map(({ Icon, title, body, href }) => (
+            <li key={title}>
+              <Link
+                href={href}
+                className="grid gap-3 rounded-[var(--radius-chunk)] border-2 border-ink bg-surface p-5 transition-transform hover:-translate-y-0.5"
+              >
+                <Icon className="size-7 text-grape" aria-hidden />
+                <span className="font-display text-xl font-extrabold">{title}</span>
+                <span className="text-sm text-ink-2">{body}</span>
+              </Link>
             </li>
           ))}
         </ul>

@@ -68,8 +68,8 @@ const productRows = products.map((p) =>
   ].join(", ")})`,
 );
 let sql2 = `-- Phase 2: products (safe to re-run — upserts by slug)\n`;
-for (let i = 0; i < productRows.length; i += 100) {
-  sql2 += `insert into public.products (${productCols}) values\n${productRows.slice(i, i + 100).join(",\n")}\n`;
+for (let i = 0; i < productRows.length; i += 15) {
+  sql2 += `insert into public.products (${productCols}) values\n${productRows.slice(i, i + 15).join(",\n")}\n`;
   sql2 += `on conflict (slug) do update set\n  name = excluded.name, brand_id = excluded.brand_id, category_id = excluded.category_id,\n  pet_type = excluded.pet_type, size_display = excluded.size_display, description = excluded.description,\n  ingredients = excluded.ingredients, usage = excluded.usage, is_regulated = excluded.is_regulated,\n  needs_review = excluded.needs_review, review_notes = excluded.review_notes;\n\n`;
 }
 writeFileSync(`${outDir}/2-products.sql`, sql2);
