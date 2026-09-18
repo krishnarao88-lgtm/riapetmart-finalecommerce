@@ -2,8 +2,11 @@ import { ArrowRight, PawPrint } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 
+// self-start + a fixed height stop the card from being stretched tall by its taller
+// text-panel sibling in the same grid row — that stretch was pushing the crop window
+// down into empty headroom, cropping the animal almost entirely out of frame.
 const arch =
-  "group relative flex min-h-52 flex-col items-center justify-end gap-2 overflow-hidden rounded-t-full rounded-b-3xl border-2 border-choc p-6 pb-5 text-center shadow-[5px_5px_0_0_var(--color-choc)] transition-transform duration-200 hover:-translate-y-1";
+  "group relative flex h-72 self-start flex-col items-center justify-end gap-2 overflow-hidden rounded-t-full rounded-b-3xl border-2 border-choc p-6 pb-5 text-center shadow-[5px_5px_0_0_var(--color-choc)] transition-transform duration-200 hover:-translate-y-1";
 const archSticker = "absolute drop-shadow-[0_1px_3px_rgba(0,0,0,0.45)]";
 const cardSizes = "(max-width: 768px) 100vw, (max-width: 1024px) 50vw, 33vw";
 
@@ -35,7 +38,7 @@ export function PetCollage() {
             alt="A cheerful border collie with perked ears"
             fill
             sizes={cardSizes}
-            className="object-cover object-top"
+            className="object-cover object-bottom"
           />
           <PawPrint aria-hidden className={`${archSticker} right-5 top-5 size-7 rotate-[16deg] text-cream/85`} />
           <span className="relative rounded-full border-2 border-choc bg-cream px-3 py-1 text-xs font-bold text-choc">
@@ -51,7 +54,7 @@ export function PetCollage() {
             alt="A curious tabby cat sitting upright"
             fill
             sizes={cardSizes}
-            className="object-cover object-top"
+            className="object-cover object-bottom"
           />
           <PawPrint aria-hidden className={`${archSticker} left-5 top-5 size-6 rotate-[-12deg] text-cream/85`} />
           <span className="relative rounded-full border-2 border-choc bg-cream px-3 py-1 text-xs font-bold text-choc">
@@ -76,7 +79,7 @@ export function PetCollage() {
             alt="An alert grey rabbit with ears up"
             fill
             sizes={cardSizes}
-            className="object-cover object-top"
+            className="object-cover object-bottom"
           />
           <PawPrint aria-hidden className={`${archSticker} right-5 top-6 size-6 rotate-[10deg] text-cream/85`} />
           <span className="relative rounded-full border-2 border-choc bg-cream px-3 py-1 text-xs font-bold text-choc">

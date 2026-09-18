@@ -146,6 +146,7 @@ def main() -> int:
             batch = batch_by_variant.get(variant.get("Variant ID"), {})
             variant_expiry = iso_date(batch.get("Expiry Date")) or expiry
             bundle_note = "bundle price is unit price x quantity: set your own bundle price" if multiplier > 1 else ""
+            description = clean(gen.get("Final Storefront Description")) or clean(product.get("Storefront Description"))
 
             rows.append([
                 ref,

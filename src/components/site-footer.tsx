@@ -1,6 +1,6 @@
 import { MessageCircle } from "lucide-react";
 import Link from "next/link";
-import { site, whatsappLink } from "@/lib/site";
+import { mapsLink, site, whatsappLink } from "@/lib/site";
 
 export function SiteFooter() {
   const a = site.address;
@@ -16,10 +16,17 @@ export function SiteFooter() {
 
         <address className="grid content-start gap-1 text-sm not-italic text-cream/85">
           <span className="mb-1 text-xs font-bold uppercase tracking-widest text-cream/60">Visit the shop</span>
-          <span>{a.street}</span>
-          <span>
-            {a.postcode} {a.city}, {a.state}
-          </span>
+          <a
+            href={mapsLink()}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="grid gap-1 underline decoration-cream/40 underline-offset-2 hover:text-peach hover:decoration-peach"
+          >
+            <span>{a.street}</span>
+            <span>
+              {a.postcode} {a.city}, {a.state}
+            </span>
+          </a>
           <span className="mt-2">
             {site.hours.days} · {site.hours.opens}–{site.hours.closes}
           </span>
@@ -42,7 +49,7 @@ export function SiteFooter() {
             className="btn-bubble w-fit bg-terracotta text-cream"
           >
             <MessageCircle className="size-5" aria-hidden />
-            WhatsApp {site.phone}
+            WhatsApp us now
           </a>
         </div>
       </div>

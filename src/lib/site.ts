@@ -24,6 +24,13 @@ export function whatsappLink(message = "Hi Ria Pet Mart, I have a question.") {
   return `https://wa.me/${site.whatsapp}?text=${encodeURIComponent(message)}`;
 }
 
+// Google Maps' web query link opens the installed Google Maps app on both Android and
+// iOS (falling back to the Google Maps website), which covers the vast majority of
+// visitors without needing to detect or guess which specific app (Waze, Apple Maps) they use.
+export function mapsLink() {
+  return `https://www.google.com/maps/search/?api=1&query=${site.geo.lat},${site.geo.lng}`;
+}
+
 // Public by design (row-level security protects the data); env vars override per environment.
 export const supabaseUrl =
   process.env.NEXT_PUBLIC_SUPABASE_URL ?? "https://fveawvyiyqezrrkdwmpw.supabase.co";
