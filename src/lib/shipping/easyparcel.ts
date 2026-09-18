@@ -123,5 +123,6 @@ export async function getEasyParcelQuote(
   const data = await res.json();
   const cheapest = (data?.quotations as { total_amount: number; courier_name: string }[] | undefined)
     ?.sort((a, b) => a.total_amount - b.total_amount)[0];
-  return cheapest ? { price: cheapest.total_amount, courierName: cheapest.courier_name } : null;
+  if (!cheapest) throw new Error(`EasyParcel: no couriers in response: ${JSON.stringify(data)}`);
+  return { price: cheapest.total_amount, courierName: cheapest.courier_name };
 }
