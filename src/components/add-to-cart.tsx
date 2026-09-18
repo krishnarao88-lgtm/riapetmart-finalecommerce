@@ -5,7 +5,7 @@ import { useState } from "react";
 import { formatMyr } from "@/lib/pricing";
 import { useCart } from "@/lib/cart-context";
 
-type Variant = { id: string; title: string; price: number };
+type Variant = { id: string; title: string; price: number; originalPrice?: number };
 
 export function AddToCart({
   productSlug,
@@ -41,6 +41,7 @@ export function AddToCart({
             {variants.map((v) => (
               <option key={v.id} value={v.id}>
                 {v.title} — {formatMyr(v.price)}
+                {v.originalPrice && v.originalPrice > v.price ? ` (was ${formatMyr(v.originalPrice)})` : ""}
               </option>
             ))}
           </select>
@@ -67,7 +68,12 @@ export function AddToCart({
             <Plus className="size-4" aria-hidden />
           </button>
         </div>
-        <span className="text-xl font-bold text-choc">{formatMyr(variant.price * qty)}</span>
+        <span className="flex items-baseline gap-2">
+          {variant.originalPrice && variant.originalPrice > variant.price && (
+            <span className="text-sm text-choc-2 line-through">{formatMyr(variant.originalPrice * qty)}</span>
+          )}
+          <span className="text-xl font-bold text-choc">{formatMyr(variant.price * qty)}</span>
+        </span>
       </div>
 
       <button

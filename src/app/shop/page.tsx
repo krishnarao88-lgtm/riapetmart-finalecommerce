@@ -1,5 +1,6 @@
 import { PawPrint } from "lucide-react";
 import Link from "next/link";
+import { discountedPrice, getExpiryBadge, type ExpirySettings } from "@/lib/expiry";
 import { formatMyr } from "@/lib/pricing";
 import { createClient } from "@/lib/supabase/server";
 
@@ -19,22 +20,23 @@ type ProductRow = {
   size_display: string | null;
   categories: { name: string } | null;
   product_images: { path: string; alt: string | null }[];
-  variants: { price: number }[];
+  variants: { price: number; stock_batches: { expiry_date: string | null }[] }[];
 };
 
 export default async function ShopPage({
   searchParams,
 }: {
-  searchParams: Promise<{ pet?: string; category?: string }>;
+  searchParams: Promise<{ pet?: string; category?: string; deal?: string }>;
 }) {
-  const { pet, category } = await searchParams;
+  const { pet, category, deal } = await searchParams;
   const supabase = await createClient();
 
   const categoriesQuery = supabase.from("categories").select("id, name, slug").order("sort");
+  const settingsQuery = supabase.from("settings").select("value").eq("key", "expiry_badges").single();
   let productsQuery = supabase
     .from("products")
     .select(
-      "id, slug, name, pet_type, size_display, categories(name), product_images(path, alt), variants(price)",
+      "id, slug, name, pet_type, size_display, categories(name), product_images(path, alt), variants(price, stock_batches(expiry_date))",
     )
     .eq("status", "published")
     .order("name");
@@ -42,12 +44,25 @@ export default async function ShopPage({
   if (pet) productsQuery = productsQuery.or(`pet_type.eq.${pet},pet_type.eq.dog_cat`);
   if (category) productsQuery = productsQuery.eq("categories.slug", category);
 
-  const [{ data: categories }, { data: products }] = await Promise.all([
+  const [{ data: categories }, { data: settingsRow }, { data: products }] = await Promise.all([
     categoriesQuery,
+    settingsQuery,
     productsQuery,
   ]);
 
-  const rows = (products ?? []) as unknown as ProductRow[];
+  const expirySettings = (settingsRow?.value ?? {}) as Partial<ExpirySettings>;
+  let rows = (products ?? []) as unknown as ProductRow[];
+
+  const withBadge = rows.map((p) => {
+    const expiries = p.variants.flatMap((v) => v.stock_batches.map((b) => b.expiry_date)).filter(Boolean) as string[];
+    const nearest = expiries.sort()[0] ?? null;
+    return { product: p, badge: getExpiryBadge(nearest, expirySettings) };
+  });
+
+  if (deal === "short-dated") {
+    rows = withBadge.filter((r) => r.badge?.kind === "short-dated").map((r) => r.product);
+  }
+  const badgeByProductId = new Map(withBadge.map((r) => [r.product.id, r.badge]));
 
   return (
     <div className="mx-auto max-w-6xl px-4 py-10">
@@ -79,6 +94,12 @@ export default async function ShopPage({
             {c.name}
           </Link>
         ))}
+        <Link
+          href="/shop?deal=short-dated"
+          className={`rounded-full border-2 border-rust px-4 py-1.5 text-sm font-semibold ${deal === "short-dated" ? "bg-rust text-cream" : "bg-cream text-rust"}`}
+        >
+          Clearance
+        </Link>
       </div>
 
       {rows.length === 0 ? (
@@ -90,6 +111,9 @@ export default async function ShopPage({
           {rows.map((p) => {
             const minPrice = p.variants.length ? Math.min(...p.variants.map((v) => v.price)) : null;
             const image = p.product_images[0];
+            const badge = badgeByProductId.get(p.id);
+            const showPrice =
+              minPrice !== null && badge?.kind === "short-dated" ? discountedPrice(minPrice, badge.discount) : minPrice;
             return (
               <li key={p.id}>
                 <Link
@@ -103,6 +127,16 @@ export default async function ShopPage({
                     ) : (
                       <PawPrint className="size-10 text-rust/50" aria-hidden />
                     )}
+                    {badge?.kind === "short-dated" && (
+                      <span className="absolute left-2 top-2 rounded-full bg-rust px-2 py-0.5 text-xs font-bold text-cream">
+                        -{Math.round(badge.discount * 100)}% short-dated
+                      </span>
+                    )}
+                    {badge?.kind === "fresh" && (
+                      <span className="absolute left-2 top-2 rounded-full bg-ok-bg px-2 py-0.5 text-xs font-bold text-ok-fg">
+                        Fresh stock
+                      </span>
+                    )}
                   </div>
                   <div className="flex flex-1 flex-col gap-1 p-3">
                     <span className="text-xs font-semibold uppercase tracking-wide text-rust">
@@ -110,8 +144,13 @@ export default async function ShopPage({
                     </span>
                     <span className="line-clamp-2 text-sm font-bold text-choc">{p.name}</span>
                     {p.size_display && <span className="text-xs text-choc-2">{p.size_display}</span>}
-                    <span className="mt-auto pt-1 font-bold text-choc">
-                      {minPrice !== null ? `from ${formatMyr(minPrice)}` : "Price on request"}
+                    <span className="mt-auto flex items-baseline gap-2 pt-1">
+                      {badge?.kind === "short-dated" && minPrice !== null && (
+                        <span className="text-xs text-choc-2 line-through">{formatMyr(minPrice)}</span>
+                      )}
+                      <span className="font-bold text-choc">
+                        {showPrice !== null ? `from ${formatMyr(showPrice)}` : "Price on request"}
+                      </span>
                     </span>
                   </div>
                 </Link>
