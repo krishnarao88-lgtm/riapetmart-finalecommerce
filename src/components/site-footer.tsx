@@ -1,6 +1,6 @@
 import { MessageCircle } from "lucide-react";
 import Link from "next/link";
-import { mapsLink, site, whatsappLink } from "@/lib/site";
+import { site, whatsappLink } from "@/lib/site";
 
 export function SiteFooter() {
   const a = site.address;
@@ -17,7 +17,7 @@ export function SiteFooter() {
         <address className="grid content-start gap-1 text-sm not-italic text-cream/85">
           <span className="mb-1 text-xs font-bold uppercase tracking-widest text-cream/60">Visit the shop</span>
           <a
-            href={mapsLink()}
+            href={site.mapsUrl}
             target="_blank"
             rel="noopener noreferrer"
             className="grid gap-1 underline decoration-cream/40 underline-offset-2 hover:text-peach hover:decoration-peach"
