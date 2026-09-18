@@ -4,6 +4,7 @@ import { signOut } from "@/app/admin/actions";
 const links = [
   { href: "/admin", label: "Dashboard" },
   { href: "/admin/products", label: "Products & stock" },
+  { href: "/admin/orders", label: "Orders" },
   { href: "/admin/import", label: "Import & export" },
   { href: "/admin/settings", label: "Settings" },
 ];

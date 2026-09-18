@@ -1,4 +1,4 @@
-import { Boxes, FileSpreadsheet, LogOut, Percent, Settings } from "lucide-react";
+import { Boxes, FileSpreadsheet, LogOut, Percent, Receipt, Settings } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { redirect } from "next/navigation";
@@ -10,6 +10,7 @@ export const metadata: Metadata = { title: "Admin", robots: { index: false } };
 const sections = [
   { Icon: Boxes, title: "Products & stock", body: "Variants, batches and expiry dates.", href: "/admin/products" },
   { Icon: Percent, title: "Pricing", body: "Cost price and margin slider.", href: "/admin/products" },
+  { Icon: Receipt, title: "Orders", body: "Paid and pending Stripe orders.", href: "/admin/orders" },
   { Icon: FileSpreadsheet, title: "Import & export", body: "Excel, CSV and PDF.", href: "/admin/import" },
   { Icon: Settings, title: "Settings", body: "Short-dated discounts and delivery.", href: "/admin/settings" },
 ];
