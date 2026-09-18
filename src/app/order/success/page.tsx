@@ -2,7 +2,7 @@ import { CheckCircle2 } from "lucide-react";
 import Link from "next/link";
 import { ClearCartOnMount } from "@/components/clear-cart-on-mount";
 import { formatMyr } from "@/lib/pricing";
-import { stripe } from "@/lib/stripe";
+import { getStripe } from "@/lib/stripe";
 
 export default async function OrderSuccessPage({
   searchParams,
@@ -10,7 +10,7 @@ export default async function OrderSuccessPage({
   searchParams: Promise<{ session_id?: string }>;
 }) {
   const { session_id } = await searchParams;
-  const session = session_id ? await stripe.checkout.sessions.retrieve(session_id).catch(() => null) : null;
+  const session = session_id ? await getStripe().checkout.sessions.retrieve(session_id).catch(() => null) : null;
   const paid = session?.payment_status === "paid";
 
   return (

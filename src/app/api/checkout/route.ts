@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { headers } from "next/headers";
-import { stripe } from "@/lib/stripe";
+import { getStripe } from "@/lib/stripe";
 import { createClient } from "@/lib/supabase/server";
 
 type CartLineInput = { variantId: string; qty: number };
@@ -47,7 +47,7 @@ export async function POST(req: Request) {
   const h = await headers();
   const origin = h.get("origin") ?? `https://${h.get("host")}`;
 
-  const session = await stripe.checkout.sessions.create({
+  const session = await getStripe().checkout.sessions.create({
     mode: "payment",
     payment_method_types: ["card", "fpx"],
     line_items: lineItems,
