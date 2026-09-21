@@ -18,8 +18,7 @@ export async function POST(req: Request) {
     });
   } catch (err) {
     console.error("Enquiry email failed:", err);
-    const debug = err instanceof Error ? err.message : String(err);
-    return NextResponse.json({ error: "Could not send your message. Try WhatsApp instead.", debug }, { status: 500 });
+    return NextResponse.json({ error: "Could not send your message. Try WhatsApp instead." }, { status: 500 });
   }
 
   return NextResponse.json({ ok: true });

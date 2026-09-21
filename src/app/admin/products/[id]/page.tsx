@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 import { AdminNav } from "@/components/admin/admin-nav";
 import { BatchEditor, type Batch } from "@/components/admin/batch-editor";
 import { ProductForm, type ProductFields } from "@/components/admin/product-form";
+import { ProductImages } from "@/components/admin/product-images";
 import { VariantPricingRow } from "@/components/admin/variant-pricing-row";
 import { requireAdmin } from "@/lib/auth";
 
@@ -11,6 +12,7 @@ export const metadata: Metadata = { title: "Edit product", robots: { index: fals
 
 type Loaded = ProductFields & {
   brands: { name: string } | null;
+  product_images: { id: string; path: string; alt: string }[];
   variants: {
     id: string;
     sku: string;
@@ -29,7 +31,7 @@ export default async function EditProduct({ params }: PageProps<"/admin/products
   const { data } = await supabase
     .from("products")
     .select(
-      "id, name, status, pet_type, size_display, description, ingredients, usage, is_regulated, needs_review, review_notes, seo_title, seo_description, brands(name), variants(id, sku, title, price, sort, variant_costs(cost_price, margin), stock_batches(id, quantity, expiry_date, batch_no, received_at))",
+      "id, name, status, pet_type, size_display, description, ingredients, usage, is_regulated, needs_review, review_notes, seo_title, seo_description, brands(name), product_images(id, path, alt), variants(id, sku, title, price, sort, variant_costs(cost_price, margin), stock_batches(id, quantity, expiry_date, batch_no, received_at))",
     )
     .eq("id", id)
     .single();
@@ -49,6 +51,13 @@ export default async function EditProduct({ params }: PageProps<"/admin/products
         <h1 className="font-display text-3xl font-extrabold tracking-tight">{product.name}</h1>
         {product.brands?.name && <p className="text-sm text-ink-2">{product.brands.name}</p>}
       </div>
+
+      <section aria-labelledby="images-heading" className="grid gap-3">
+        <h2 id="images-heading" className="font-display text-2xl font-extrabold tracking-tight">
+          Photos
+        </h2>
+        <ProductImages productId={product.id} productName={product.name} images={product.product_images} />
+      </section>
 
       <ProductForm product={product} />
 

@@ -108,6 +108,61 @@ export async function deleteBatch(_prev: ActionState, formData: FormData) {
   return error ? { error: error.message } : { ok: "Batch removed." };
 }
 
+export async function saveVariantDetails(_prev: ActionState, formData: FormData) {
+  const { supabase } = await requireAdmin();
+  const variantId = String(formData.get("variant_id"));
+  const productId = String(formData.get("product_id"));
+  const title = text(formData, "title");
+  const sku = text(formData, "sku");
+  if (!title) return { error: "Variant title is required." };
+
+  const { error } = await supabase.from("variants").update({ title, sku }).eq("id", variantId);
+  revalidatePath(`/admin/products/${productId}`);
+  return error ? { error: error.message } : { ok: "Variant updated." };
+}
+
+export async function deleteVariant(_prev: ActionState, formData: FormData) {
+  const { supabase } = await requireAdmin();
+  const productId = String(formData.get("product_id"));
+  const { error } = await supabase.from("variants").delete().eq("id", String(formData.get("variant_id")));
+  revalidatePath(`/admin/products/${productId}`);
+  return error ? { error: error.message } : { ok: "Variant deleted." };
+}
+
+export async function uploadProductImage(_prev: ActionState, formData: FormData) {
+  const { supabase } = await requireAdmin();
+  const productId = String(formData.get("product_id"));
+  const productName = String(formData.get("product_name") ?? "Product photo");
+  const file = formData.get("file") as File | null;
+  if (!file || file.size === 0) return { error: "Choose an image file first." };
+
+  const ext = file.name.split(".").pop() ?? "jpg";
+  const path = `${productId}/${crypto.randomUUID()}.${ext}`;
+  const { error: uploadError } = await supabase.storage.from("product-images").upload(path, file);
+  if (uploadError) return { error: uploadError.message };
+
+  const { data: publicUrl } = supabase.storage.from("product-images").getPublicUrl(path);
+  const { error: insertError } = await supabase
+    .from("product_images")
+    .insert({ product_id: productId, path: publicUrl.publicUrl, alt: productName, sort: 0 });
+
+  revalidatePath(`/admin/products/${productId}`);
+  return insertError ? { error: insertError.message } : { ok: "Image uploaded." };
+}
+
+export async function deleteProductImage(_prev: ActionState, formData: FormData) {
+  const { supabase } = await requireAdmin();
+  const productId = String(formData.get("product_id"));
+  const imageId = String(formData.get("image_id"));
+  const publicUrl = String(formData.get("image_path"));
+
+  const storagePath = publicUrl.split("/storage/v1/object/public/product-images/")[1];
+  if (storagePath) await supabase.storage.from("product-images").remove([storagePath]);
+  const { error } = await supabase.from("product_images").delete().eq("id", imageId);
+  revalidatePath(`/admin/products/${productId}`);
+  return error ? { error: error.message } : { ok: "Image removed." };
+}
+
 /**
  * Applies one margin to every variant that already has a cost price, for the
  * products matching the current search filter. Products without a cost are skipped.
