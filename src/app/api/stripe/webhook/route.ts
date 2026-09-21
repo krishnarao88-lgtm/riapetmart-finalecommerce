@@ -37,6 +37,7 @@ export async function POST(req: Request) {
       p_payment_intent: typeof session.payment_intent === "string" ? session.payment_intent : null,
       p_customer_email: customerEmail,
     });
+    if (customerEmail) await supabase.rpc("mark_cart_recovered", { p_email: customerEmail });
 
     if (customerEmail) {
       try {

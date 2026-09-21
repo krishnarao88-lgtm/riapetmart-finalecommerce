@@ -21,7 +21,21 @@ export default function CartPage() {
   const [paying, setPaying] = useState(false);
   const [payError, setPayError] = useState<string | null>(null);
 
+  const [email, setEmail] = useState("");
   const [address, setAddress] = useState({ addressLine: "", city: "", postcode: "", state: "Selangor" });
+
+  function trackCart(currentEmail: string) {
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(currentEmail)) return;
+    fetch("/api/cart-track", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        email: currentEmail,
+        items: lines.map((l) => ({ name: l.productName, title: l.variantTitle, qty: l.qty, price: l.price })),
+        subtotal,
+      }),
+    }).catch(() => {});
+  }
   const [quoting, setQuoting] = useState(false);
   const [quoteError, setQuoteError] = useState<string | null>(null);
   const [shippingOptions, setShippingOptions] = useState<ShippingOption[] | null>(null);
@@ -52,6 +66,7 @@ export default function CartPage() {
   async function payNow() {
     setPaying(true);
     setPayError(null);
+    trackCart(email);
     try {
       const res = await fetch("/api/checkout", {
         method: "POST",
@@ -146,6 +161,19 @@ export default function CartPage() {
       </ul>
 
       <div className="mt-6 grid gap-3 rounded-2xl border-2 border-choc bg-surface p-4">
+        <h2 className="font-bold text-choc">Your email</h2>
+        <input
+          type="email"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          onBlur={() => trackCart(email)}
+          placeholder="you@example.com"
+          className="rounded-xl border-2 border-choc/40 px-3 py-2"
+        />
+        <p className="text-xs text-choc-2">For your order confirmation and a reminder if you don&apos;t finish checkout.</p>
+      </div>
+
+      <div className="mt-4 grid gap-3 rounded-2xl border-2 border-choc bg-surface p-4">
         <h2 className="flex items-center gap-2 font-bold text-choc">
           <MapPinned className="size-5 text-rust" aria-hidden />
           Delivery address
