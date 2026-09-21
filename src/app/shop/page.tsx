@@ -73,37 +73,48 @@ export default async function ShopPage({
       <h1 className="font-bubble text-3xl font-extrabold text-choc">Shop all</h1>
       <p className="mt-1 text-choc-2">{rows.length} product{rows.length === 1 ? "" : "s"}</p>
 
-      <div className="mt-5 flex flex-wrap gap-2">
-        <Link
-          href="/shop"
-          className={`rounded-full border-2 border-choc px-4 py-1.5 text-sm font-semibold ${!pet ? "bg-terracotta text-cream" : "bg-cream text-choc"}`}
-        >
-          All pets
-        </Link>
-        {petFilters.map((f) => (
-          <Link
-            key={f.value}
-            href={`/shop?pet=${f.value}`}
-            className={`rounded-full border-2 border-choc px-4 py-1.5 text-sm font-semibold ${pet === f.value ? "bg-terracotta text-cream" : "bg-cream text-choc"}`}
-          >
-            {f.label}
-          </Link>
-        ))}
-        {(categories ?? []).map((c) => (
-          <Link
-            key={c.slug}
-            href={`/shop?category=${c.slug}${pet ? `&pet=${pet}` : ""}`}
-            className={`rounded-full border-2 border-peach px-4 py-1.5 text-sm font-semibold ${category === c.slug ? "bg-peach text-choc" : "bg-cream text-choc-2"}`}
-          >
-            {c.name}
-          </Link>
-        ))}
-        <Link
-          href="/shop?deal=short-dated"
-          className={`rounded-full border-2 border-rust px-4 py-1.5 text-sm font-semibold ${deal === "short-dated" ? "bg-rust text-cream" : "bg-cream text-rust"}`}
-        >
-          Clearance
-        </Link>
+      <div className="mt-5 grid gap-3">
+        <div>
+          <p className="mb-1.5 text-xs font-bold uppercase tracking-widest text-choc-2">Pet</p>
+          <div className="flex flex-wrap gap-2">
+            <Link
+              href="/shop"
+              className={`rounded-full border-2 border-choc px-4 py-1.5 text-sm font-semibold ${!pet ? "bg-terracotta text-cream" : "bg-cream text-choc"}`}
+            >
+              All pets
+            </Link>
+            {petFilters.map((f) => (
+              <Link
+                key={f.value}
+                href={`/shop?pet=${f.value}`}
+                className={`rounded-full border-2 border-choc px-4 py-1.5 text-sm font-semibold ${pet === f.value ? "bg-terracotta text-cream" : "bg-cream text-choc"}`}
+              >
+                {f.label}
+              </Link>
+            ))}
+          </div>
+        </div>
+
+        <div>
+          <p className="mb-1.5 text-xs font-bold uppercase tracking-widest text-choc-2">Category</p>
+          <div className="flex flex-wrap gap-2">
+            {(categories ?? []).map((c) => (
+              <Link
+                key={c.slug}
+                href={`/shop?category=${c.slug}${pet ? `&pet=${pet}` : ""}`}
+                className={`rounded-full border-2 border-peach px-4 py-1.5 text-sm font-semibold ${category === c.slug ? "bg-peach text-choc" : "bg-cream text-choc-2"}`}
+              >
+                {c.name}
+              </Link>
+            ))}
+            <Link
+              href="/shop?deal=short-dated"
+              className={`rounded-full border-2 border-rust px-4 py-1.5 text-sm font-semibold ${deal === "short-dated" ? "bg-rust text-cream" : "bg-cream text-rust"}`}
+            >
+              Clearance
+            </Link>
+          </div>
+        </div>
       </div>
 
       {rows.length === 0 ? (

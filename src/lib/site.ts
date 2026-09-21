@@ -15,7 +15,7 @@ export const site = {
     postcode: "48300",
     country: "MY",
   },
-  geo: { lat: 3.3996, lng: 101.5584 },
+  geo: { lat: 3.4067267, lng: 101.5575358 },
   hours: { days: "Monday–Saturday", opens: "10:00", closes: "19:00", closed: "Sunday" },
   // Real figures from the owner's Google Business Profile — never invent a rating or review count.
   google: { rating: 4.1, reviewCount: 67, url: "https://share.google/nyn2T6MXEyIGxYOcw" },
