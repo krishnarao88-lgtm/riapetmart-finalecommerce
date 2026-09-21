@@ -51,8 +51,8 @@ export async function POST(req: Request) {
   const isSameDayZone = delivery.same_day_states?.includes(state) ?? false;
   const fullAddress = `${addressLine}, ${city}, ${postcode} ${state}, Malaysia`;
 
-  try {
-    if (isSameDayZone && delivery.lalamove_enabled !== false) {
+  if (isSameDayZone && delivery.lalamove_enabled !== false) {
+    try {
       const quote = await getLalamoveQuote(fullAddress, weightKg);
       if (quote) {
         options.push({
@@ -61,7 +61,13 @@ export async function POST(req: Request) {
           price: freeDelivery ? 0 : quote.price,
         });
       }
-    } else if (delivery.easyparcel_enabled !== false) {
+    } catch (err) {
+      console.error("Lalamove quote failed:", err);
+    }
+  }
+
+  if (delivery.easyparcel_enabled !== false) {
+    try {
       const quote = await getEasyParcelQuote(postcode, state, weightKg);
       if (quote) {
         options.push({
@@ -71,9 +77,9 @@ export async function POST(req: Request) {
           serviceId: quote.serviceId,
         });
       }
+    } catch (err) {
+      console.error("EasyParcel quote failed:", err);
     }
-  } catch (err) {
-    console.error("Shipping quote failed:", err);
   }
 
   if (delivery.pickup_enabled !== false) {
