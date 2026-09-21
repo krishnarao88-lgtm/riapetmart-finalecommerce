@@ -1,5 +1,6 @@
 import { PawPrint } from "lucide-react";
 import Link from "next/link";
+import { QuickAddButton } from "@/components/quick-add-button";
 import { discountedPrice, getExpiryBadge, type ExpirySettings } from "@/lib/expiry";
 import { formatMyr } from "@/lib/pricing";
 import { createClient } from "@/lib/supabase/server";
@@ -24,7 +25,7 @@ type ProductRow = {
   size_display: string | null;
   categories: { name: string } | null;
   product_images: { path: string; alt: string | null }[];
-  variants: { price: number; stock_batches: { expiry_date: string | null }[] }[];
+  variants: { id: string; title: string; price: number; stock_batches: { expiry_date: string | null }[] }[];
 };
 
 export default async function ShopPage({
@@ -40,7 +41,7 @@ export default async function ShopPage({
   let productsQuery = supabase
     .from("products")
     .select(
-      "id, slug, name, pet_type, size_display, categories(name), product_images(path, alt), variants(price, stock_batches(expiry_date))",
+      "id, slug, name, pet_type, size_display, categories(name), product_images(path, alt), variants(id, title, price, stock_batches(expiry_date))",
     )
     .eq("status", "published")
     .order("name");
@@ -125,6 +126,7 @@ export default async function ShopPage({
         <ul className="mt-8 grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
           {rows.map((p) => {
             const minPrice = p.variants.length ? Math.min(...p.variants.map((v) => v.price)) : null;
+            const cheapestVariant = [...p.variants].sort((a, b) => a.price - b.price)[0] ?? null;
             const image = p.product_images[0];
             const badge = badgeByProductId.get(p.id);
             const showPrice =
@@ -151,6 +153,16 @@ export default async function ShopPage({
                       <span className="absolute left-2 top-2 rounded-full bg-ok-bg px-2 py-0.5 text-xs font-bold text-ok-fg">
                         Fresh stock
                       </span>
+                    )}
+                    {cheapestVariant && showPrice !== null && (
+                      <QuickAddButton
+                        variantId={cheapestVariant.id}
+                        productSlug={p.slug}
+                        productName={p.name}
+                        variantTitle={cheapestVariant.title}
+                        price={showPrice}
+                        image={image?.path ?? null}
+                      />
                     )}
                   </div>
                   <div className="flex flex-1 flex-col gap-1 p-3">

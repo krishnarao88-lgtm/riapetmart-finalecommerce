@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { AdminNav } from "@/components/admin/admin-nav";
 import { formatMyr } from "@/lib/pricing";
 import { requireAdmin } from "@/lib/auth";
@@ -6,6 +7,7 @@ import { requireAdmin } from "@/lib/auth";
 export const metadata: Metadata = { title: "Orders", robots: { index: false } };
 
 type OrderItem = { variant_id: string; name: string; title: string; qty: number; price: number };
+type ShippingAddress = { addressLine: string; city: string; postcode: string; state: string } | null;
 type Order = {
   id: string;
   created_at: string;
@@ -13,6 +15,8 @@ type Order = {
   customer_email: string | null;
   subtotal: number;
   items: OrderItem[];
+  shipping_method: string | null;
+  shipping_address: ShippingAddress;
 };
 
 const statusStyle: Record<Order["status"], string> = {
@@ -25,7 +29,7 @@ export default async function OrdersPage() {
   const { supabase } = await requireAdmin();
   const { data } = await supabase
     .from("orders")
-    .select("id, created_at, status, customer_email, subtotal, items")
+    .select("id, created_at, status, customer_email, subtotal, items, shipping_method, shipping_address")
     .order("created_at", { ascending: false })
     .limit(200);
 
@@ -65,10 +69,24 @@ export default async function OrdersPage() {
                   </li>
                 ))}
               </ul>
-              <div className="flex items-center justify-between border-t border-line pt-2">
+              {order.shipping_address && (
+                <p className="text-sm text-ink-2">
+                  {order.shipping_method ? `${order.shipping_method} — ` : ""}
+                  {order.shipping_address.addressLine}, {order.shipping_address.city},{" "}
+                  {order.shipping_address.postcode} {order.shipping_address.state}
+                </p>
+              )}
+              <div className="flex flex-wrap items-center justify-between gap-2 border-t border-line pt-2">
                 <span className="text-sm text-ink-2">{order.customer_email ?? "No email on file"}</span>
                 <span className="font-display text-lg font-extrabold">{formatMyr(order.subtotal)}</span>
               </div>
+              <Link
+                href={`/admin/orders/${order.id}/packing-slip`}
+                target="_blank"
+                className="w-fit text-sm font-semibold text-grape underline"
+              >
+                Print packing list
+              </Link>
             </li>
           ))}
         </ul>
