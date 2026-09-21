@@ -13,7 +13,7 @@ async function getProduct(slug: string) {
   const { data: product } = await supabase
     .from("products")
     .select(
-      "id, name, description, ingredients, usage, size_display, pet_type, is_regulated, brands(name), categories(name, slug), product_images(path, alt, sort), variants(id, title, price, sort, stock_batches(expiry_date))",
+      "id, name, description, ingredients, usage, size_display, pet_type, category_id, is_regulated, brands(name), categories(name, slug), product_images(path, alt, sort), variants(id, title, price, sort, stock_batches(expiry_date))",
     )
     .eq("slug", slug)
     .eq("status", "published")
@@ -51,6 +51,16 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
   ]);
 
   if (!product) notFound();
+
+  const { data: related } = product.category_id
+    ? await (await createClient())
+        .from("products")
+        .select("slug, name, product_images(path, alt), variants(price)")
+        .eq("category_id", product.category_id)
+        .eq("status", "published")
+        .neq("id", product.id)
+        .limit(4)
+    : { data: null };
 
   const expirySettings = (settingsRow?.value ?? {}) as Partial<ExpirySettings>;
   const images = [...(product.product_images ?? [])].sort((a, b) => a.sort - b.sort);
@@ -170,6 +180,41 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
           )}
         </div>
       </div>
+
+      {related && related.length > 0 && (
+        <section className="mt-12">
+          <h2 className="font-bubble text-xl font-extrabold text-choc">More from {category ?? "this category"}</h2>
+          <ul className="mt-4 grid grid-cols-2 gap-4 sm:grid-cols-4">
+            {related.map((p) => {
+              const price = p.variants.length ? Math.min(...p.variants.map((v) => v.price)) : null;
+              const relImage = p.product_images[0];
+              return (
+                <li key={p.slug}>
+                  <Link
+                    href={`/shop/${p.slug}`}
+                    className="flex h-full flex-col overflow-hidden rounded-2xl border-2 border-choc bg-surface transition-transform hover:-translate-y-0.5"
+                  >
+                    <div className="flex aspect-square items-center justify-center bg-peach/40">
+                      {relImage ? (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img src={relImage.path} alt={relImage.alt ?? p.name} className="size-full object-cover" />
+                      ) : (
+                        <PawPrint className="size-10 text-rust/50" aria-hidden />
+                      )}
+                    </div>
+                    <div className="grid gap-1 p-3">
+                      <span className="line-clamp-2 text-sm font-bold text-choc">{p.name}</span>
+                      <span className="text-sm text-choc-2">
+                        {price !== null ? `from ${formatMyr(price)}` : "Price on request"}
+                      </span>
+                    </div>
+                  </Link>
+                </li>
+              );
+            })}
+          </ul>
+        </section>
+      )}
     </div>
   );
 }
