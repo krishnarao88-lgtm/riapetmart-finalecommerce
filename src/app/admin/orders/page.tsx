@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { AdminNav } from "@/components/admin/admin-nav";
+import { BookEasyParcel } from "@/components/admin/book-easyparcel";
 import { formatMyr } from "@/lib/pricing";
 import { requireAdmin } from "@/lib/auth";
 
@@ -17,6 +18,9 @@ type Order = {
   items: OrderItem[];
   shipping_method: string | null;
   shipping_address: ShippingAddress;
+  easyparcel_order_number: string | null;
+  easyparcel_awb_url: string | null;
+  easyparcel_tracking_url: string | null;
 };
 
 const statusStyle: Record<Order["status"], string> = {
@@ -29,7 +33,9 @@ export default async function OrdersPage() {
   const { supabase } = await requireAdmin();
   const { data } = await supabase
     .from("orders")
-    .select("id, created_at, status, customer_email, subtotal, items, shipping_method, shipping_address")
+    .select(
+      "id, created_at, status, customer_email, subtotal, items, shipping_method, shipping_address, easyparcel_order_number, easyparcel_awb_url, easyparcel_tracking_url",
+    )
     .order("created_at", { ascending: false })
     .limit(200);
 
@@ -87,6 +93,22 @@ export default async function OrdersPage() {
               >
                 Print packing list
               </Link>
+              {order.status === "paid" && order.shipping_method === "easyparcel" && (
+                order.easyparcel_awb_url ? (
+                  <div className="flex flex-wrap gap-3 text-sm font-semibold">
+                    <a href={order.easyparcel_awb_url} target="_blank" rel="noopener noreferrer" className="text-grape underline">
+                      Print waybill ({order.easyparcel_order_number})
+                    </a>
+                    {order.easyparcel_tracking_url && (
+                      <a href={order.easyparcel_tracking_url} target="_blank" rel="noopener noreferrer" className="text-ink-2 underline">
+                        Track shipment
+                      </a>
+                    )}
+                  </div>
+                ) : (
+                  <BookEasyParcel orderId={order.id} />
+                )
+              )}
             </li>
           ))}
         </ul>

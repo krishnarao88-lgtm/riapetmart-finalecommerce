@@ -13,6 +13,7 @@ type ShippingInput = {
   city?: string;
   postcode?: string;
   state?: string;
+  serviceId?: string;
 };
 
 export async function POST(req: Request) {
@@ -98,6 +99,7 @@ export async function POST(req: Request) {
     p_shipping_method: shipping?.method ?? null,
     p_shipping_cost: shippingPrice,
     p_shipping_address: shippingAddress,
+    p_shipping_service_id: shipping?.serviceId ?? null,
   });
   if (rpcError) return NextResponse.json({ error: "Could not start checkout" }, { status: 500 });
 

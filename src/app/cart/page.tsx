@@ -14,7 +14,12 @@ const MY_STATES = [
   "Sarawak", "Kuala Lumpur", "Labuan", "Putrajaya",
 ];
 
-type ShippingOption = { method: "pickup" | "lalamove" | "easyparcel"; label: string; price: number };
+type ShippingOption = {
+  method: "pickup" | "lalamove" | "easyparcel";
+  label: string;
+  price: number;
+  serviceId?: string;
+};
 
 const FREE_SHIPPING_THRESHOLD = 150;
 

@@ -3,7 +3,12 @@ import { getLalamoveQuote } from "@/lib/shipping/lalamove";
 import { getEasyParcelQuote } from "@/lib/shipping/easyparcel";
 import { createClient } from "@/lib/supabase/server";
 
-type ShippingOption = { method: "pickup" | "lalamove" | "easyparcel"; label: string; price: number };
+type ShippingOption = {
+  method: "pickup" | "lalamove" | "easyparcel";
+  label: string;
+  price: number;
+  serviceId?: string;
+};
 
 const FREE_SHIPPING_THRESHOLD = 150;
 
@@ -63,6 +68,7 @@ export async function POST(req: Request) {
           method: "easyparcel",
           label: freeDelivery ? `Courier — ${quote.courierName} — free over RM150` : `Courier — ${quote.courierName}`,
           price: freeDelivery ? 0 : quote.price,
+          serviceId: quote.serviceId,
         });
       }
     }

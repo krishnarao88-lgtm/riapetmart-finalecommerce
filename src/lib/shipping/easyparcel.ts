@@ -93,7 +93,7 @@ export async function isEasyParcelConnected(): Promise<boolean> {
 }
 
 type EasyParcelQuotation = {
-  courier: { courier_name: string };
+  courier: { courier_name: string; service_id: string };
   pricing: { total_amount: number; currency: string };
 };
 type EasyParcelResponse = {
@@ -104,7 +104,7 @@ export async function getEasyParcelQuote(
   receiverPostcode: string,
   receiverState: string,
   weightKg: number,
-): Promise<{ price: number; courierName: string } | null> {
+): Promise<{ price: number; courierName: string; serviceId: string } | null> {
   const token = await getValidAccessToken();
   if (!token) return null;
 
@@ -132,5 +132,113 @@ export async function getEasyParcelQuote(
   const data = (await res.json()) as EasyParcelResponse;
   const quotations = data.data?.[0]?.quotations ?? [];
   const cheapest = [...quotations].sort((a, b) => a.pricing.total_amount - b.pricing.total_amount)[0];
-  return cheapest ? { price: cheapest.pricing.total_amount, courierName: cheapest.courier.courier_name } : null;
+  return cheapest
+    ? { price: cheapest.pricing.total_amount, courierName: cheapest.courier.courier_name, serviceId: cheapest.courier.service_id }
+    : null;
+}
+
+type SubmitOrderReceiver = {
+  name: string;
+  phone: string;
+  addressLine: string;
+  city: string;
+  postcode: string;
+  state: string;
+};
+
+type SubmitOrderResult = {
+  orderNumber: string;
+  awbNumber: string | null;
+  awbUrl: string | null;
+  trackingUrl: string | null;
+  courierName: string;
+};
+
+/** Actually books the shipment with EasyParcel — this deducts from the account's real balance. */
+export async function submitEasyParcelOrder(
+  serviceId: string,
+  weightKg: number,
+  receiver: SubmitOrderReceiver,
+  reference: string,
+): Promise<SubmitOrderResult> {
+  const token = await getValidAccessToken();
+  if (!token) throw new Error("EasyParcel is not connected");
+
+  const receiverCode = MY_STATE_CODES[receiver.state];
+  if (!receiverCode) throw new Error(`Unknown state: ${receiver.state}`);
+
+  const collectionDate = new Date().toISOString().slice(0, 10);
+  const res = await fetch(`${API_BASE}/shipment/submit_orders`, {
+    method: "POST",
+    headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+    body: JSON.stringify({
+      shipment: [
+        {
+          reference,
+          service_id: serviceId,
+          collection_date: collectionDate,
+          weight: weightKg,
+          // ponytail: real parcel dimensions aren't tracked per order; a small-parcel
+          // default works for this shop's typical items, revisit if bulky items ship.
+          height: 15,
+          length: 20,
+          width: 15,
+          item: [{ content: "Pet supplies", weight: weightKg, height: 15, length: 20, width: 15, currency_code: "MYR", value: 1, quantity: 1 }],
+          sender: {
+            name: "Ria Pet Mart",
+            phone_number_country_code: "MY",
+            phone_number: "196112848",
+            address_1: "57, Jalan Jenjarum 3B, Bandar Bukit Beruntung",
+            postcode: "48300",
+            city: "Rawang",
+            subdivision_code: MY_STATE_CODES.Selangor,
+            country_code: "MY",
+          },
+          receiver: {
+            name: receiver.name,
+            phone_number_country_code: "MY",
+            phone_number: receiver.phone,
+            address_1: receiver.addressLine,
+            postcode: receiver.postcode,
+            city: receiver.city,
+            subdivision_code: receiverCode,
+            country_code: "MY",
+          },
+          feature: { email_tracking: true, whatsapp_tracking: true },
+        },
+      ],
+    }),
+  });
+
+  const body = (await res.json()) as {
+    status_code: number;
+    message: string;
+    data?: {
+      order_details: { order_number: string };
+      shipments: {
+        status: string;
+        courier: string;
+        awb_number: string | null;
+        awb_url: string | null;
+        tracking_url: string | null;
+        errors?: string[];
+      }[];
+    }[];
+  };
+
+  if (!res.ok) throw new Error(`EasyParcel booking request failed: ${res.status} ${JSON.stringify(body)}`);
+
+  const order = body.data?.[0];
+  const shipment = order?.shipments?.[0];
+  if (!order || !shipment || shipment.status !== "success") {
+    throw new Error(shipment?.errors?.join(", ") ?? body.message ?? "EasyParcel booking failed");
+  }
+
+  return {
+    orderNumber: order.order_details.order_number,
+    awbNumber: shipment.awb_number,
+    awbUrl: shipment.awb_url,
+    trackingUrl: shipment.tracking_url,
+    courierName: shipment.courier,
+  };
 }
