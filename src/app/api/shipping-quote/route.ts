@@ -5,14 +5,18 @@ import { createClient } from "@/lib/supabase/server";
 
 type ShippingOption = { method: "pickup" | "lalamove" | "easyparcel"; label: string; price: number };
 
+const FREE_SHIPPING_THRESHOLD = 150;
+
 export async function POST(req: Request) {
-  const { lines, addressLine, city, postcode, state } = (await req.json()) as {
+  const { lines, addressLine, city, postcode, state, subtotal } = (await req.json()) as {
     lines: { variantId: string; qty: number }[];
     addressLine: string;
     city: string;
     postcode: string;
     state: string;
+    subtotal?: number;
   };
+  const freeDelivery = (subtotal ?? 0) >= FREE_SHIPPING_THRESHOLD;
 
   if (!addressLine || !postcode || !state) {
     return NextResponse.json({ error: "Missing delivery address" }, { status: 400 });
@@ -45,10 +49,22 @@ export async function POST(req: Request) {
   try {
     if (isSameDayZone && delivery.lalamove_enabled !== false) {
       const quote = await getLalamoveQuote(fullAddress, weightKg);
-      if (quote) options.push({ method: "lalamove", label: "Same-day delivery (Lalamove)", price: quote.price });
+      if (quote) {
+        options.push({
+          method: "lalamove",
+          label: freeDelivery ? "Same-day delivery (Lalamove) — free over RM150" : "Same-day delivery (Lalamove)",
+          price: freeDelivery ? 0 : quote.price,
+        });
+      }
     } else if (delivery.easyparcel_enabled !== false) {
       const quote = await getEasyParcelQuote(postcode, state, weightKg);
-      if (quote) options.push({ method: "easyparcel", label: `Courier — ${quote.courierName}`, price: quote.price });
+      if (quote) {
+        options.push({
+          method: "easyparcel",
+          label: freeDelivery ? `Courier — ${quote.courierName} — free over RM150` : `Courier — ${quote.courierName}`,
+          price: freeDelivery ? 0 : quote.price,
+        });
+      }
     }
   } catch (err) {
     console.error("Shipping quote failed:", err);

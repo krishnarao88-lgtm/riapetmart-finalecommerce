@@ -16,6 +16,8 @@ const MY_STATES = [
 
 type ShippingOption = { method: "pickup" | "lalamove" | "easyparcel"; label: string; price: number };
 
+const FREE_SHIPPING_THRESHOLD = 150;
+
 export default function CartPage() {
   const { lines, subtotal, setQty, remove } = useCart();
   const [paying, setPaying] = useState(false);
@@ -50,7 +52,11 @@ export default function CartPage() {
       const res = await fetch("/api/shipping-quote", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ lines: lines.map((l) => ({ variantId: l.variantId, qty: l.qty })), ...address }),
+        body: JSON.stringify({
+          lines: lines.map((l) => ({ variantId: l.variantId, qty: l.qty })),
+          subtotal,
+          ...address,
+        }),
       });
       const data = await res.json();
       if (!res.ok || !data.options) throw new Error(data.error ?? "Could not get delivery options");
@@ -107,6 +113,12 @@ export default function CartPage() {
   return (
     <div className="mx-auto max-w-3xl px-4 py-10">
       <h1 className="font-bubble text-3xl font-extrabold text-choc">Your cart</h1>
+
+      <p className="mt-4 rounded-full bg-peach/40 px-4 py-2 text-center text-sm font-semibold text-choc">
+        {subtotal >= FREE_SHIPPING_THRESHOLD
+          ? "🎉 You've unlocked free delivery!"
+          : `Add ${formatMyr(FREE_SHIPPING_THRESHOLD - subtotal)} more for free delivery`}
+      </p>
 
       <ul className="mt-6 grid gap-3">
         {lines.map((l) => (
