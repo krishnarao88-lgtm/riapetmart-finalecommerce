@@ -1,4 +1,5 @@
-import { MapPin, MessageCircle, Phone } from "lucide-react";
+import { Mail, MapPin, MessageCircle, Phone } from "lucide-react";
+import { EnquiryForm } from "@/components/enquiry-form";
 import { site, whatsappLink } from "@/lib/site";
 
 export const metadata = { title: "Contact us" };
@@ -31,6 +32,14 @@ export default function ContactPage() {
         </a>
 
         <a
+          href={`mailto:${site.email}`}
+          className="flex items-center gap-3 rounded-2xl border-2 border-choc bg-surface p-4 font-semibold text-choc"
+        >
+          <Mail className="size-5 text-rust" aria-hidden />
+          {site.email}
+        </a>
+
+        <a
           href={site.mapsUrl}
           target="_blank"
           rel="noopener noreferrer"
@@ -45,6 +54,18 @@ export default function ContactPage() {
             </span>
           </span>
         </a>
+
+        <iframe
+          title="Ria Pet Mart location"
+          src={`https://www.google.com/maps?q=${site.geo.lat},${site.geo.lng}&z=16&output=embed`}
+          className="h-64 w-full rounded-2xl border-2 border-choc"
+          loading="lazy"
+        />
+      </div>
+
+      <h2 className="mt-10 font-bubble text-2xl font-extrabold text-choc">Send us an enquiry</h2>
+      <div className="mt-4">
+        <EnquiryForm />
       </div>
     </div>
   );

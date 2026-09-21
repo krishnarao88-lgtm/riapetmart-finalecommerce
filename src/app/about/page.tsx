@@ -8,8 +8,17 @@ export default function AboutPage() {
       <h1 className="font-bubble text-3xl font-extrabold text-choc">About {site.name}</h1>
       <div className="mt-6 grid gap-4 text-choc-2">
         <p>
-          {site.name} is a neighbourhood pet shop in {site.address.city}, {site.address.state}, stocking
-          food, treats, grooming and health supplies for dogs, cats and small pets.
+          {site.name} has been serving Bandar Bukit Beruntung for 16 years — the first pet shop to open in the
+          area. What started as a small neighbourhood shop has grown into a full pet care destination for
+          {" "}{site.address.city} and the surrounding Klang Valley.
+        </p>
+        <p>
+          Alongside our shop, we run a panel clinic, All Animal Health Clinic, so pets can get food, supplies
+          and veterinary care without a trip across town.
+        </p>
+        <p>
+          Today we stock food, treats, grooming and health supplies for dogs, cats and small pets, with
+          same-day delivery in the Klang Valley, nationwide courier and free store pickup.
         </p>
         <p>
           Rated {site.google.rating}★ from {site.google.reviewCount} Google reviews, we&apos;re proud to be

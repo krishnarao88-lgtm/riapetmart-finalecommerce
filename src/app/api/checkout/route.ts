@@ -81,6 +81,7 @@ export async function POST(req: Request) {
     mode: "payment",
     payment_method_types: ["card", "fpx"],
     line_items: allLineItems,
+    allow_promotion_codes: true,
     success_url: `${origin}/order/success?session_id={CHECKOUT_SESSION_ID}`,
     cancel_url: `${origin}/cart`,
   });

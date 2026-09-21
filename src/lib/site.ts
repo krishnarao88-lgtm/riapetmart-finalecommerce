@@ -7,6 +7,7 @@ export const site = {
     "Pet food, treats and care essentials from our Rawang shop. Same-day delivery in the Klang Valley, nationwide courier and free store pickup.",
   phone: "+60 19-611 2848",
   whatsapp: "60196112848",
+  email: "riapetmart@gmail.com",
   address: {
     street: "57, Jalan Jenjarum 3B, Bandar Bukit Beruntung",
     city: "Rawang",
