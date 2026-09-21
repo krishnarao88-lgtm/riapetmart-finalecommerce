@@ -37,30 +37,32 @@ export function VariantPricingRow({ variant, productId }: { variant: VariantPric
 
   return (
     <div className="grid gap-4 rounded-[var(--radius-chunk)] border-2 border-line bg-surface p-4">
-      <form action={detailsAction} className="flex flex-wrap items-end gap-3">
-        <input type="hidden" name="variant_id" value={variant.id} />
-        <input type="hidden" name="product_id" value={productId} />
-        <label className="grid gap-1 text-sm font-semibold" htmlFor={`title-${variant.id}`}>
-          Variant title
-          <input
-            id={`title-${variant.id}`}
-            name="title"
-            defaultValue={variant.title}
-            className="min-h-11 rounded-xl border-2 border-line bg-ground px-3 font-normal"
-          />
-        </label>
-        <label className="grid gap-1 text-sm font-semibold" htmlFor={`sku-${variant.id}`}>
-          SKU
-          <input
-            id={`sku-${variant.id}`}
-            name="sku"
-            defaultValue={variant.sku}
-            className="min-h-11 rounded-xl border-2 border-line bg-ground px-3 font-mono text-xs font-normal"
-          />
-        </label>
-        <button type="submit" disabled={detailsPending} className="btn-chunk bg-surface text-sm disabled:opacity-60">
-          {detailsPending ? "Saving…" : "Save details"}
-        </button>
+      <div className="flex flex-wrap items-end gap-3">
+        <form action={detailsAction} className="flex flex-wrap items-end gap-3">
+          <input type="hidden" name="variant_id" value={variant.id} />
+          <input type="hidden" name="product_id" value={productId} />
+          <label className="grid gap-1 text-sm font-semibold" htmlFor={`title-${variant.id}`}>
+            Variant title
+            <input
+              id={`title-${variant.id}`}
+              name="title"
+              defaultValue={variant.title}
+              className="min-h-11 rounded-xl border-2 border-line bg-ground px-3 font-normal"
+            />
+          </label>
+          <label className="grid gap-1 text-sm font-semibold" htmlFor={`sku-${variant.id}`}>
+            SKU
+            <input
+              id={`sku-${variant.id}`}
+              name="sku"
+              defaultValue={variant.sku}
+              className="min-h-11 rounded-xl border-2 border-line bg-ground px-3 font-mono text-xs font-normal"
+            />
+          </label>
+          <button type="submit" disabled={detailsPending} className="btn-chunk bg-surface text-sm disabled:opacity-60">
+            {detailsPending ? "Saving…" : "Save details"}
+          </button>
+        </form>
         <form action={deleteAction}>
           <input type="hidden" name="variant_id" value={variant.id} />
           <input type="hidden" name="product_id" value={productId} />
@@ -77,10 +79,10 @@ export function VariantPricingRow({ variant, productId }: { variant: VariantPric
             Delete variant
           </button>
         </form>
-        {detailsState?.ok && <span className="text-sm font-semibold text-ok-fg">{detailsState.ok}</span>}
-        {detailsState?.error && <span className="text-sm font-semibold text-bad-fg">{detailsState.error}</span>}
-        {deleteState?.error && <span className="text-sm font-semibold text-bad-fg">{deleteState.error}</span>}
-      </form>
+      </div>
+      {detailsState?.ok && <span className="text-sm font-semibold text-ok-fg">{detailsState.ok}</span>}
+      {detailsState?.error && <span className="text-sm font-semibold text-bad-fg">{detailsState.error}</span>}
+      {deleteState?.error && <span className="text-sm font-semibold text-bad-fg">{deleteState.error}</span>}
 
       <form action={action} className="grid gap-4">
       <input type="hidden" name="variant_id" value={variant.id} />
