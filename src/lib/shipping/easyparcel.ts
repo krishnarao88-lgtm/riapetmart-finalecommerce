@@ -131,9 +131,11 @@ export async function getEasyParcelQuote(
 
   const data = (await res.json()) as EasyParcelResponse;
   const quotations = data.data?.[0]?.quotations ?? [];
-  const cheapest = [...quotations].sort((a, b) => a.pricing.total_amount - b.pricing.total_amount)[0];
-  return cheapest
-    ? { price: cheapest.pricing.total_amount, courierName: cheapest.courier.courier_name, serviceId: cheapest.courier.service_id }
+  const byPrice = [...quotations].sort((a, b) => a.pricing.total_amount - b.pricing.total_amount);
+  const posLaju = byPrice.filter((q) => q.courier.courier_name.toLowerCase().includes("pos laju"));
+  const chosen = posLaju[0] ?? byPrice[0];
+  return chosen
+    ? { price: chosen.pricing.total_amount, courierName: chosen.courier.courier_name, serviceId: chosen.courier.service_id }
     : null;
 }
 
