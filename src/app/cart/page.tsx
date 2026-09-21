@@ -259,6 +259,9 @@ export default function CartPage() {
       <p className="mt-2 text-center text-sm text-choc-2">
         Prefer to arrange delivery and pay directly? We&apos;ll confirm on WhatsApp instead.
       </p>
+      <p className="mt-4 text-center text-xs text-choc-2">
+        🔒 Secured by Stripe · <Link href="/returns" className="underline hover:text-choc">Returns & refunds</Link>
+      </p>
     </div>
   );
 }

@@ -38,6 +38,7 @@ export function SiteFooter() {
           <Link href="/shop" className="hover:text-peach">Shop all</Link>
           <Link href="/about" className="hover:text-peach">About us</Link>
           <Link href="/contact" className="hover:text-peach">Contact us</Link>
+          <Link href="/returns" className="hover:text-peach">Returns & refunds</Link>
         </div>
 
         <div className="grid content-start gap-3">

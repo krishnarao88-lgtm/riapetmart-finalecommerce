@@ -6,7 +6,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const supabase = await createClient();
   const { data: products } = await supabase.from("products").select("slug").eq("status", "published");
 
-  const staticPages = ["", "/shop", "/about", "/contact"].map((path) => ({
+  const staticPages = ["", "/shop", "/about", "/contact", "/returns"].map((path) => ({
     url: `${site.url}${path}`,
     changeFrequency: (path === "/shop" ? "daily" : "monthly") as "daily" | "monthly",
   }));
