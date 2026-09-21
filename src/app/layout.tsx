@@ -26,6 +26,9 @@ export const metadata: Metadata = {
   description: site.description,
   openGraph: { siteName: site.name, type: "website", locale: "en_MY" },
   alternates: { canonical: "/" },
+  verification: process.env.NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION
+    ? { google: process.env.NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION }
+    : undefined,
 };
 
 export const viewport: Viewport = { themeColor: "#d9814a" };
