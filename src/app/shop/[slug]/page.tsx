@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { PawPrint } from "lucide-react";
+import Link from "next/link";
 import { notFound } from "next/navigation";
 import { AddToCart } from "@/components/add-to-cart";
 import { discountedPrice, getExpiryBadge, type ExpirySettings } from "@/lib/expiry";
@@ -12,7 +13,7 @@ async function getProduct(slug: string) {
   const { data: product } = await supabase
     .from("products")
     .select(
-      "id, name, description, ingredients, usage, size_display, pet_type, is_regulated, brands(name), categories(name), product_images(path, alt, sort), variants(id, title, price, sort, stock_batches(expiry_date))",
+      "id, name, description, ingredients, usage, size_display, pet_type, is_regulated, brands(name), categories(name, slug), product_images(path, alt, sort), variants(id, title, price, sort, stock_batches(expiry_date))",
     )
     .eq("slug", slug)
     .eq("status", "published")
@@ -62,7 +63,10 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
   });
   const image = images[0] ?? null;
   const brand = (product.brands as unknown as { name: string }[])?.[0]?.name;
-  const category = (product.categories as unknown as { name: string }[])?.[0]?.name;
+  const categoryRow = (product.categories as unknown as { name: string; slug: string }[])?.[0];
+  const category = categoryRow?.name;
+  const petLabels: Record<string, string> = { dog: "Dogs", cat: "Cats", small_pet: "Small pets" };
+  const petLabel = petLabels[product.pet_type] ?? product.pet_type;
   const cheapestPrice = variants.length ? Math.min(...variants.map((v) => v.price)) : null;
 
   const productJsonLd = {
@@ -88,6 +92,25 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
   return (
     <div className="mx-auto max-w-5xl px-4 py-10">
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(productJsonLd) }} />
+      <nav aria-label="Breadcrumb" className="mb-6 flex flex-wrap items-center gap-1 text-sm text-choc-2">
+        <Link href="/shop" className="hover:underline">
+          Shop
+        </Link>
+        <span aria-hidden>/</span>
+        <Link href={`/shop?pet=${product.pet_type}`} className="hover:underline">
+          {petLabel}
+        </Link>
+        {categoryRow && (
+          <>
+            <span aria-hidden>/</span>
+            <Link href={`/shop?category=${categoryRow.slug}`} className="hover:underline">
+              {categoryRow.name}
+            </Link>
+          </>
+        )}
+        <span aria-hidden>/</span>
+        <span className="text-choc">{product.name}</span>
+      </nav>
       <div className="grid gap-8 md:grid-cols-2">
         <div className="flex aspect-square items-center justify-center rounded-3xl border-2 border-choc bg-peach/40">
           {image ? (
