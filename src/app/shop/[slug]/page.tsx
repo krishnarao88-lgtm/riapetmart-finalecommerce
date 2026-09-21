@@ -13,7 +13,7 @@ async function getProduct(slug: string) {
   const { data: product } = await supabase
     .from("products")
     .select(
-      "id, name, description, ingredients, usage, size_display, pet_type, category_id, is_regulated, brands(name), categories(name, slug), product_images(path, alt, sort), variants(id, title, price, sort, stock_batches(expiry_date))",
+      "id, name, description, ingredients, usage, size_display, pet_type, category_id, is_regulated, brands(name), categories(name, slug), product_images(path, alt, sort), variants(id, title, price, sort, stock_batches(quantity, expiry_date))",
     )
     .eq("slug", slug)
     .eq("status", "published")
@@ -69,7 +69,8 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
     const nearest = v.stock_batches.map((b) => b.expiry_date).filter(Boolean).sort()[0] ?? null;
     const badge = getExpiryBadge(nearest, expirySettings);
     const price = badge?.kind === "short-dated" ? discountedPrice(v.price, badge.discount) : v.price;
-    return { id: v.id, title: v.title, price, originalPrice: v.price, badge };
+    const stock = v.stock_batches.reduce((sum, b) => sum + b.quantity, 0);
+    return { id: v.id, title: v.title, price, originalPrice: v.price, badge, stock };
   });
   const image = images[0] ?? null;
   const brand = (product.brands as unknown as { name: string }[])?.[0]?.name;
@@ -144,6 +145,14 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
               Short-dated — discount applied at checkout
             </span>
           )}
+          {(() => {
+            const totalStock = variants.reduce((sum, v) => sum + v.stock, 0);
+            return totalStock > 0 && totalStock <= 5 ? (
+              <span className="w-fit rounded-full bg-warn-bg px-3 py-1 text-xs font-bold text-warn-fg">
+                Only {totalStock} left in stock
+              </span>
+            ) : null;
+          })()}
 
           <div className="mt-2 rounded-2xl border-2 border-choc bg-cream p-4">
             <AddToCart
