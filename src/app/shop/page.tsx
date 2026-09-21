@@ -4,7 +4,11 @@ import { discountedPrice, getExpiryBadge, type ExpirySettings } from "@/lib/expi
 import { formatMyr } from "@/lib/pricing";
 import { createClient } from "@/lib/supabase/server";
 
-export const metadata = { title: "Shop all" };
+export const metadata = {
+  title: "Shop all",
+  description: "Browse pet food, treats, grooming and health supplies for dogs, cats and small pets at Ria Pet Mart.",
+  alternates: { canonical: "/shop" },
+};
 
 const petFilters = [
   { value: "dog", label: "Dogs" },

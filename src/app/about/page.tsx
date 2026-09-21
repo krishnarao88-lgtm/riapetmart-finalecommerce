@@ -1,6 +1,10 @@
 import { site } from "@/lib/site";
 
-export const metadata = { title: "About us" };
+export const metadata = {
+  title: "About us",
+  description: "Ria Pet Mart has served Bandar Bukit Beruntung for 16 years as the area's first pet shop, alongside our panel clinic, All Animal Health Clinic.",
+  alternates: { canonical: "/about" },
+};
 
 export default function AboutPage() {
   return (

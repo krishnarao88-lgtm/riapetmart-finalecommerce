@@ -2,7 +2,11 @@ import { Mail, MapPin, MessageCircle, Phone } from "lucide-react";
 import { EnquiryForm } from "@/components/enquiry-form";
 import { site, whatsappLink } from "@/lib/site";
 
-export const metadata = { title: "Contact us" };
+export const metadata = {
+  title: "Contact us",
+  description: "Reach Ria Pet Mart by WhatsApp, phone or email, or send us an enquiry directly.",
+  alternates: { canonical: "/contact" },
+};
 
 export default function ContactPage() {
   return (
