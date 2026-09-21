@@ -1,4 +1,4 @@
-import { PawPrint } from "lucide-react";
+import { PawPrint, Search } from "lucide-react";
 import Link from "next/link";
 import { QuickAddButton } from "@/components/quick-add-button";
 import { discountedPrice, getExpiryBadge, type ExpirySettings } from "@/lib/expiry";
@@ -31,9 +31,9 @@ type ProductRow = {
 export default async function ShopPage({
   searchParams,
 }: {
-  searchParams: Promise<{ pet?: string; category?: string; deal?: string }>;
+  searchParams: Promise<{ pet?: string; category?: string; deal?: string; q?: string }>;
 }) {
-  const { pet, category, deal } = await searchParams;
+  const { pet, category, deal, q } = await searchParams;
   const supabase = await createClient();
 
   const categoriesQuery = supabase.from("categories").select("id, name, slug").order("sort");
@@ -48,6 +48,7 @@ export default async function ShopPage({
 
   if (pet) productsQuery = productsQuery.or(`pet_type.eq.${pet},pet_type.eq.dog_cat`);
   if (category) productsQuery = productsQuery.eq("categories.slug", category);
+  if (q) productsQuery = productsQuery.ilike("name", `%${q}%`);
 
   const [{ data: categories }, { data: settingsRow }, { data: products }] = await Promise.all([
     categoriesQuery,
@@ -73,6 +74,20 @@ export default async function ShopPage({
     <div className="mx-auto max-w-6xl px-4 py-10">
       <h1 className="font-bubble text-3xl font-extrabold text-choc">Shop all</h1>
       <p className="mt-1 text-choc-2">{rows.length} product{rows.length === 1 ? "" : "s"}</p>
+
+      <form className="relative mt-4 max-w-md">
+        <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-choc-2" aria-hidden />
+        <input
+          type="search"
+          name="q"
+          defaultValue={q ?? ""}
+          placeholder="Search products…"
+          className="w-full rounded-full border-2 border-choc bg-cream py-2 pl-9 pr-4 text-sm text-choc placeholder:text-choc-2/70"
+        />
+        {pet && <input type="hidden" name="pet" value={pet} />}
+        {category && <input type="hidden" name="category" value={category} />}
+        {deal && <input type="hidden" name="deal" value={deal} />}
+      </form>
 
       <div className="mt-5 grid gap-3">
         <div>

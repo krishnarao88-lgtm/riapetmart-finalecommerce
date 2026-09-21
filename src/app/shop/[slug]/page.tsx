@@ -85,7 +85,7 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
     "@type": "Product",
     name: product.name,
     description: product.description ?? undefined,
-    image: image ? `${site.url}${image.path}` : undefined,
+    image: image ? image.path : undefined,
     brand: brand ? { "@type": "Brand", name: brand } : undefined,
     category: category ?? undefined,
     offers:
@@ -100,9 +100,27 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
         : undefined,
   };
 
+  const breadcrumbItems = [
+    { name: "Shop", url: `${site.url}/shop` },
+    { name: petLabel, url: `${site.url}/shop?pet=${product.pet_type}` },
+    ...(categoryRow ? [{ name: categoryRow.name, url: `${site.url}/shop?category=${categoryRow.slug}` }] : []),
+    { name: product.name, url: `${site.url}/shop/${slug}` },
+  ];
+  const breadcrumbJsonLd = {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    itemListElement: breadcrumbItems.map((item, i) => ({
+      "@type": "ListItem",
+      position: i + 1,
+      name: item.name,
+      item: item.url,
+    })),
+  };
+
   return (
     <div className="mx-auto max-w-5xl px-4 py-10">
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(productJsonLd) }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd) }} />
       <nav aria-label="Breadcrumb" className="mb-6 flex flex-wrap items-center gap-1 text-sm text-choc-2">
         <Link href="/shop" className="hover:underline">
           Shop
