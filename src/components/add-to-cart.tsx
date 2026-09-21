@@ -18,7 +18,7 @@ export function AddToCart({
   image: string | null;
   variants: Variant[];
 }) {
-  const { add } = useCart();
+  const { add, openCart } = useCart();
   const [variantId, setVariantId] = useState(variants[0]?.id ?? "");
   const [qty, setQty] = useState(1);
   const [added, setAdded] = useState(false);
@@ -91,6 +91,7 @@ export function AddToCart({
             qty,
           );
           setAdded(true);
+          openCart();
           setTimeout(() => setAdded(false), 1800);
         }}
         className="btn-bubble bg-terracotta px-6 py-3 text-cream"

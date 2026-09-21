@@ -20,6 +20,9 @@ type CartContextValue = {
   setQty: (variantId: string, qty: number) => void;
   remove: (variantId: string) => void;
   clear: () => void;
+  isOpen: boolean;
+  openCart: () => void;
+  closeCart: () => void;
 };
 
 const CartContext = createContext<CartContextValue | null>(null);
@@ -28,6 +31,7 @@ const STORAGE_KEY = "riapetmart:cart";
 export function CartProvider({ children }: { children: ReactNode }) {
   const [lines, setLines] = useState<CartLine[]>([]);
   const [hydrated, setHydrated] = useState(false);
+  const [isOpen, setIsOpen] = useState(false);
 
   useEffect(() => {
     try {
@@ -72,8 +76,19 @@ export function CartProvider({ children }: { children: ReactNode }) {
     const clear = () => setLines([]);
     const count = lines.reduce((n, l) => n + l.qty, 0);
     const subtotal = lines.reduce((n, l) => n + l.qty * l.price, 0);
-    return { lines, count, subtotal, add, setQty, remove, clear };
-  }, [lines]);
+    return {
+      lines,
+      count,
+      subtotal,
+      add,
+      setQty,
+      remove,
+      clear,
+      isOpen,
+      openCart: () => setIsOpen(true),
+      closeCart: () => setIsOpen(false),
+    };
+  }, [lines, isOpen]);
 
   return <CartContext.Provider value={value}>{children}</CartContext.Provider>;
 }

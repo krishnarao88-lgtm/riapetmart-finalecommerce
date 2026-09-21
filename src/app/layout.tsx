@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { Baloo_2, Bricolage_Grotesque, Figtree, Fraunces } from "next/font/google";
+import { CartDrawer } from "@/components/cart-drawer";
 import { SiteFooter } from "@/components/site-footer";
 import { SiteHeader } from "@/components/site-header";
 import { WelcomePopup } from "@/components/welcome-popup";
@@ -84,6 +85,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
           </main>
           <SiteFooter />
           <WelcomePopup />
+          <CartDrawer />
         </CartProvider>
       </body>
     </html>
