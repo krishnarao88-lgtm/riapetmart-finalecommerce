@@ -71,3 +71,10 @@ export async function updateCatHotelBookingStatus(formData: FormData) {
   await supabase.from("cat_hotel_bookings").update({ status }).eq("id", id);
   redirect("/admin/cat-hotel");
 }
+
+export async function deleteReview(formData: FormData) {
+  const id = String(formData.get("id"));
+  const supabase = await createClient();
+  await supabase.from("reviews").delete().eq("id", id);
+  redirect("/admin/reviews");
+}

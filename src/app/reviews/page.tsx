@@ -1,14 +1,25 @@
 import { Star, BadgeCheck } from "lucide-react";
 import Link from "next/link";
 import type { Metadata } from "next";
+import { supabaseUrl } from "@/lib/site";
 import { createClient } from "@/lib/supabase/server";
+
+const reviewImageUrl = (path: string) => `${supabaseUrl}/storage/v1/object/public/review-images/${path}`;
 
 export const metadata: Metadata = {
   title: "Customer reviews",
   description: "What Malaysian pet parents say about Ria Pet Mart — real, moderated customer reviews.",
 };
 
-type Review = { id: string; customer_name: string; rating: number; body: string; created_at: string; order_id: string | null };
+type Review = {
+  id: string;
+  customer_name: string;
+  rating: number;
+  body: string;
+  created_at: string;
+  order_id: string | null;
+  review_images: { path: string }[];
+};
 
 export default async function ReviewsPage({
   searchParams,
@@ -19,10 +30,10 @@ export default async function ReviewsPage({
   const supabase = await createClient();
   const { data } = await supabase
     .from("reviews")
-    .select("id, customer_name, rating, body, created_at, order_id")
+    .select("id, customer_name, rating, body, created_at, order_id, review_images(path)")
     .eq("status", "approved")
     .order("created_at", { ascending: false });
-  const reviews = (data ?? []) as Review[];
+  const reviews = (data ?? []) as unknown as Review[];
 
   return (
     <div className="mx-auto grid max-w-3xl gap-6 px-4 py-10">
@@ -61,6 +72,19 @@ export default async function ReviewsPage({
                 </span>
               </div>
               <p className="text-sm text-choc">{r.body}</p>
+              {r.review_images.length > 0 && (
+                <div className="flex flex-wrap gap-2">
+                  {r.review_images.map((img) => (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img
+                      key={img.path}
+                      src={reviewImageUrl(img.path)}
+                      alt="Photo submitted with this review"
+                      className="size-20 rounded-xl border-2 border-choc object-cover"
+                    />
+                  ))}
+                </div>
+              )}
               <p className="flex items-center gap-1 text-xs font-semibold text-choc-2">
                 {r.customer_name}
                 {r.order_id && (

@@ -1,36 +1,74 @@
-import { Star } from "lucide-react";
+import { BadgeCheck, Star } from "lucide-react";
 import Link from "next/link";
+import { supabaseUrl } from "@/lib/site";
 import { createClient } from "@/lib/supabase/server";
 
-/** Shows the latest real approved review, or nothing — never a placeholder/fabricated quote. */
+const reviewImageUrl = (path: string) => `${supabaseUrl}/storage/v1/object/public/review-images/${path}`;
+
+type Review = {
+  id: string;
+  customer_name: string;
+  rating: number;
+  body: string;
+  order_id: string | null;
+  review_images: { path: string }[];
+};
+
+/** Real approved reviews only, up to 6 latest — renders nothing until at least one exists. */
 export async function Testimonial() {
   const supabase = await createClient();
   const { data } = await supabase
     .from("reviews")
-    .select("customer_name, rating, body")
+    .select("id, customer_name, rating, body, order_id, review_images(path)")
     .eq("status", "approved")
     .order("created_at", { ascending: false })
-    .limit(1)
-    .maybeSingle();
-
-  if (!data) return null;
+    .limit(6);
+  const reviews = (data ?? []) as unknown as Review[];
+  if (reviews.length === 0) return null;
 
   return (
-    <section className="mx-auto max-w-6xl px-4 pt-10">
-      <div className="rounded-3xl border-2 border-choc bg-peach/50 p-6 sm:p-8">
-        <div className="flex items-center gap-1 text-terracotta">
-          {Array.from({ length: 5 }).map((_, i) => (
-            <Star key={i} className="size-4" fill={i < data.rating ? "currentColor" : "none"} aria-hidden />
-          ))}
-        </div>
-        <p className="mt-2 max-w-xl font-editorial text-xl italic text-choc">&ldquo;{data.body}&rdquo;</p>
-        <p className="mt-2 text-sm font-bold text-choc-2">
-          {data.customer_name} ·{" "}
-          <Link href="/reviews" className="underline">
-            See all reviews
-          </Link>
-        </p>
+    <section aria-labelledby="reviews-heading" className="mx-auto max-w-6xl px-4 pt-10">
+      <div className="flex items-center justify-between">
+        <h2 id="reviews-heading" className="font-bubble text-2xl font-extrabold text-choc">
+          What pet parents say
+        </h2>
+        <Link href="/reviews" className="text-sm font-bold text-rust underline">
+          See all reviews
+        </Link>
       </div>
+      <ul className="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        {reviews.map((r) => (
+          <li key={r.id} className="grid gap-2 rounded-2xl border-2 border-choc bg-peach/40 p-5">
+            <div className="flex items-center gap-1 text-terracotta">
+              {Array.from({ length: 5 }).map((_, i) => (
+                <Star key={i} className="size-4" fill={i < r.rating ? "currentColor" : "none"} aria-hidden />
+              ))}
+            </div>
+            <p className="line-clamp-4 text-sm text-choc">&ldquo;{r.body}&rdquo;</p>
+            {r.review_images.length > 0 && (
+              <div className="flex flex-wrap gap-1.5">
+                {r.review_images.slice(0, 3).map((img) => (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img
+                    key={img.path}
+                    src={reviewImageUrl(img.path)}
+                    alt="Photo submitted with this review"
+                    className="size-12 rounded-lg border border-choc/40 object-cover"
+                  />
+                ))}
+              </div>
+            )}
+            <p className="flex items-center gap-1 text-xs font-bold text-choc-2">
+              {r.customer_name}
+              {r.order_id && (
+                <span className="inline-flex items-center gap-0.5 text-ok-fg">
+                  <BadgeCheck className="size-3.5" aria-hidden /> Verified
+                </span>
+              )}
+            </p>
+          </li>
+        ))}
+      </ul>
     </section>
   );
 }

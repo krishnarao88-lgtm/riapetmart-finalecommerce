@@ -6,9 +6,9 @@ export const metadata: Metadata = { title: "Write a review" };
 export default async function NewReviewPage({
   searchParams,
 }: {
-  searchParams: Promise<{ order?: string; email?: string; error?: string }>;
+  searchParams: Promise<{ order?: string; email?: string; product?: string; error?: string }>;
 }) {
-  const { order, email, error } = await searchParams;
+  const { order, email, product, error } = await searchParams;
   const locked = Boolean(order && email);
 
   return (
@@ -20,7 +20,12 @@ export default async function NewReviewPage({
         </p>
       </div>
 
-      {error && (
+      {error === "image" && (
+        <p className="rounded-xl border-2 border-bad-fg bg-bad-bg px-3 py-2 text-sm text-bad-fg">
+          Each photo must be an image under 5MB.
+        </p>
+      )}
+      {error && error !== "image" && (
         <p className="rounded-xl border-2 border-bad-fg bg-bad-bg px-3 py-2 text-sm text-bad-fg">
           Please fill in your name, email, a rating and a short review.
         </p>
@@ -28,6 +33,7 @@ export default async function NewReviewPage({
 
       <form action={submitReview} className="grid gap-4 rounded-2xl border-2 border-choc bg-surface p-5">
         {order && <input type="hidden" name="order_id" value={order} />}
+        {product && <input type="hidden" name="product_id" value={product} />}
 
         <label className="grid gap-1 text-sm font-semibold text-choc">
           Your name
@@ -72,6 +78,17 @@ export default async function NewReviewPage({
             rows={5}
             placeholder="How was the food quality, delivery, or service?"
             className="rounded-xl border-2 border-choc bg-cream px-3 py-2 text-base font-normal text-choc"
+          />
+        </label>
+
+        <label className="grid gap-1 text-sm font-semibold text-choc">
+          Photos (optional, up to 4)
+          <input
+            type="file"
+            name="images"
+            accept="image/*"
+            multiple
+            className="rounded-xl border-2 border-dashed border-choc bg-cream px-3 py-2 text-sm font-normal text-choc"
           />
         </label>
 
