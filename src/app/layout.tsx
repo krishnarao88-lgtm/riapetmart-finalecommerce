@@ -7,6 +7,7 @@ import { SiteFooter } from "@/components/site-footer";
 import { SiteHeader } from "@/components/site-header";
 import { WelcomePopup } from "@/components/welcome-popup";
 import { CartProvider } from "@/lib/cart-context";
+import { siteKeywords } from "@/lib/seo";
 import { site } from "@/lib/site";
 import "./globals.css";
 
@@ -23,27 +24,9 @@ const fraunces = Fraunces({
 
 export const metadata: Metadata = {
   metadataBase: new URL(site.url),
-  title: { default: `${site.name} · Pet food & supplies in Rawang`, template: `%s · ${site.name}` },
+  title: { default: `Pet Shop Rawang & Bukit Beruntung | ${site.name}`, template: `%s · ${site.name}` },
   description: site.description,
-  keywords: [
-    "pet shop Rawang",
-    "pet shop Bukit Beruntung",
-    "kedai haiwan Rawang",
-    "kedai haiwan Bukit Beruntung",
-    "online pet shop Malaysia",
-    "kedai haiwan online Malaysia",
-    "cat food Malaysia",
-    "dog food Malaysia",
-    "makanan kucing Malaysia",
-    "makanan anjing Malaysia",
-    "cat food delivery Malaysia",
-    "dog food delivery Malaysia",
-    "pet supplies near me",
-    "cat litter Malaysia",
-    "pasir kucing",
-    "Rawang 宠物店",
-    "马来西亚宠物店",
-  ],
+  keywords: siteKeywords,
   openGraph: { siteName: site.name, type: "website", locale: "en_MY" },
   alternates: { canonical: "/" },
   verification: process.env.NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION
@@ -58,7 +41,9 @@ const storeJsonLd = {
   "@type": "PetStore",
   name: site.name,
   url: site.url,
+  description: site.description,
   telephone: site.phone,
+  sameAs: [site.marketplaces.shopee, site.marketplaces.lazada, site.mapsUrl],
   address: {
     "@type": "PostalAddress",
     streetAddress: site.address.street,
@@ -68,7 +53,7 @@ const storeJsonLd = {
     addressCountry: site.address.country,
   },
   geo: { "@type": "GeoCoordinates", latitude: site.geo.lat, longitude: site.geo.lng },
-  areaServed: ["Rawang", "Bukit Beruntung", "Bukit Sentosa", "Selangor", "Kuala Lumpur"],
+  areaServed: ["Rawang", "Bukit Beruntung", "Bukit Sentosa", "Selangor", "Kuala Lumpur", "Putrajaya", "Malaysia"],
   openingHoursSpecification: [
     {
       "@type": "OpeningHoursSpecification",

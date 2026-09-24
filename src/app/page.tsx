@@ -3,6 +3,7 @@ import { CategoryQuickLinks } from "@/components/category-quick-links";
 import { FeaturedProducts } from "@/components/featured-products";
 import { GuidesTeaser } from "@/components/guides-teaser";
 import { Hero } from "@/components/hero";
+import { LocalSeo } from "@/components/local-seo";
 import { PetCareTips } from "@/components/pet-care-tips";
 import { PetCollage } from "@/components/pet-collage";
 import { PromoBanner } from "@/components/promo-banner";
@@ -53,6 +54,8 @@ export default async function Home() {
           ))}
         </ul>
       </section>
+
+      <LocalSeo />
     </>
   );
 }

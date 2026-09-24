@@ -5,6 +5,7 @@ import { notFound } from "next/navigation";
 import { AddToCart } from "@/components/add-to-cart";
 import { discountedPrice, getExpiryBadge, type ExpirySettings } from "@/lib/expiry";
 import { formatMyr } from "@/lib/pricing";
+import { titleCase } from "@/lib/seo";
 import { site } from "@/lib/site";
 import { createClient } from "@/lib/supabase/server";
 
@@ -37,7 +38,7 @@ export async function generateMetadata({
     `${product.name}${product.size_display ? ` — ${product.size_display}` : ""} at ${site.name}.`;
 
   return {
-    title: product.seo_title ?? product.name,
+    title: product.seo_title ?? `${titleCase(product.name)} – Price in Malaysia`,
     description,
     alternates: { canonical: `/shop/${slug}` },
     openGraph: image ? { images: [{ url: image.path }] } : undefined,
@@ -84,7 +85,7 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
   const productJsonLd = {
     "@context": "https://schema.org",
     "@type": "Product",
-    name: product.name,
+    name: titleCase(product.name),
     description: product.description ?? undefined,
     image: image ? image.path : undefined,
     brand: brand ? { "@type": "Brand", name: brand } : undefined,
