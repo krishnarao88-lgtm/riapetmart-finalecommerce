@@ -1,6 +1,5 @@
 import { CheckCircle2, XCircle } from "lucide-react";
 import type { Metadata } from "next";
-import { headers } from "next/headers";
 import { AdminNav } from "@/components/admin/admin-nav";
 import { SettingsForm, type SettingsValues } from "@/components/admin/settings-form";
 import { requireAdmin } from "@/lib/auth";
@@ -20,12 +19,6 @@ export default async function SettingsPage({
   const { supabase } = await requireAdmin();
   const connected = await isEasyParcelConnected().catch(() => false);
   const tiktokConnected = await isTikTokConnected().catch(() => false);
-  const h = await headers();
-  const origin = h.get("origin") ?? `https://${h.get("host")}`;
-  const clientId = process.env.EASYPARCEL_CLIENT_ID ?? "";
-  const authorizeUrl = `https://api.easyparcel.com/oauth/login?client_id=${clientId}&redirect_uri=${encodeURIComponent(`${origin}/api/easyparcel/callback`)}`;
-  const tiktokClientKey = process.env.TIKTOK_Client_key ?? "";
-  const tiktokAuthorizeUrl = `https://www.tiktok.com/v2/auth/authorize/?client_key=${tiktokClientKey}&scope=${encodeURIComponent("user.info.profile,user.info.stats,video.list")}&response_type=code&redirect_uri=${encodeURIComponent(`${origin}/api/tiktok/callback`)}&state=admin`;
   const { data } = await supabase.from("settings").select("key, value");
   const byKey = new Map((data ?? []).map((row) => [row.key, row.value as Record<string, unknown>]));
 
@@ -80,7 +73,7 @@ export default async function SettingsPage({
             )}
             EasyParcel (nationwide courier rates)
           </span>
-          <a href={authorizeUrl} className="btn-chunk bg-tangerine px-4 py-2 text-sm">
+          <a href="/api/oauth/start?provider=easyparcel" className="btn-chunk bg-tangerine px-4 py-2 text-sm">
             {connected ? "Reconnect" : "Connect EasyParcel"}
           </a>
         </div>
@@ -109,7 +102,7 @@ export default async function SettingsPage({
             )}
             TikTok (latest videos on homepage)
           </span>
-          <a href={tiktokAuthorizeUrl} className="btn-chunk bg-tangerine px-4 py-2 text-sm">
+          <a href="/api/oauth/start?provider=tiktok" className="btn-chunk bg-tangerine px-4 py-2 text-sm">
             {tiktokConnected ? "Reconnect" : "Connect TikTok"}
           </a>
         </div>
