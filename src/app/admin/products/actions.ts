@@ -129,25 +129,59 @@ export async function deleteVariant(_prev: ActionState, formData: FormData) {
   return error ? { error: error.message } : { ok: "Variant deleted." };
 }
 
+// The browser shrinks photos before sending (see lib/shrink-image), so these are generous.
+const IMAGE_EXTENSIONS: Record<string, string> = {
+  "image/jpeg": "jpg",
+  "image/png": "png",
+  "image/webp": "webp",
+  "image/gif": "gif",
+  "image/avif": "avif",
+};
+const MAX_IMAGE_BYTES = 3 * 1024 * 1024;
+
 export async function uploadProductImage(_prev: ActionState, formData: FormData) {
   const { supabase } = await requireAdmin();
   const productId = String(formData.get("product_id"));
   const productName = String(formData.get("product_name") ?? "Product photo");
-  const file = formData.get("file") as File | null;
-  if (!file || file.size === 0) return { error: "Choose an image file first." };
+  const files = formData.getAll("file").filter((f): f is File => f instanceof File && f.size > 0);
+  if (files.length === 0) return { error: "Choose an image file first." };
 
-  const ext = file.name.split(".").pop() ?? "jpg";
-  const path = `${productId}/${crypto.randomUUID()}.${ext}`;
-  const { error: uploadError } = await supabase.storage.from("product-images").upload(path, file);
-  if (uploadError) return { error: uploadError.message };
+  const invalid = files.find((f) => !IMAGE_EXTENSIONS[f.type] || f.size > MAX_IMAGE_BYTES);
+  if (invalid) return { error: `${invalid.name} must be a JPG, PNG or WebP photo under 3 MB.` };
 
-  const { data: publicUrl } = supabase.storage.from("product-images").getPublicUrl(path);
-  const { error: insertError } = await supabase
+  // New photos go after the existing ones, so the first photo stays the main one.
+  const { count } = await supabase
     .from("product_images")
-    .insert({ product_id: productId, path: publicUrl.publicUrl, alt: productName, sort: 0 });
+    .select("id", { count: "exact", head: true })
+    .eq("product_id", productId);
+  let sort = count ?? 0;
+  let uploaded = 0;
+  let error: string | null = null;
+
+  for (const file of files) {
+    const path = `${productId}/${crypto.randomUUID()}.${IMAGE_EXTENSIONS[file.type]}`;
+    const { error: uploadError } = await supabase.storage
+      .from("product-images")
+      .upload(path, file, { contentType: file.type });
+    if (uploadError) {
+      error = `${file.name}: ${uploadError.message}`;
+      break;
+    }
+
+    const { data: publicUrl } = supabase.storage.from("product-images").getPublicUrl(path);
+    const { error: insertError } = await supabase
+      .from("product_images")
+      .insert({ product_id: productId, path: publicUrl.publicUrl, alt: productName, sort: sort++ });
+    if (insertError) {
+      error = insertError.message;
+      break;
+    }
+    uploaded += 1;
+  }
 
   revalidatePath(`/admin/products/${productId}`);
-  return insertError ? { error: insertError.message } : { ok: "Image uploaded." };
+  if (error) return { error: uploaded ? `${uploaded} uploaded, then: ${error}` : error };
+  return { ok: uploaded === 1 ? "Image uploaded." : `${uploaded} images uploaded.` };
 }
 
 export async function deleteProductImage(_prev: ActionState, formData: FormData) {

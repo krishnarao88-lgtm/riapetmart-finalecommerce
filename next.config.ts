@@ -4,6 +4,11 @@ const nextConfig: NextConfig = {
   images: {
     remotePatterns: [{ protocol: "https", hostname: "fveawvyiyqezrrkdwmpw.supabase.co", pathname: "/storage/v1/object/public/**" }],
   },
+  experimental: {
+    // Photo uploads go through server actions (default cap 1MB). Photos are shrunk in the
+    // browser first; this leaves room for a few at once while staying under Vercel's 4.5MB.
+    serverActions: { bodySizeLimit: "4mb" },
+  },
   async headers() {
     return [
       {
