@@ -111,7 +111,30 @@ export default async function ShopPage({
           </div>
         </div>
 
-        <div>
+        <details className="md:hidden">
+          <summary className="mb-1.5 cursor-pointer text-xs font-bold uppercase tracking-widest text-choc-2">
+            Category
+          </summary>
+          <div className="mt-2 flex flex-wrap gap-2">
+            {(categories ?? []).map((c) => (
+              <Link
+                key={c.slug}
+                href={`/shop?category=${c.slug}${pet ? `&pet=${pet}` : ""}`}
+                className={`rounded-full border-2 border-peach px-4 py-1.5 text-sm font-semibold ${category === c.slug ? "bg-peach text-choc" : "bg-cream text-choc-2"}`}
+              >
+                {c.name}
+              </Link>
+            ))}
+            <Link
+              href="/shop?deal=short-dated"
+              className={`rounded-full border-2 border-rust px-4 py-1.5 text-sm font-semibold ${deal === "short-dated" ? "bg-rust text-cream" : "bg-cream text-rust"}`}
+            >
+              Clearance
+            </Link>
+          </div>
+        </details>
+
+        <div className="hidden md:block">
           <p className="mb-1.5 text-xs font-bold uppercase tracking-widest text-choc-2">Category</p>
           <div className="flex flex-wrap gap-2">
             {(categories ?? []).map((c) => (

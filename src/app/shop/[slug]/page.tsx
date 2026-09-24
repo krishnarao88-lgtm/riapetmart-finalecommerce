@@ -141,7 +141,7 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
         <span className="text-choc">{product.name}</span>
       </nav>
       <div className="grid gap-8 md:grid-cols-2">
-        <div className="flex aspect-square items-center justify-center rounded-3xl border-2 border-choc bg-peach/40">
+        <div className="flex aspect-square max-h-[45vh] items-center justify-center rounded-3xl border-2 border-choc bg-peach/40 sm:max-h-none">
           {image ? (
             // eslint-disable-next-line @next/next/no-img-element
             <img src={image.path} alt={image.alt ?? product.name} className="size-full rounded-3xl object-cover" />

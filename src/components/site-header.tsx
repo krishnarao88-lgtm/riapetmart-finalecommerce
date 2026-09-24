@@ -43,7 +43,7 @@ export function SiteHeader() {
       </div>
 
       {/* Phones: nav scrolls sideways inside its own strip, never the page. */}
-      <nav aria-label="Main" className="md:hidden">
+      <nav aria-label="Main" className="relative md:hidden">
         <ul className="flex gap-2 overflow-x-auto px-4 pb-3 [scrollbar-width:none]">
           {nav.map((item) => (
             <li key={item.href} className="shrink-0">
@@ -56,6 +56,10 @@ export function SiteHeader() {
             </li>
           ))}
         </ul>
+        <div
+          className="pointer-events-none absolute bottom-3 right-0 top-0 w-8 bg-gradient-to-l from-cream to-transparent"
+          aria-hidden
+        />
       </nav>
     </header>
   );
