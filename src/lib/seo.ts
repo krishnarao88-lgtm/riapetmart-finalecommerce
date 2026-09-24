@@ -2,6 +2,8 @@
 // search for (EN, BM, 中文). Keep it true to what the shop sells and offers: pages for
 // categories with no live products are noindexed until products are published.
 
+import { formatMyr } from "./pricing.ts";
+
 export type Faq = { q: string; a: string };
 
 export type LandingSeo = {
@@ -337,4 +339,66 @@ export function titleCase(name: string): string {
     if (!first && SMALL_WORDS.has(lower)) return lower;
     return lower.charAt(0).toUpperCase() + lower.slice(1);
   });
+}
+
+/** Product <title> before the layout's " · Ria Pet Mart" suffix; the price tail is dropped when the full title would pass 60 characters. */
+export function productTitle(name: string): string {
+  const title = titleCase(name);
+  const withTail = `${title} – Price in Malaysia`;
+  return withTail.length + " · Ria Pet Mart".length <= 60 ? withTail : title;
+}
+
+export function productDescription(name: string, fromPrice: number | null): string {
+  const price = fromPrice !== null ? `, from ${formatMyr(fromPrice)}` : "";
+  return `${titleCase(name)}${price}. Same-day delivery in the Klang Valley or free store pickup in Rawang.`;
+}
+
+export type FeedItem = {
+  id: string;
+  groupId: string | null;
+  title: string;
+  description: string;
+  link: string;
+  image: string;
+  price: number;
+  salePrice: number | null;
+  inStock: boolean;
+  brand: string | null;
+  gtin: string | null;
+};
+
+const XML_ESCAPES: Record<string, string> = { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&apos;" };
+export const escapeXml = (value: string) => value.replace(/[&<>"']/g, (c) => XML_ESCAPES[c]);
+
+const money = (value: number) => `${value.toFixed(2)} MYR`;
+
+/** Google Merchant Center product feed: RSS 2.0 with the g: namespace. */
+export function productFeedXml(channel: { title: string; link: string; description: string }, items: FeedItem[]): string {
+  const tag = (name: string, value: string | null) => (value ? `<${name}>${escapeXml(value)}</${name}>` : "");
+  const entries = items.map((i) =>
+    [
+      "<item>",
+      tag("g:id", i.id),
+      tag("g:item_group_id", i.groupId),
+      tag("title", i.title),
+      tag("description", i.description),
+      tag("link", i.link),
+      tag("g:image_link", i.image),
+      tag("g:price", money(i.price)),
+      tag("g:sale_price", i.salePrice !== null ? money(i.salePrice) : null),
+      tag("g:availability", i.inStock ? "in_stock" : "out_of_stock"),
+      tag("g:brand", i.brand),
+      tag("g:gtin", i.gtin),
+      tag("g:condition", "new"),
+      "</item>",
+    ].join(""),
+  );
+  return [
+    '<?xml version="1.0" encoding="UTF-8"?>',
+    '<rss version="2.0" xmlns:g="http://base.google.com/ns/1.0">',
+    `<channel>${tag("title", channel.title)}${tag("link", channel.link)}${tag("description", channel.description)}`,
+    ...entries,
+    "</channel>",
+    "</rss>",
+  ].join("\n");
 }

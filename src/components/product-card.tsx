@@ -3,6 +3,7 @@ import Link from "next/link";
 import { QuickAddButton } from "@/components/quick-add-button";
 import { discountedPrice, getExpiryBadge, type ExpirySettings } from "@/lib/expiry";
 import { formatMyr } from "@/lib/pricing";
+import { titleCase } from "@/lib/seo";
 import type { createClient } from "@/lib/supabase/server";
 
 export type ProductCardData = {
@@ -66,6 +67,7 @@ export function ProductCard({
   const image = p.product_images[0];
   const priceNow = (price: number) => (badge?.kind === "short-dated" ? discountedPrice(price, badge.discount) : price);
   const showPrice = minPrice !== null ? priceNow(minPrice) : null;
+  const name = titleCase(p.name);
 
   return (
     <Link
@@ -75,7 +77,7 @@ export function ProductCard({
       <div className="relative flex aspect-square items-center justify-center bg-peach/40">
         {image ? (
           // eslint-disable-next-line @next/next/no-img-element
-          <img src={image.path} alt={image.alt ?? p.name} className={`size-full object-cover ${soldOut ? "opacity-60" : ""}`} />
+          <img src={image.path} alt={titleCase(image.alt || p.name)} className={`size-full object-cover ${soldOut ? "opacity-60" : ""}`} />
         ) : (
           <PawPrint className="size-10 text-rust/50" aria-hidden />
         )}
@@ -96,7 +98,7 @@ export function ProductCard({
           <QuickAddButton
             variantId={cheapestVariant.id}
             productSlug={p.slug}
-            productName={p.name}
+            productName={name}
             variantTitle={cheapestVariant.title}
             price={priceNow(cheapestVariant.price)}
             image={image?.path ?? null}
@@ -107,7 +109,7 @@ export function ProductCard({
         {p.categoryLabel && (
           <span className="text-xs font-semibold uppercase tracking-wide text-rust">{p.categoryLabel}</span>
         )}
-        <span className="line-clamp-2 text-sm font-bold text-choc">{p.name}</span>
+        <span className="line-clamp-2 text-sm font-bold text-choc">{name}</span>
         {p.size_display && <span className="text-xs text-choc-2">{p.size_display}</span>}
         {available !== null && available > 0 && available <= 5 && (
           <span className="text-xs font-bold text-warn-fg">Only {available} left</span>

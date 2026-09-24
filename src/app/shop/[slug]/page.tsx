@@ -6,7 +6,8 @@ import { AddToCart } from "@/components/add-to-cart";
 import { getVariantStock } from "@/components/product-card";
 import { discountedPrice, getExpiryBadge, type ExpirySettings } from "@/lib/expiry";
 import { formatMyr } from "@/lib/pricing";
-import { titleCase } from "@/lib/seo";
+import { TrackViewItem } from "@/components/track-view-item";
+import { productDescription, productTitle, titleCase } from "@/lib/seo";
 import { site } from "@/lib/site";
 import { createClient } from "@/lib/supabase/server";
 
@@ -15,7 +16,7 @@ async function getProduct(slug: string) {
   const { data: product } = await supabase
     .from("products")
     .select(
-      "id, name, description, ingredients, usage, size_display, pet_type, category_id, is_regulated, seo_title, seo_description, brands(name), categories(name, slug), product_images(path, alt, sort), variants(id, title, price, sort)",
+      "id, name, description, ingredients, usage, size_display, pet_type, category_id, is_regulated, seo_title, seo_description, brands(name, slug), categories(name, slug), product_images(path, alt, sort), variants(id, title, price, sort)",
     )
     .eq("slug", slug)
     .eq("status", "published")
@@ -33,16 +34,26 @@ export async function generateMetadata({
   if (!product) return {};
 
   const image = [...(product.product_images ?? [])].sort((a, b) => a.sort - b.sort)[0];
+  const prices = (product.variants ?? []).map((v) => v.price);
+  const name = titleCase(product.name);
+  const seoTitle = product.seo_title?.trim();
   const description =
-    product.seo_description ??
-    product.description?.slice(0, 160) ??
-    `${product.name}${product.size_display ? ` — ${product.size_display}` : ""} at ${site.name}.`;
+    product.seo_description?.trim() || productDescription(product.name, prices.length ? Math.min(...prices) : null);
 
   return {
-    title: product.seo_title ?? `${titleCase(product.name)} – Price in Malaysia`,
+    // The layout template appends " · Ria Pet Mart", so a hand-written title that already names the shop is used as-is.
+    title: seoTitle ? (seoTitle.includes(site.name) ? { absolute: seoTitle } : seoTitle) : productTitle(product.name),
     description,
     alternates: { canonical: `/shop/${slug}` },
-    openGraph: image ? { images: [{ url: image.path }] } : undefined,
+    openGraph: {
+      title: name,
+      description,
+      siteName: site.name,
+      locale: "en_MY",
+      url: `/shop/${slug}`,
+      // A page-level openGraph replaces the layout's, so products without a photo name the default share image.
+      images: image ? [{ url: image.path, alt: name }] : ["/opengraph-image"],
+    },
   };
 }
 
@@ -57,7 +68,7 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
 
   const supabase = await createClient();
   const rawVariants = [...(product.variants ?? [])].sort((a, b) => a.sort - b.sort);
-  const [{ data: related }, stockMap] = await Promise.all([
+  const [{ data: related }, stockMap, { data: reviews }] = await Promise.all([
     product.category_id
       ? supabase
           .from("products")
@@ -68,6 +79,7 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
           .limit(4)
       : { data: null },
     getVariantStock(supabase, rawVariants.map((v) => v.id)),
+    supabase.from("reviews").select("rating").eq("product_id", product.id).eq("status", "approved"),
   ]);
 
   const expirySettings = (settingsRow?.value ?? {}) as Partial<ExpirySettings>;
@@ -79,40 +91,57 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
     const available = stockMap ? (row?.available ?? 0) : null;
     return { id: v.id, title: v.title, price, originalPrice: v.price, badge, available };
   });
-  const inStock = variants.some((v) => v.available !== 0);
   const image = images[0] ?? null;
-  const brand = (product.brands as unknown as { name: string }[])?.[0]?.name;
-  const categoryRow = (product.categories as unknown as { name: string; slug: string }[])?.[0];
+  const name = titleCase(product.name);
+  // Many-to-one embeds come back as a single object, not an array.
+  const brandRow = product.brands as unknown as { name: string; slug: string } | null;
+  const brand = brandRow?.name;
+  const categoryRow = product.categories as unknown as { name: string; slug: string } | null;
   const category = categoryRow?.name;
   const petLabels: Record<string, string> = { dog: "Dogs", cat: "Cats", small_pet: "Small pets" };
   const petLabel = petLabels[product.pet_type] ?? product.pet_type;
-  const cheapestPrice = variants.length ? Math.min(...variants.map((v) => v.price)) : null;
+  // Variant id, matching the feed's g:id and the cart's add_to_cart/purchase events.
+  const cheapest = [...variants].sort((a, b) => a.price - b.price)[0];
+  const ratings = (reviews ?? []).map((r) => r.rating as number);
 
   const productJsonLd = {
     "@context": "https://schema.org",
     "@type": "Product",
-    name: titleCase(product.name),
+    name,
     description: product.description ?? undefined,
     image: image ? image.path : undefined,
     brand: brand ? { "@type": "Brand", name: brand } : undefined,
     category: category ?? undefined,
-    offers:
-      cheapestPrice !== null
-        ? {
-            "@type": "Offer",
-            priceCurrency: "MYR",
-            price: cheapestPrice,
-            availability: inStock ? "https://schema.org/InStock" : "https://schema.org/OutOfStock",
-            url: `${site.url}/shop/${slug}`,
-          }
-        : undefined,
+    offers: variants.length
+      ? variants.map((v) => ({
+          "@type": "Offer",
+          name: v.title,
+          priceCurrency: "MYR",
+          price: v.price,
+          // Left out when the stock lookup failed rather than guessed.
+          availability:
+            v.available === null
+              ? undefined
+              : v.available > 0
+                ? "https://schema.org/InStock"
+                : "https://schema.org/OutOfStock",
+          url: `${site.url}/shop/${slug}`,
+        }))
+      : undefined,
+    aggregateRating: ratings.length
+      ? {
+          "@type": "AggregateRating",
+          ratingValue: Math.round((ratings.reduce((a, b) => a + b, 0) / ratings.length) * 10) / 10,
+          reviewCount: ratings.length,
+        }
+      : undefined,
   };
 
   const breadcrumbItems = [
     { name: "Shop", url: `${site.url}/shop` },
     { name: petLabel, url: `${site.url}/shop?pet=${product.pet_type}` },
     ...(categoryRow ? [{ name: categoryRow.name, url: `${site.url}/shop?category=${categoryRow.slug}` }] : []),
-    { name: product.name, url: `${site.url}/shop/${slug}` },
+    { name, url: `${site.url}/shop/${slug}` },
   ];
   const breadcrumbJsonLd = {
     "@context": "https://schema.org",
@@ -146,13 +175,14 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
           </>
         )}
         <span aria-hidden>/</span>
-        <span className="text-choc">{product.name}</span>
+        <span className="text-choc">{name}</span>
       </nav>
+      {cheapest && <TrackViewItem id={cheapest.id} name={name} price={cheapest.price} />}
       <div className="grid gap-8 md:grid-cols-2">
         <div className="flex aspect-square max-h-[45vh] items-center justify-center rounded-3xl border-2 border-choc bg-peach/40 sm:max-h-none">
           {image ? (
             // eslint-disable-next-line @next/next/no-img-element
-            <img src={image.path} alt={image.alt ?? product.name} className="size-full rounded-3xl object-cover" />
+            <img src={image.path} alt={titleCase(image.alt || product.name)} className="size-full rounded-3xl object-cover" />
           ) : (
             <PawPrint className="size-16 text-rust/50" aria-hidden />
           )}
@@ -160,10 +190,14 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
 
         <div className="grid gap-3">
           <div className="flex flex-wrap gap-2 text-xs font-semibold uppercase tracking-wide text-rust">
-            {brand && <span>{brand}</span>}
+            {brandRow && (
+              <Link href={`/brands/${brandRow.slug}`} className="hover:underline">
+                {brandRow.name}
+              </Link>
+            )}
             {category && <span>· {category}</span>}
           </div>
-          <h1 className="font-bubble text-2xl font-extrabold text-choc">{product.name}</h1>
+          <h1 className="font-bubble text-2xl font-extrabold text-choc">{name}</h1>
           {product.size_display && <p className="text-choc-2">{product.size_display}</p>}
 
           {variants.some((v) => v.badge?.kind === "short-dated") && (
@@ -175,7 +209,7 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
           <div className="mt-2 rounded-2xl border-2 border-choc bg-cream p-4">
             <AddToCart
               productSlug={slug}
-              productName={product.name}
+              productName={name}
               image={image?.path ?? null}
               variants={variants}
             />
@@ -224,13 +258,13 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
                     <div className="flex aspect-square items-center justify-center bg-peach/40">
                       {relImage ? (
                         // eslint-disable-next-line @next/next/no-img-element
-                        <img src={relImage.path} alt={relImage.alt ?? p.name} className="size-full object-cover" />
+                        <img src={relImage.path} alt={titleCase(relImage.alt || p.name)} className="size-full object-cover" />
                       ) : (
                         <PawPrint className="size-10 text-rust/50" aria-hidden />
                       )}
                     </div>
                     <div className="grid gap-1 p-3">
-                      <span className="line-clamp-2 text-sm font-bold text-choc">{p.name}</span>
+                      <span className="line-clamp-2 text-sm font-bold text-choc">{titleCase(p.name)}</span>
                       <span className="text-sm text-choc-2">
                         {price !== null ? `from ${formatMyr(price)}` : "Price on request"}
                       </span>
