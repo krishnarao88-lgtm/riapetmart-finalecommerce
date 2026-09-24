@@ -1,11 +1,10 @@
 import { formatMyr } from "@/lib/pricing";
 
-export const FREE_SHIPPING_THRESHOLD = 150;
-
-/** Visual progress toward the real RM150 free-delivery threshold — shown in the cart drawer and /cart. */
-export function FreeShippingProgress({ subtotal }: { subtotal: number }) {
-  const remaining = FREE_SHIPPING_THRESHOLD - subtotal;
-  const pct = Math.min(100, (subtotal / FREE_SHIPPING_THRESHOLD) * 100);
+/** Progress toward the free-delivery threshold from settings (null = free delivery off) — shown in the cart drawer and /cart. */
+export function FreeShippingProgress({ subtotal, threshold }: { subtotal: number; threshold: number | null }) {
+  if (threshold === null) return null;
+  const remaining = threshold - subtotal;
+  const pct = threshold > 0 ? Math.min(100, (subtotal / threshold) * 100) : 100;
 
   return (
     <div className="grid gap-1.5">

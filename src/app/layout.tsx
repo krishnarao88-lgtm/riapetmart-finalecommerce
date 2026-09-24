@@ -7,6 +7,7 @@ import { SiteFooter } from "@/components/site-footer";
 import { SiteHeader } from "@/components/site-header";
 import { WelcomePopup } from "@/components/welcome-popup";
 import { CartProvider } from "@/lib/cart-context";
+import { freeDeliveryMin, getDeliverySettings } from "@/lib/delivery-settings";
 import { siteKeywords } from "@/lib/seo";
 import { site } from "@/lib/site";
 import "./globals.css";
@@ -71,7 +72,8 @@ const storeJsonLd = {
   },
 };
 
-export default function RootLayout({ children }: LayoutProps<"/">) {
+export default async function RootLayout({ children }: LayoutProps<"/">) {
+  const delivery = await getDeliverySettings();
   return (
     <html
       lang="en-MY"
@@ -97,7 +99,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
           </main>
           <SiteFooter />
           <WelcomePopup />
-          <CartDrawer />
+          <CartDrawer freeDeliveryMin={freeDeliveryMin(delivery)} />
         </CartProvider>
       </body>
     </html>
