@@ -1,16 +1,16 @@
 import { NextResponse } from "next/server";
 import { getStripe } from "@/lib/stripe";
-import { getResend } from "@/lib/resend";
+import { FROM, getResend } from "@/lib/resend";
 import { formatMyr } from "@/lib/pricing";
 import { site } from "@/lib/site";
-import { createClient } from "@/lib/supabase/server";
+import { createServiceClient } from "@/lib/supabase/service";
 
 type OrderItem = { name: string; title: string; qty: number; price: number };
 type OrderForEmail = {
   items: OrderItem[];
-  subtotal: number;
   shipping_method: string | null;
   shipping_cost: number;
+  total: number;
 };
 
 export async function POST(req: Request) {
@@ -28,35 +28,72 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "Invalid signature" }, { status: 400 });
   }
 
-  if (event.type === "checkout.session.completed") {
+  const supabase = createServiceClient();
+
+  if (event.type === "checkout.session.expired") {
+    const { error } = await supabase
+      .from("orders")
+      .update({ status: "failed" })
+      .eq("stripe_session_id", event.data.object.id)
+      .eq("status", "pending");
+    if (error) return NextResponse.json({ error: "Could not update order" }, { status: 500 });
+  }
+
+  if (event.type === "charge.refunded") {
+    const charge = event.data.object;
+    const paymentIntent = typeof charge.payment_intent === "string" ? charge.payment_intent : charge.payment_intent?.id;
+    // charge.refunded also fires for partial refunds; only a full refund marks the order refunded.
+    if (paymentIntent && charge.refunded) {
+      const { error } = await supabase
+        .from("orders")
+        .update({ fulfilment_status: "refunded" })
+        .eq("stripe_payment_intent", paymentIntent);
+      if (error) return NextResponse.json({ error: "Could not update order" }, { status: 500 });
+    }
+  }
+
+  if (
+    (event.type === "checkout.session.completed" || event.type === "checkout.session.async_payment_succeeded") &&
+    event.data.object.payment_status !== "unpaid"
+  ) {
     const session = event.data.object;
     const customerEmail = session.customer_details?.email ?? null;
-    const supabase = await createClient();
-    await supabase.rpc("mark_order_paid", {
+    const { data: justPaid, error: paidError } = await supabase.rpc("mark_order_paid", {
       p_session_id: session.id,
       p_payment_intent: typeof session.payment_intent === "string" ? session.payment_intent : null,
       p_customer_email: customerEmail,
     });
+    if (paidError) {
+      console.error("mark_order_paid failed:", paidError);
+      return NextResponse.json({ error: "Could not mark order paid" }, { status: 500 });
+    }
+    // false = already processed on an earlier delivery of this event; don't email or reward twice.
+    if (justPaid !== true) return NextResponse.json({ received: true });
+
     if (customerEmail) await supabase.rpc("mark_cart_recovered", { p_email: customerEmail });
 
     if (customerEmail) {
       try {
         const { data: order } = (await supabase
-          .rpc("get_order_for_email", { p_session_id: session.id })
+          .from("orders")
+          .select("items, shipping_method, shipping_cost, total")
+          .eq("stripe_session_id", session.id)
           .single()) as { data: OrderForEmail | null };
         if (order) {
-          const items = order.items;
-          const lines = items
+          const lines = order.items
             .map((it) => `${it.name} (${it.title}) x${it.qty} — ${formatMyr(it.price * it.qty)}`)
             .join("\n");
           const shippingLine = order.shipping_method
-            ? `\nDelivery (${order.shipping_method}): ${formatMyr(Number(order.shipping_cost))}`
+            ? `\n${order.shipping_method === "pickup" ? "Store pickup" : `Delivery (${order.shipping_method})`}: ${
+                Number(order.shipping_cost) > 0 ? formatMyr(Number(order.shipping_cost)) : "Free"
+              }`
             : "";
+          const total = formatMyr(Number(order.total));
           await getResend().emails.send({
-            from: `${site.name} <orders@${new URL(site.url).hostname}>`,
+            from: FROM,
             to: customerEmail,
-            subject: `Your ${site.name} order — ${formatMyr(Number(order.subtotal))}`,
-            text: `Thanks for your order!\n\n${lines}${shippingLine}\n\nTotal: ${formatMyr(Number(order.subtotal))}\n\nWe'll be in touch on WhatsApp with delivery updates.\n\n${site.name}\n${site.phone}`,
+            subject: `Your ${site.name} order — ${total}`,
+            text: `Thanks for your order!\n\n${lines}${shippingLine}\n\nTotal: ${total}\n\nWe'll be in touch on WhatsApp with delivery updates.\n\n${site.name}\n${site.phone}`,
           });
         }
       } catch (err) {
@@ -74,7 +111,7 @@ export async function POST(req: Request) {
           code: `REF${Math.random().toString(36).slice(2, 8).toUpperCase()}`,
         });
         await getResend().emails.send({
-          from: `${site.name} <orders@${new URL(site.url).hostname}>`,
+          from: FROM,
           to: referral.owner_email,
           subject: "Your friend just ordered — here's your 10% off 🐾",
           text: `Thanks for sharing ${site.name}! Your friend just placed their first order.\n\nHere's your reward code: ${promo.code}\n\nUse it at checkout for 10% off your next order: ${site.url}/shop\n\n${site.name}`,
