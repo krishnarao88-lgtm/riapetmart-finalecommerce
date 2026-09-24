@@ -65,22 +65,22 @@ export default async function CatHotelPage({
           </label>
 
           <div className="grid gap-4 sm:grid-cols-2">
-            <label className="grid gap-1 text-sm font-semibold text-choc">
+            <label className="grid min-w-0 gap-1 text-sm font-semibold text-choc">
               Email
               <input
                 type="email"
                 name="customer_email"
                 required
-                className="rounded-xl border-2 border-choc bg-cream px-3 py-2 text-base font-normal text-choc"
+                className="w-full min-w-0 rounded-xl border-2 border-choc bg-cream px-3 py-2 text-base font-normal text-choc"
               />
             </label>
-            <label className="grid gap-1 text-sm font-semibold text-choc">
+            <label className="grid min-w-0 gap-1 text-sm font-semibold text-choc">
               Phone / WhatsApp
               <input
                 type="tel"
                 name="customer_phone"
                 required
-                className="rounded-xl border-2 border-choc bg-cream px-3 py-2 text-base font-normal text-choc"
+                className="w-full min-w-0 rounded-xl border-2 border-choc bg-cream px-3 py-2 text-base font-normal text-choc"
               />
             </label>
           </div>
@@ -94,24 +94,24 @@ export default async function CatHotelPage({
           </label>
 
           <div className="grid gap-4 sm:grid-cols-2">
-            <label className="grid gap-1 text-sm font-semibold text-choc">
+            <label className="grid min-w-0 gap-1 text-sm font-semibold text-choc">
               Check-in
               <input
                 type="date"
                 name="check_in"
                 required
                 min={today}
-                className="rounded-xl border-2 border-choc bg-cream px-3 py-2 text-base font-normal text-choc"
+                className="w-full min-w-0 rounded-xl border-2 border-choc bg-cream px-3 py-2 text-base font-normal text-choc"
               />
             </label>
-            <label className="grid gap-1 text-sm font-semibold text-choc">
+            <label className="grid min-w-0 gap-1 text-sm font-semibold text-choc">
               Check-out
               <input
                 type="date"
                 name="check_out"
                 required
                 min={today}
-                className="rounded-xl border-2 border-choc bg-cream px-3 py-2 text-base font-normal text-choc"
+                className="w-full min-w-0 rounded-xl border-2 border-choc bg-cream px-3 py-2 text-base font-normal text-choc"
               />
             </label>
           </div>

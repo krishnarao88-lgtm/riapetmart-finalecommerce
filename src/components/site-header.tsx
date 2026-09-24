@@ -7,6 +7,7 @@ const nav = [
   { href: "/shop?pet=dog", label: "Dogs" },
   { href: "/shop?pet=cat", label: "Cats" },
   { href: "/shop?deal=short-dated", label: "Clearance" },
+  { href: "/cat-hotel", label: "Cat Hotel" },
   { href: "/about", label: "About us" },
   { href: "/contact", label: "Contact" },
 ];
