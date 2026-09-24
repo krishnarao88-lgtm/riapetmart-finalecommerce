@@ -36,6 +36,8 @@ export function CartProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     try {
       const raw = localStorage.getItem(STORAGE_KEY);
+      // Hydrating from localStorage has to happen after mount, or SSR and client markup differ.
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       if (raw) setLines(JSON.parse(raw));
     } catch {
       // ponytail: corrupt/blocked storage just starts empty, no recovery needed

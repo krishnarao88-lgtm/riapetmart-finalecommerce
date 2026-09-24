@@ -38,7 +38,7 @@ export default async function GuidePage({ params }: PageProps<"/guides/[slug]">)
       </div>
 
       <div className="mt-8 grid gap-2 rounded-2xl border-2 border-choc bg-peach/40 p-5">
-        <p className="font-bold text-choc">Shop what's in this guide</p>
+        <p className="font-bold text-choc">Shop what&apos;s in this guide</p>
         <div className="flex flex-wrap gap-2">
           {guide.shopLinks.map((link) => (
             <Link
