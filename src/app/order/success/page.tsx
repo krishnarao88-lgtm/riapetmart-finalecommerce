@@ -3,7 +3,7 @@ import Link from "next/link";
 import { ClearCartOnMount } from "@/components/clear-cart-on-mount";
 import { formatMyr } from "@/lib/pricing";
 import { getStripe } from "@/lib/stripe";
-import { createClient } from "@/lib/supabase/server";
+import { createServiceClient } from "@/lib/supabase/service";
 
 type OrderItem = { name: string; title: string; qty: number; price: number };
 
@@ -16,9 +16,8 @@ export default async function OrderSuccessPage({
   const session = session_id ? await getStripe().checkout.sessions.retrieve(session_id).catch(() => null) : null;
   const paid = session?.payment_status === "paid";
 
-  const supabase = await createClient();
   const { data: order } = paid && session_id
-    ? ((await supabase.rpc("get_order_for_email", { p_session_id: session_id }).single()) as {
+    ? ((await createServiceClient().rpc("get_order_for_email", { p_session_id: session_id }).single()) as {
         data: { id: string; items: OrderItem[] } | null;
       })
     : { data: null };

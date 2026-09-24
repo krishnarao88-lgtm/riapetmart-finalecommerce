@@ -1,7 +1,7 @@
 "use server";
 
 import { redirect } from "next/navigation";
-import { getResend } from "@/lib/resend";
+import { FROM, getResend } from "@/lib/resend";
 import { site } from "@/lib/site";
 import { createClient } from "@/lib/supabase/server";
 
@@ -36,13 +36,13 @@ export async function submitCatHotelBooking(formData: FormData) {
   const summary = `${customerName} (${customerPhone}) — ${checkIn} to ${checkOut} — ${petLabel}`;
   try {
     await getResend().emails.send({
-      from: `${site.name} <orders@${new URL(site.url).hostname}>`,
+      from: FROM,
       to: customerEmail,
       subject: "We've received your Cat Hotel booking request",
       text: `Hi ${customerName},\n\nThanks for your Cat Hotel booking request for ${petLabel}:\n${checkIn} to ${checkOut}\n\nThis is a request, not a confirmed reservation yet — we'll contact you on WhatsApp or phone (${site.phone}) shortly to confirm availability and the current rate.\n\n${site.name}`,
     });
     await getResend().emails.send({
-      from: `${site.name} <orders@${new URL(site.url).hostname}>`,
+      from: FROM,
       to: site.email,
       subject: "New Cat Hotel booking request",
       text: `${summary}\nEmail: ${customerEmail}\nNotes: ${notes || "—"}\n\nReview it in /admin/cat-hotel.`,

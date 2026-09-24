@@ -1,82 +1,101 @@
 import { NextResponse } from "next/server";
 import { headers } from "next/headers";
 import type Stripe from "stripe";
+import { parseLines, priceCart } from "@/lib/cart-pricing";
+import { freeDeliveryMin, type DeliverySettings } from "@/lib/delivery-settings";
+import { quoteSecret, verifyQuote } from "@/lib/quote-signature";
 import { getStripe } from "@/lib/stripe";
 import { createClient } from "@/lib/supabase/server";
+import { createServiceClient } from "@/lib/supabase/service";
 
-type CartLineInput = { variantId: string; qty: number };
 type ShippingInput = {
-  method: "pickup" | "lalamove" | "easyparcel";
-  label: string;
-  price: number;
+  method?: string;
+  price?: number;
+  serviceId?: string;
+  expires?: number;
+  sig?: string;
   addressLine?: string;
   city?: string;
   postcode?: string;
   state?: string;
-  serviceId?: string;
 };
 
+const EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const MY_MOBILE = /^(?:\+?60|0)1\d{8,9}$/;
+const DELIVERY_LABELS: Record<string, string> = { lalamove: "Same-day delivery (Lalamove)", easyparcel: "Courier delivery" };
+
 export async function POST(req: Request) {
-  const { lines, shipping, referralCode, customerName, customerPhone } = (await req.json()) as {
-    lines: CartLineInput[];
+  const body = (await req.json()) as {
+    lines?: unknown;
     shipping?: ShippingInput;
     referralCode?: string;
     customerName?: string;
     customerPhone?: string;
+    email?: string;
   };
-  if (!Array.isArray(lines) || lines.length === 0) {
-    return NextResponse.json({ error: "Cart is empty" }, { status: 400 });
+  const lines = parseLines(body.lines);
+  if (!lines) return NextResponse.json({ error: "Cart is empty" }, { status: 400 });
+
+  const customerName = String(body.customerName ?? "").trim();
+  const customerPhone = String(body.customerPhone ?? "").trim();
+  if (!customerName || !MY_MOBILE.test(customerPhone.replace(/[\s-]/g, ""))) {
+    return NextResponse.json({ error: "Enter your name and a Malaysian mobile number" }, { status: 400 });
   }
-  // ponytail: the shipping quote was already computed server-side in
-  // /api/shipping-quote; re-quoting live carriers a second time here would
-  // add real complexity for a small shop's order volume, so we trust the
-  // client-echoed price within a sane ceiling instead of re-verifying it.
-  const shippingPrice = shipping ? Math.min(Math.max(0, shipping.price), 200) : 0;
-  if (shipping && shipping.method !== "pickup" && shippingPrice <= 0) {
-    return NextResponse.json({ error: "Invalid shipping option" }, { status: 400 });
+  const email = String(body.email ?? "").trim();
+  const shipping = body.shipping;
+  const method = shipping?.method;
+  if (!shipping || !method || !(method === "pickup" || Object.hasOwn(DELIVERY_LABELS, method))) {
+    return NextResponse.json({ error: "Choose pickup or delivery" }, { status: 400 });
   }
 
   const supabase = await createClient();
-  const variantIds = lines.map((l) => l.variantId);
-  const { data: variants } = await supabase
-    .from("variants")
-    .select("id, title, price, products(name, product_images(path))")
-    .in("id", variantIds);
+  const [cart, { data: settingsRow }] = await Promise.all([
+    priceCart(supabase, lines),
+    supabase.from("settings").select("value").eq("key", "delivery").maybeSingle(),
+  ]);
+  if ("error" in cart) return NextResponse.json({ error: cart.error }, { status: 400 });
+  const delivery = (settingsRow?.value ?? {}) as DeliverySettings;
 
-  if (!variants || variants.length !== variantIds.length) {
-    return NextResponse.json({ error: "One or more items are no longer available" }, { status: 400 });
+  const isPickup = method === "pickup";
+  let shippingPrice = 0;
+  if (isPickup) {
+    if (delivery.pickup_enabled === false) {
+      return NextResponse.json({ error: "Store pickup is not available right now" }, { status: 400 });
+    }
+  } else {
+    const postcode = String(shipping.postcode ?? "").trim();
+    const quote = {
+      method,
+      price: Number(shipping.price),
+      serviceId: shipping.serviceId,
+      postcode,
+      subtotal: cart.subtotal,
+    };
+    if (!shipping.addressLine?.trim() || !shipping.state?.trim() || !verifyQuote(quote, shipping, quoteSecret())) {
+      return NextResponse.json(
+        { error: "Your delivery quote has expired or your cart changed — please get delivery options again" },
+        { status: 400 },
+      );
+    }
+    const freeMin = freeDeliveryMin(delivery);
+    shippingPrice = freeMin !== null && cart.subtotal >= freeMin ? 0 : Math.max(0, quote.price);
   }
 
-  const qtyByVariant = new Map(lines.map((l) => [l.variantId, l.qty]));
-  let subtotal = 0;
-  const orderItems: { variant_id: string; name: string; title: string; qty: number; price: number }[] = [];
-  const lineItems = variants.map((v) => {
-    const qty = Math.max(1, Math.floor(qtyByVariant.get(v.id) ?? 1));
-    const product = (v.products as unknown as { name: string; product_images: { path: string }[] } | null);
-    subtotal += v.price * qty;
-    orderItems.push({ variant_id: v.id, name: product?.name ?? v.title, title: v.title, qty, price: v.price });
-    return {
-      quantity: qty,
-      price_data: {
-        currency: "myr",
-        unit_amount: Math.round(v.price * 100),
-        product_data: {
-          name: product?.name ?? v.title,
-          description: v.title,
-          images: product?.product_images?.[0]?.path ? [product.product_images[0].path] : undefined,
-        },
-      },
-    };
-  });
-
-  const allLineItems: Stripe.Checkout.SessionCreateParams.LineItem[] = [...lineItems];
-  if (shipping && shippingPrice > 0) {
-    allLineItems.push({
+  const lineItems: Stripe.Checkout.SessionCreateParams.LineItem[] = cart.items.map((it) => ({
+    quantity: it.qty,
+    price_data: {
+      currency: "myr",
+      unit_amount: Math.round(it.price * 100),
+      product_data: { name: it.name, description: it.title, images: it.image ? [it.image] : undefined },
+    },
+  }));
+  if (shippingPrice > 0) {
+    lineItems.push({
       quantity: 1,
       price_data: {
         currency: "myr",
         unit_amount: Math.round(shippingPrice * 100),
-        product_data: { name: shipping.label },
+        product_data: { name: DELIVERY_LABELS[method] },
       },
     });
   }
@@ -86,29 +105,31 @@ export async function POST(req: Request) {
 
   const session = await getStripe().checkout.sessions.create({
     mode: "payment",
-    payment_method_types: ["card", "fpx"],
-    line_items: allLineItems,
+    line_items: lineItems,
     allow_promotion_codes: true,
+    customer_email: EMAIL.test(email) ? email : undefined,
+    metadata: { customer_phone: customerPhone },
     success_url: `${origin}/order/success?session_id={CHECKOUT_SESSION_ID}`,
     cancel_url: `${origin}/cart`,
   });
 
-  const shippingAddress = shipping
-    ? { addressLine: shipping.addressLine, city: shipping.city, postcode: shipping.postcode, state: shipping.state }
-    : null;
+  const shippingAddress = isPickup
+    ? null
+    : { addressLine: shipping.addressLine, city: shipping.city, postcode: shipping.postcode, state: shipping.state };
 
-  const { error: rpcError } = await supabase.rpc("create_pending_order", {
+  const { error: rpcError } = await createServiceClient().rpc("create_pending_order", {
     p_session_id: session.id,
-    p_items: orderItems,
-    p_subtotal: subtotal + shippingPrice,
+    p_items: cart.items.map(({ variant_id, name, title, qty, price }) => ({ variant_id, name, title, qty, price })),
+    p_subtotal: cart.subtotal,
+    p_total: Math.round((cart.subtotal + shippingPrice) * 100) / 100,
     p_customer_email: null,
-    p_shipping_method: shipping?.method ?? null,
+    p_shipping_method: method,
     p_shipping_cost: shippingPrice,
     p_shipping_address: shippingAddress,
-    p_shipping_service_id: shipping?.serviceId ?? null,
-    p_referral_code: referralCode ?? null,
-    p_customer_name: customerName?.trim() || null,
-    p_customer_phone: customerPhone?.trim() || null,
+    p_shipping_service_id: isPickup ? null : (shipping.serviceId ?? null),
+    p_referral_code: typeof body.referralCode === "string" ? body.referralCode.slice(0, 64) : null,
+    p_customer_name: customerName,
+    p_customer_phone: customerPhone,
   });
   if (rpcError) return NextResponse.json({ error: "Could not start checkout" }, { status: 500 });
 

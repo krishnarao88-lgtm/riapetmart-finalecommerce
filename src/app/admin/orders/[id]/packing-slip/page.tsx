@@ -16,7 +16,7 @@ export default async function PackingSlipPage({ params }: PageProps<"/admin/orde
 
   const { data } = await supabase
     .from("orders")
-    .select("id, created_at, customer_email, subtotal, shipping_cost, shipping_method, shipping_address, items")
+    .select("id, created_at, customer_email, subtotal, shipping_cost, total, shipping_method, shipping_address, items")
     .eq("id", id)
     .single();
 
@@ -27,6 +27,7 @@ export default async function PackingSlipPage({ params }: PageProps<"/admin/orde
     customer_email: string | null;
     subtotal: number;
     shipping_cost: number;
+    total: number;
     shipping_method: string | null;
     shipping_address: ShippingAddress;
     items: OrderItem[];
@@ -95,7 +96,7 @@ export default async function PackingSlipPage({ params }: PageProps<"/admin/orde
         <div className="mt-4 flex justify-end gap-8 text-sm">
           <span>Subtotal: {formatMyr(order.subtotal)}</span>
           <span>Delivery: {formatMyr(order.shipping_cost)}</span>
-          <span className="font-bold">Total: {formatMyr(order.subtotal + order.shipping_cost)}</span>
+          <span className="font-bold">Total: {formatMyr(order.total)}</span>
         </div>
       </div>
     </div>

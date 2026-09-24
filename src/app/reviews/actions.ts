@@ -3,6 +3,7 @@
 import { randomUUID } from "node:crypto";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import { createServiceClient } from "@/lib/supabase/service";
 
 const MAX_IMAGE_BYTES = 5 * 1024 * 1024;
 
@@ -18,22 +19,23 @@ export async function submitReview(formData: FormData) {
   if (!name || !email || !body || rating < 1 || rating > 5) {
     redirect("/reviews/new?error=1");
   }
-  if (images.some((f) => f.size > MAX_IMAGE_BYTES || !f.type.startsWith("image/"))) {
+  if (images.some((f) => f.size > MAX_IMAGE_BYTES || !f.type.startsWith("image/") || f.type.includes("svg"))) {
     redirect("/reviews/new?error=image");
   }
 
-  const supabase = await createClient();
-
+  // The bucket has no public upload policy; the service role uploads after the checks above.
+  const storage = createServiceClient().storage;
   const imagePaths: string[] = [];
   for (const file of images.slice(0, 4)) {
-    const ext = file.name.split(".").pop() || "jpg";
+    const ext = file.name.split(".").pop()?.replace(/[^a-z0-9]/gi, "").slice(0, 5) || "jpg";
     const path = `${randomUUID()}.${ext}`;
-    const { error: uploadError } = await supabase.storage.from("review-images").upload(path, file, {
+    const { error: uploadError } = await storage.from("review-images").upload(path, file, {
       contentType: file.type,
     });
     if (!uploadError) imagePaths.push(path);
   }
 
+  const supabase = await createClient();
   const { error } = await supabase.rpc("submit_review", {
     p_order_id: orderId ? String(orderId) : null,
     p_customer_name: name,
