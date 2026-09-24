@@ -5,6 +5,23 @@ import { usePathname } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 
 const STORAGE_KEY = "riapetmart:welcome-popup-seen";
+const DIALOG_ID = "welcome-popup";
+
+/** Opens the signup dialog on demand (e.g. from the homepage promo), even if it was dismissed before. */
+export function WelcomeOfferButton({ className, children }: { className?: string; children: React.ReactNode }) {
+  return (
+    <button
+      type="button"
+      className={className}
+      onClick={() => {
+        const dialog = document.getElementById(DIALOG_ID) as HTMLDialogElement | null;
+        if (dialog && !dialog.open) dialog.showModal();
+      }}
+    >
+      {children}
+    </button>
+  );
+}
 
 export function WelcomePopup() {
   const dialogRef = useRef<HTMLDialogElement>(null);
@@ -68,6 +85,7 @@ export function WelcomePopup() {
   return (
     <dialog
       ref={dialogRef}
+      id={DIALOG_ID}
       onClose={markSeen}
       aria-labelledby="welcome-popup-title"
       className="m-auto w-full max-w-sm rounded-3xl border-2 border-choc bg-cream p-6 shadow-[6px_6px_0_0_var(--color-choc)] backdrop:bg-choc/50"
