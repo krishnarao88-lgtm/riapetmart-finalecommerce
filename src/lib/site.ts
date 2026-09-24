@@ -4,7 +4,7 @@ export const site = {
   url: process.env.NEXT_PUBLIC_SITE_URL ?? "https://riapetmart.com",
   tagline: "Happy pets, delivered today.",
   description:
-    "Pet food, treats and care essentials from our Rawang shop. Same-day delivery in the Klang Valley, nationwide courier and free store pickup.",
+    "Pet shop in Rawang & Bukit Beruntung. Cat food, dog food and treats with same-day delivery in Selangor & KL, free store pickup and WhatsApp orders.",
   phone: "+60 19-611 2848",
   whatsapp: "60196112848",
   email: "riapetmart@gmail.com",
@@ -21,6 +21,11 @@ export const site = {
   google: { rating: 4.1, reviewCount: 67, url: "https://share.google/nyn2T6MXEyIGxYOcw" },
   // The owner's exact pinned Google Maps listing (real Place ID) — opens the installed
   // Google Maps app on Android/iOS, falling back to the Maps website otherwise.
+  // The owner's own marketplace stores, listed as the same business in structured data.
+  marketplaces: {
+    shopee: "https://shopee.com.my/riapetmartexpress",
+    lazada: "https://www.lazada.com.my/ria-pet-mart-express/",
+  },
   mapsUrl:
     "https://www.google.com/maps/place/Ria+Pet+Mart/@3.4051116,101.5577595,17.3z/data=!4m12!1m5!3m4!2zM8KwMjMnNTguNiJOIDEwMcKwMzMnMzAuMiJF!8m2!3d3.3996!4d101.5584!3m5!1s0x31cc68e83d67de1b:0xefbe9c75396960dc!8m2!3d3.4067267!4d101.5575358!16s%2Fg%2F1pzwdpqzh?entry=ttu&g_ep=EgoyMDI2MDkxNS4wIKXMDSoASAFQAw%3D%3D",
 } as const;

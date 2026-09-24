@@ -3,8 +3,9 @@ import type { Metadata } from "next";
 import { submitCatHotelBooking } from "./actions";
 
 export const metadata: Metadata = {
-  title: "Cat Hotel booking",
-  description: "Request a Cat Hotel boarding stay at Ria Pet Mart, Bandar Bukit Beruntung.",
+  title: "Cat Hotel Rawang – Book Cat Boarding Online",
+  description:
+    "Cat hotel in Rawang at Ria Pet Mart, Bandar Bukit Beruntung. RM10 per cat per day. Request your cat boarding dates online and we confirm on WhatsApp.",
   alternates: { canonical: "/cat-hotel" },
 };
 
@@ -29,7 +30,7 @@ export default async function CatHotelPage({
           />
         </div>
         <div className="grid gap-1">
-          <h1 className="font-bubble text-3xl font-extrabold text-choc">Cat Hotel booking</h1>
+          <h1 className="font-bubble text-3xl font-extrabold text-choc">Cat Hotel in Rawang: book cat boarding</h1>
           <p className="text-choc-2">
             Boarding for your cat while you&apos;re away, right here at our Bandar Bukit Beruntung shop. Current
             rate is RM10 per day, per cat — submit a request below and we&apos;ll confirm availability and the

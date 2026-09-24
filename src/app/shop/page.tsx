@@ -1,16 +1,53 @@
-import { Search } from "lucide-react";
+import { MessageCircle, Search } from "lucide-react";
+import type { Metadata } from "next";
 import Link from "next/link";
 import { ProductCard } from "@/components/product-card";
 import { getExpiryBadge, type ExpirySettings } from "@/lib/expiry";
+import { faqJsonLd, landingSeo } from "@/lib/seo";
+import { whatsappLink } from "@/lib/site";
 import { createClient } from "@/lib/supabase/server";
 
-export const metadata = {
+type ShopSearchParams = Promise<{ pet?: string; category?: string; deal?: string; q?: string }>;
+
+const shopAllMetadata: Metadata = {
   title: "Shop all",
   description:
-    "Browse dog food, cat food, treats, grooming and health supplies at Ria Pet Mart — pet shop Rawang and Bukit Beruntung, with delivery across Malaysia.",
-  keywords: ["dog food Malaysia", "cat food Malaysia", "pet shop Rawang", "kedai haiwan Rawang", "cat litter Malaysia"],
+    "Browse dog food, cat food, treats, grooming and health supplies at Ria Pet Mart, the pet shop in Rawang and Bukit Beruntung, with delivery across Malaysia.",
+  keywords: ["online pet shop Malaysia", "dog food Malaysia", "cat food Malaysia", "pet shop Rawang", "kedai haiwan Rawang"],
   alternates: { canonical: "/shop" },
 };
+
+// Category and pet filters are landing pages in their own right (e.g. "cat food Malaysia"),
+// so each gets its own title and canonical. Searches and deals stay out of the index, and a
+// landing page with no live products is noindexed until products are published.
+export async function generateMetadata({ searchParams }: { searchParams: ShopSearchParams }): Promise<Metadata> {
+  const { pet, category, deal, q } = await searchParams;
+  if (q || deal) return { ...shopAllMetadata, robots: { index: false, follow: true } };
+
+  const seo = landingSeo(category, pet);
+  if (!seo) return shopAllMetadata;
+
+  const supabase = await createClient();
+  const { count } = category
+    ? await supabase
+        .from("products")
+        .select("id, categories!inner(slug)", { count: "exact", head: true })
+        .eq("status", "published")
+        .eq("categories.slug", category)
+    : await supabase
+        .from("products")
+        .select("id", { count: "exact", head: true })
+        .eq("status", "published")
+        .in("pet_type", [pet ?? "", "dog_cat"]);
+
+  return {
+    title: seo.title,
+    description: seo.description,
+    keywords: seo.alsoSearched,
+    alternates: { canonical: category ? `/shop?category=${category}` : `/shop?pet=${pet}` },
+    robots: count ? undefined : { index: false, follow: true },
+  };
+}
 
 const petFilters = [
   { value: "dog", label: "Dogs" },
@@ -29,12 +66,9 @@ type ProductRow = {
   variants: { id: string; title: string; price: number; stock_batches: { expiry_date: string | null }[] }[];
 };
 
-export default async function ShopPage({
-  searchParams,
-}: {
-  searchParams: Promise<{ pet?: string; category?: string; deal?: string; q?: string }>;
-}) {
+export default async function ShopPage({ searchParams }: { searchParams: ShopSearchParams }) {
   const { pet, category, deal, q } = await searchParams;
+  const seo = q || deal ? null : landingSeo(category, pet);
   const supabase = await createClient();
 
   const categoriesQuery = supabase.from("categories").select("id, name, slug").order("sort");
@@ -84,8 +118,22 @@ export default async function ShopPage({
 
   return (
     <div className="mx-auto max-w-6xl px-4 py-10">
-      <h1 className="font-bubble text-3xl font-extrabold text-choc">Shop all</h1>
+      {seo && seo.faqs.length > 0 && (
+        <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(faqJsonLd(seo.faqs)) }} />
+      )}
+      <h1 className="font-bubble text-3xl font-extrabold text-choc">{seo?.h1 ?? "Shop all"}</h1>
       <p className="mt-1 text-choc-2">{rows.length} product{rows.length === 1 ? "" : "s"}</p>
+      {seo && (
+        <div className="mt-3 grid max-w-3xl gap-1.5">
+          <p className="text-choc">{seo.intro}</p>
+          <p className="text-xs text-choc-2">Also searched as: {seo.alsoSearched.join(" · ")}</p>
+          {seo.guide && (
+            <Link href={`/guides/${seo.guide.slug}`} className="w-fit text-sm font-bold text-rust underline">
+              Read: {seo.guide.label}
+            </Link>
+          )}
+        </div>
+      )}
 
       <form className="relative mt-4 max-w-md">
         <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-choc-2" aria-hidden />
@@ -169,9 +217,22 @@ export default async function ShopPage({
       </div>
 
       {rows.length === 0 ? (
-        <p className="mt-10 rounded-3xl border-2 border-choc bg-cream p-8 text-center text-choc-2">
-          No products match this filter yet — check back soon.
-        </p>
+        <div className="mt-10 grid justify-items-center gap-3 rounded-3xl border-2 border-choc bg-cream p-8 text-center">
+          <p className="text-choc-2">No products match this filter online yet.</p>
+          <p className="max-w-md text-choc">
+            Many more products are on the shelves at our Rawang shop. Ask us on WhatsApp and we&apos;ll deliver it or
+            keep it for pickup.
+          </p>
+          <a
+            href={whatsappLink(`Hi Ria Pet Mart, do you have ${seo?.h1.toLowerCase() ?? q ?? "this"} in stock?`)}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="btn-bubble bg-terracotta px-6 py-2.5 text-cream"
+          >
+            <MessageCircle className="size-5" aria-hidden />
+            Ask on WhatsApp
+          </a>
+        </div>
       ) : (
         <ul className="mt-8 grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
           {rows.map((p) => (
@@ -183,6 +244,20 @@ export default async function ShopPage({
             </li>
           ))}
         </ul>
+      )}
+
+      {seo && seo.faqs.length > 0 && (
+        <section aria-labelledby="faq-heading" className="mt-12 grid max-w-3xl gap-3">
+          <h2 id="faq-heading" className="font-bubble text-xl font-extrabold text-choc">
+            Questions pet owners ask
+          </h2>
+          {seo.faqs.map((faq) => (
+            <details key={faq.q} className="rounded-2xl border-2 border-choc/30 bg-surface p-4">
+              <summary className="cursor-pointer font-bold text-choc">{faq.q}</summary>
+              <p className="mt-2 text-sm text-choc-2">{faq.a}</p>
+            </details>
+          ))}
+        </section>
       )}
     </div>
   );

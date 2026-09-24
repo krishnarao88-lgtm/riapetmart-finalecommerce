@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { ShrinkImagesForm } from "@/components/shrink-images-form";
 import { submitReview } from "../actions";
 
 export const metadata: Metadata = { title: "Write a review" };
@@ -31,7 +32,7 @@ export default async function NewReviewPage({
         </p>
       )}
 
-      <form action={submitReview} className="grid gap-4 rounded-2xl border-2 border-choc bg-surface p-5">
+      <ShrinkImagesForm action={submitReview} className="grid gap-4 rounded-2xl border-2 border-choc bg-surface p-5">
         {order && <input type="hidden" name="order_id" value={order} />}
         {product && <input type="hidden" name="product_id" value={product} />}
 
@@ -98,7 +99,7 @@ export default async function NewReviewPage({
         <p className="text-xs text-choc-2">
           We read every review before it goes live, so it may take a day or two to appear.
         </p>
-      </form>
+      </ShrinkImagesForm>
     </div>
   );
 }
