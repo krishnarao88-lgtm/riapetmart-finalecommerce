@@ -3,6 +3,7 @@
 
 const MAX_SIDE = 1600;
 const QUALITY = 0.85;
+const MAX_TOTAL_BYTES = 3.5 * 1024 * 1024;
 
 function toBlob(canvas: HTMLCanvasElement, type: string): Promise<Blob | null> {
   return new Promise((resolve) => canvas.toBlob(resolve, type, QUALITY));
@@ -45,7 +46,7 @@ export async function shrinkImage(file: File): Promise<File> {
  * Shrinks every photo in a form's data in place. Throws a message fit to show the
  * user when a photo can't be read or the batch is still too big to send at once.
  */
-export async function shrinkFormImages(formData: FormData, maxTotalBytes = 3.5 * 1024 * 1024) {
+export async function shrinkFormImages(formData: FormData) {
   const keys = new Set<string>();
   for (const [key, value] of formData.entries()) {
     if (value instanceof File && value.size > 0) keys.add(key);
@@ -62,7 +63,7 @@ export async function shrinkFormImages(formData: FormData, maxTotalBytes = 3.5 *
     }
   }
 
-  if (total > maxTotalBytes) {
+  if (total > MAX_TOTAL_BYTES) {
     throw new Error("Those photos are too big to send together. Upload fewer at a time.");
   }
 }
