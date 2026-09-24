@@ -12,7 +12,7 @@ type Order = {
   id: string;
   created_at: string;
   status: "pending" | "paid" | "failed";
-  subtotal: number;
+  total: number;
   shipping_cost: number;
   shipping_method: string | null;
   easyparcel_tracking_url: string | null;
@@ -37,9 +37,9 @@ export default async function AccountPage() {
   const [{ data }, { data: referralCode }] = await Promise.all([
     supabase
       .from("orders")
-      .select("id, created_at, status, subtotal, shipping_cost, shipping_method, easyparcel_tracking_url, items")
+      .select("id, created_at, status, total, shipping_cost, shipping_method, easyparcel_tracking_url, items")
       .order("created_at", { ascending: false }),
-    supabase.rpc("get_or_create_referral_code", { p_email: user.email }),
+    supabase.rpc("get_or_create_my_referral_code"),
   ]);
   const orders = (data ?? []) as Order[];
   const referralUrl = referralCode ? `https://riapetmart.com/shop?ref=${referralCode}` : null;
@@ -62,8 +62,8 @@ export default async function AccountPage() {
         <div className="rounded-2xl border-2 border-choc bg-peach/40 p-4">
           <p className="font-bold text-choc">Give 10%, get 10%</p>
           <p className="mt-1 text-sm text-choc-2">
-            Share your link, and tell your friend to enter code <strong>WELCOME10</strong> at checkout for 10% off
-            their first order. Once they pay, we&apos;ll email you a 10% code too.
+            Share your link — your friend can sign up on the site for a 10% welcome code on their first order. Once
+            they pay, we&apos;ll email you a 10% code too.
           </p>
           <p className="mt-3 break-all rounded-xl border-2 border-dashed border-rust bg-surface px-3 py-2 font-mono text-sm text-choc">
             {referralUrl}
@@ -99,10 +99,12 @@ export default async function AccountPage() {
               </ul>
               <div className="flex flex-wrap items-center justify-between gap-2 border-t border-choc/20 pt-2">
                 <span className="text-sm text-choc-2">
-                  {order.shipping_method ? `Delivery: ${order.shipping_method}` : "Store pickup"}
+                  {order.shipping_method && order.shipping_method !== "pickup"
+                    ? `Delivery (${order.shipping_method}): ${order.shipping_cost > 0 ? formatMyr(order.shipping_cost) : "Free"}`
+                    : "Store pickup"}
                 </span>
                 <span className="font-bubble text-lg font-extrabold text-choc">
-                  {formatMyr(order.subtotal + order.shipping_cost)}
+                  {formatMyr(order.total)}
                 </span>
               </div>
               {order.easyparcel_tracking_url && (
