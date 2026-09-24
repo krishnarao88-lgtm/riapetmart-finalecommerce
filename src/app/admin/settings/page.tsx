@@ -5,6 +5,7 @@ import { AdminNav } from "@/components/admin/admin-nav";
 import { SettingsForm, type SettingsValues } from "@/components/admin/settings-form";
 import { requireAdmin } from "@/lib/auth";
 import { isEasyParcelConnected } from "@/lib/shipping/easyparcel";
+import { isTikTokConnected } from "@/lib/tiktok";
 
 export const metadata: Metadata = { title: "Settings", robots: { index: false } };
 
@@ -13,15 +14,18 @@ type Tier = { max_days: number; discount: number };
 export default async function SettingsPage({
   searchParams,
 }: {
-  searchParams: Promise<{ easyparcel?: string }>;
+  searchParams: Promise<{ easyparcel?: string; tiktok?: string }>;
 }) {
-  const { easyparcel } = await searchParams;
+  const { easyparcel, tiktok } = await searchParams;
   const { supabase } = await requireAdmin();
   const connected = await isEasyParcelConnected().catch(() => false);
+  const tiktokConnected = await isTikTokConnected().catch(() => false);
   const h = await headers();
   const origin = h.get("origin") ?? `https://${h.get("host")}`;
   const clientId = process.env.EASYPARCEL_CLIENT_ID ?? "";
   const authorizeUrl = `https://api.easyparcel.com/oauth/login?client_id=${clientId}&redirect_uri=${encodeURIComponent(`${origin}/api/easyparcel/callback`)}`;
+  const tiktokClientKey = process.env.TIKTOK_Client_key ?? "";
+  const tiktokAuthorizeUrl = `https://www.tiktok.com/v2/auth/authorize/?client_key=${tiktokClientKey}&scope=${encodeURIComponent("user.info.profile,user.info.stats,video.list")}&response_type=code&redirect_uri=${encodeURIComponent(`${origin}/api/tiktok/callback`)}&state=admin`;
   const { data } = await supabase.from("settings").select("key, value");
   const byKey = new Map((data ?? []).map((row) => [row.key, row.value as Record<string, unknown>]));
 
@@ -84,6 +88,31 @@ export default async function SettingsPage({
           <CheckCircle2 className="size-4 text-ok-fg" aria-hidden />
           Lalamove (same-day quotes) — connected via API key, no login needed.
         </p>
+      </div>
+
+      <div className="grid gap-3 rounded-[var(--radius-chunk)] border-2 border-ink bg-surface p-5">
+        <h2 className="font-display text-xl font-extrabold">Social connections</h2>
+        {tiktok === "connected" && (
+          <p className="rounded-xl bg-ok-bg px-3 py-2 text-sm font-medium text-ok-fg">TikTok connected.</p>
+        )}
+        {tiktok === "error" && (
+          <p className="rounded-xl bg-bad-bg px-3 py-2 text-sm font-medium text-bad-fg">
+            Couldn&apos;t connect TikTok. Try again once the app is approved (or added as a sandbox target user).
+          </p>
+        )}
+        <div className="flex items-center justify-between gap-3">
+          <span className="flex items-center gap-2 font-semibold">
+            {tiktokConnected ? (
+              <CheckCircle2 className="size-5 text-ok-fg" aria-hidden />
+            ) : (
+              <XCircle className="size-5 text-bad-fg" aria-hidden />
+            )}
+            TikTok (latest videos on homepage)
+          </span>
+          <a href={tiktokAuthorizeUrl} className="btn-chunk bg-tangerine px-4 py-2 text-sm">
+            {tiktokConnected ? "Reconnect" : "Connect TikTok"}
+          </a>
+        </div>
       </div>
 
       <SettingsForm values={values} />

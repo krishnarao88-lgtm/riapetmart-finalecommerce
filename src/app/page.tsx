@@ -7,6 +7,7 @@ import { PetCareTips } from "@/components/pet-care-tips";
 import { PetCollage } from "@/components/pet-collage";
 import { PromoBanner } from "@/components/promo-banner";
 import { Testimonial } from "@/components/testimonial";
+import { TikTokFeed } from "@/components/tiktok-feed";
 import { TrustStats } from "@/components/trust-stats";
 import { createClient } from "@/lib/supabase/server";
 
@@ -35,6 +36,7 @@ export default async function Home() {
       <PetCareTips />
       <GuidesTeaser />
       <Testimonial />
+      <TikTokFeed />
 
       <section aria-label="Why shop with us" className="mx-auto max-w-6xl px-4 pb-14 pt-6">
         <ul className="grid gap-4 rounded-3xl border-2 border-choc bg-cream p-5 sm:grid-cols-2 lg:grid-cols-4">
