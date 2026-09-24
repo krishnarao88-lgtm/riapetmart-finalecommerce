@@ -10,7 +10,7 @@ export default function PrivacyPage() {
   return (
     <div className="mx-auto max-w-2xl px-4 py-10">
       <h1 className="font-bubble text-3xl font-extrabold text-choc">Privacy policy</h1>
-      <p className="mt-2 text-sm text-choc-2">Last updated: 24 September 2026</p>
+      <p className="mt-2 text-sm text-choc-2">Last updated: 25 September 2026</p>
 
       <div className="mt-6 grid gap-4 text-choc-2">
         <p>
@@ -44,6 +44,40 @@ export default function PrivacyPage() {
           (payments), delivery couriers, Supabase (secure data storage), Resend (email), Meta/WhatsApp
           (messaging), and Google and Meta analytics tools. We may also share data where the law requires it.
         </p>
+
+        <h2 className="font-bubble text-xl font-bold text-choc">Cookies and tracking</h2>
+        <p>
+          We use Google Analytics (GA4), Google Ads and the Meta Pixel to measure visits and purchases on our
+          website and to improve our ads. These tools use cookies and similar technology to collect:
+        </p>
+        <ul className="list-disc space-y-1 pl-5">
+          <li>The pages you view and how you arrived at our website.</li>
+          <li>Your device and browser type.</li>
+          <li>Items you view, add to your cart and buy, and the order value.</li>
+          <li>Cookie identifiers that let Google and Meta recognise the same browser across visits.</li>
+        </ul>
+        <p>You can opt out at any time:</p>
+        <ul className="list-disc space-y-1 pl-5">
+          <li>Block or delete cookies in your browser settings.</li>
+          <li>
+            Install the{" "}
+            <a href="https://tools.google.com/dlpage/gaoptout" target="_blank" rel="noopener noreferrer" className="underline">
+              Google Analytics opt-out browser add-on
+            </a>
+            , and turn off personalised ads in{" "}
+            <a href="https://myadcenter.google.com/" target="_blank" rel="noopener noreferrer" className="underline">
+              Google My Ad Center
+            </a>
+            .
+          </li>
+          <li>
+            Change how Meta uses your data for ads in your{" "}
+            <a href="https://www.facebook.com/adpreferences" target="_blank" rel="noopener noreferrer" className="underline">
+              Meta ad preferences
+            </a>
+            .
+          </li>
+        </ul>
 
         <h2 className="font-bubble text-xl font-bold text-choc">How long we keep it</h2>
         <p>
