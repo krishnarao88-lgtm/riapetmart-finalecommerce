@@ -1,6 +1,3 @@
--- Columns the catalogue import needs: pack size shown to shoppers, a stable
--- reference back to the source workbook row, and review flags carried over from it.
-
 alter table public.products
   add column size_display text,
   add column source_ref text unique,

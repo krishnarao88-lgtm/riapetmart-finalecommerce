@@ -52,6 +52,3 @@ end;
 $$;
 
 grant execute on function public.submit_review to anon, authenticated;
-
-create policy "admin deletes reviews" on public.reviews
-  for delete using ((select private.is_admin()));
