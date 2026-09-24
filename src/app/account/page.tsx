@@ -1,6 +1,10 @@
 import { LogOut } from "lucide-react";
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
+import { BuyAgainButton } from "@/components/buy-again-button";
+import { getVariantStock } from "@/components/product-card";
+import type { CartLine } from "@/lib/cart-context";
+import { discountedPrice, getExpiryBadge, type ExpirySettings } from "@/lib/expiry";
 import { formatMyr } from "@/lib/pricing";
 import { createClient } from "@/lib/supabase/server";
 import { signOutAccount } from "./actions";
@@ -42,6 +46,46 @@ export default async function AccountPage() {
     supabase.rpc("get_or_create_my_referral_code"),
   ]);
   const orders = (data ?? []) as Order[];
+
+  // Current price and stock for everything in past paid orders, priced like checkout (short-dated discount included).
+  // RLS only returns active variants of published products, so anything retired is simply missing.
+  const variantIds = [...new Set(orders.filter((o) => o.status === "paid").flatMap((o) => o.items.map((i) => i.variant_id)))];
+  const [{ data: variants }, { data: settingsRow }, stock] = variantIds.length
+    ? await Promise.all([
+        supabase
+          .from("variants")
+          .select("id, title, price, products(slug, name, product_images(path))")
+          .in("id", variantIds),
+        supabase.from("settings").select("value").eq("key", "expiry_badges").maybeSingle(),
+        getVariantStock(supabase, variantIds),
+      ])
+    : [{ data: [] }, { data: null }, null];
+  const expirySettings = (settingsRow?.value ?? {}) as Partial<ExpirySettings>;
+  const current = new Map((variants ?? []).map((v) => [v.id, v]));
+  function buyAgain(items: OrderItem[]) {
+    const lines: CartLine[] = [];
+    const skipped: string[] = [];
+    for (const item of items) {
+      const v = current.get(item.variant_id);
+      const s = stock?.get(item.variant_id);
+      const product = v?.products as unknown as { slug: string; name: string; product_images: { path: string }[] } | null;
+      if (!v || !product || (stock && !s?.available)) {
+        skipped.push(`${item.name} (${item.title})`);
+        continue;
+      }
+      const badge = getExpiryBadge(s?.nearest_expiry ?? null, expirySettings);
+      lines.push({
+        variantId: v.id,
+        productSlug: product.slug,
+        productName: product.name,
+        variantTitle: v.title,
+        price: badge?.kind === "short-dated" ? discountedPrice(v.price, badge.discount) : Number(v.price),
+        image: product.product_images[0]?.path ?? null,
+        qty: Math.min(item.qty, s?.available ?? item.qty),
+      });
+    }
+    return { lines, skipped };
+  }
   const referralUrl = referralCode ? `https://riapetmart.com/shop?ref=${referralCode}` : null;
 
   return (
@@ -107,6 +151,7 @@ export default async function AccountPage() {
                   {formatMyr(order.total)}
                 </span>
               </div>
+              {order.status === "paid" && <BuyAgainButton {...buyAgain(order.items)} />}
               {order.easyparcel_tracking_url && (
                 <a
                   href={order.easyparcel_tracking_url}
