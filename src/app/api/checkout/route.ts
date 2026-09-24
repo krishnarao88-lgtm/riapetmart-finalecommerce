@@ -17,7 +17,11 @@ type ShippingInput = {
 };
 
 export async function POST(req: Request) {
-  const { lines, shipping } = (await req.json()) as { lines: CartLineInput[]; shipping?: ShippingInput };
+  const { lines, shipping, referralCode } = (await req.json()) as {
+    lines: CartLineInput[];
+    shipping?: ShippingInput;
+    referralCode?: string;
+  };
   if (!Array.isArray(lines) || lines.length === 0) {
     return NextResponse.json({ error: "Cart is empty" }, { status: 400 });
   }
@@ -100,6 +104,7 @@ export async function POST(req: Request) {
     p_shipping_cost: shippingPrice,
     p_shipping_address: shippingAddress,
     p_shipping_service_id: shipping?.serviceId ?? null,
+    p_referral_code: referralCode ?? null,
   });
   if (rpcError) return NextResponse.json({ error: "Could not start checkout" }, { status: 500 });
 

@@ -34,11 +34,15 @@ export default async function AccountPage() {
 
   // RLS restricts this to the signed-in user's own orders (customer_email match) —
   // no manual filtering needed here.
-  const { data } = await supabase
-    .from("orders")
-    .select("id, created_at, status, subtotal, shipping_cost, shipping_method, easyparcel_tracking_url, items")
-    .order("created_at", { ascending: false });
+  const [{ data }, { data: referralCode }] = await Promise.all([
+    supabase
+      .from("orders")
+      .select("id, created_at, status, subtotal, shipping_cost, shipping_method, easyparcel_tracking_url, items")
+      .order("created_at", { ascending: false }),
+    supabase.rpc("get_or_create_referral_code", { p_email: user.email }),
+  ]);
   const orders = (data ?? []) as Order[];
+  const referralUrl = referralCode ? `https://riapetmart.com/shop?ref=${referralCode}` : null;
 
   return (
     <div className="mx-auto grid max-w-3xl gap-6 px-4 py-10">
@@ -53,6 +57,19 @@ export default async function AccountPage() {
           </button>
         </form>
       </div>
+
+      {referralUrl && (
+        <div className="rounded-2xl border-2 border-choc bg-peach/40 p-4">
+          <p className="font-bold text-choc">Give 10%, get 10%</p>
+          <p className="mt-1 text-sm text-choc-2">
+            Share your link, and tell your friend to enter code <strong>WELCOME10</strong> at checkout for 10% off
+            their first order. Once they pay, we&apos;ll email you a 10% code too.
+          </p>
+          <p className="mt-3 break-all rounded-xl border-2 border-dashed border-rust bg-surface px-3 py-2 font-mono text-sm text-choc">
+            {referralUrl}
+          </p>
+        </div>
+      )}
 
       {orders.length === 0 ? (
         <p className="rounded-2xl border-2 border-choc bg-surface p-6 text-choc-2">

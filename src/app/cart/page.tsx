@@ -85,6 +85,13 @@ export default function CartPage() {
         body: JSON.stringify({
           lines: lines.map((l) => ({ variantId: l.variantId, qty: l.qty })),
           shipping: selectedShipping ? { ...selectedShipping, ...address } : undefined,
+          referralCode: (() => {
+            try {
+              return localStorage.getItem("riapetmart:ref") ?? undefined;
+            } catch {
+              return undefined;
+            }
+          })(),
         }),
       });
       const data = await res.json();

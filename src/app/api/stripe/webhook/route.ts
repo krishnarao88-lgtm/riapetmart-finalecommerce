@@ -63,6 +63,27 @@ export async function POST(req: Request) {
         console.error("Order confirmation email failed:", err);
       }
     }
+
+    try {
+      const { data: referralRows } = await supabase.rpc("get_referral_reward_target", { p_session_id: session.id });
+      const referral = (referralRows as { order_id: string; owner_email: string }[] | null)?.[0];
+      if (referral) {
+        const promo = await getStripe().promotionCodes.create({
+          promotion: { type: "coupon", coupon: "welcome10" },
+          max_redemptions: 1,
+          code: `REF${Math.random().toString(36).slice(2, 8).toUpperCase()}`,
+        });
+        await getResend().emails.send({
+          from: `${site.name} <orders@${new URL(site.url).hostname}>`,
+          to: referral.owner_email,
+          subject: "Your friend just ordered — here's your 10% off 🐾",
+          text: `Thanks for sharing ${site.name}! Your friend just placed their first order.\n\nHere's your reward code: ${promo.code}\n\nUse it at checkout for 10% off your next order: ${site.url}/shop\n\n${site.name}`,
+        });
+        await supabase.rpc("mark_referral_rewarded", { p_order_id: referral.order_id });
+      }
+    } catch (err) {
+      console.error("Referral reward failed:", err);
+    }
   }
 
   return NextResponse.json({ received: true });

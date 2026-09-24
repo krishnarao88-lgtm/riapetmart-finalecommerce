@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { Baloo_2, Bricolage_Grotesque, Figtree, Fraunces } from "next/font/google";
 import { Analytics } from "@/components/analytics";
 import { CartDrawer } from "@/components/cart-drawer";
+import { ReferralCapture } from "@/components/referral-capture";
 import { SiteFooter } from "@/components/site-footer";
 import { SiteHeader } from "@/components/site-header";
 import { WelcomePopup } from "@/components/welcome-popup";
@@ -77,6 +78,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
           dangerouslySetInnerHTML={{ __html: JSON.stringify(storeJsonLd) }}
         />
         <Analytics />
+        <ReferralCapture />
         <a
           href="#main"
           className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-50 focus:rounded-full focus:bg-surface focus:px-4 focus:py-2"
