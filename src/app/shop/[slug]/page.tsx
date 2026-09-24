@@ -13,7 +13,7 @@ async function getProduct(slug: string) {
   const { data: product } = await supabase
     .from("products")
     .select(
-      "id, name, description, ingredients, usage, size_display, pet_type, category_id, is_regulated, brands(name), categories(name, slug), product_images(path, alt, sort), variants(id, title, price, sort, stock_batches(quantity, expiry_date))",
+      "id, name, description, ingredients, usage, size_display, pet_type, category_id, is_regulated, seo_title, seo_description, brands(name), categories(name, slug), product_images(path, alt, sort), variants(id, title, price, sort, stock_batches(quantity, expiry_date))",
     )
     .eq("slug", slug)
     .eq("status", "published")
@@ -32,11 +32,12 @@ export async function generateMetadata({
 
   const image = [...(product.product_images ?? [])].sort((a, b) => a.sort - b.sort)[0];
   const description =
+    product.seo_description ??
     product.description?.slice(0, 160) ??
     `${product.name}${product.size_display ? ` — ${product.size_display}` : ""} at ${site.name}.`;
 
   return {
-    title: product.name,
+    title: product.seo_title ?? product.name,
     description,
     alternates: { canonical: `/shop/${slug}` },
     openGraph: image ? { images: [{ url: image.path }] } : undefined,
