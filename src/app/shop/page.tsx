@@ -38,10 +38,13 @@ export default async function ShopPage({
 
   const categoriesQuery = supabase.from("categories").select("id, name, slug").order("sort");
   const settingsQuery = supabase.from("settings").select("value").eq("key", "expiry_badges").single();
+  // categories!inner makes the category filter actually restrict rows — a plain embed
+  // only filters the nested object, not which products are returned.
+  const categoriesEmbed = category ? "categories!inner(name, slug)" : "categories(name)";
   let productsQuery = supabase
     .from("products")
     .select(
-      "id, slug, name, pet_type, size_display, categories(name), product_images(path, alt), variants(id, title, price, stock_batches(expiry_date))",
+      `id, slug, name, pet_type, size_display, ${categoriesEmbed}, product_images(path, alt), variants(id, title, price, stock_batches(expiry_date))`,
     )
     .eq("status", "published")
     .order("name");
@@ -70,6 +73,15 @@ export default async function ShopPage({
   }
   const badgeByProductId = new Map(withBadge.map((r) => [r.product.id, r.badge]));
 
+  const current = { pet, category, deal, q };
+  const filterHref = (overrides: Partial<typeof current>) => {
+    const next = { ...current, ...overrides };
+    const params = new URLSearchParams();
+    for (const [key, value] of Object.entries(next)) if (value) params.set(key, value);
+    const qs = params.toString();
+    return qs ? `/shop?${qs}` : "/shop";
+  };
+
   return (
     <div className="mx-auto max-w-6xl px-4 py-10">
       <h1 className="font-bubble text-3xl font-extrabold text-choc">Shop all</h1>
@@ -94,7 +106,7 @@ export default async function ShopPage({
           <p className="mb-1.5 text-xs font-bold uppercase tracking-widest text-choc-2">Pet</p>
           <div className="flex flex-wrap gap-2">
             <Link
-              href="/shop"
+              href={filterHref({ pet: undefined })}
               className={`rounded-full border-2 border-choc px-4 py-1.5 text-sm font-semibold ${!pet ? "bg-terracotta text-cream" : "bg-cream text-choc"}`}
             >
               All pets
@@ -102,7 +114,7 @@ export default async function ShopPage({
             {petFilters.map((f) => (
               <Link
                 key={f.value}
-                href={`/shop?pet=${f.value}`}
+                href={filterHref({ pet: f.value })}
                 className={`rounded-full border-2 border-choc px-4 py-1.5 text-sm font-semibold ${pet === f.value ? "bg-terracotta text-cream" : "bg-cream text-choc"}`}
               >
                 {f.label}
@@ -119,14 +131,14 @@ export default async function ShopPage({
             {(categories ?? []).map((c) => (
               <Link
                 key={c.slug}
-                href={`/shop?category=${c.slug}${pet ? `&pet=${pet}` : ""}`}
+                href={filterHref({ category: category === c.slug ? undefined : c.slug })}
                 className={`rounded-full border-2 border-peach px-4 py-1.5 text-sm font-semibold ${category === c.slug ? "bg-peach text-choc" : "bg-cream text-choc-2"}`}
               >
                 {c.name}
               </Link>
             ))}
             <Link
-              href="/shop?deal=short-dated"
+              href={filterHref({ deal: deal === "short-dated" ? undefined : "short-dated" })}
               className={`rounded-full border-2 border-rust px-4 py-1.5 text-sm font-semibold ${deal === "short-dated" ? "bg-rust text-cream" : "bg-cream text-rust"}`}
             >
               Clearance
@@ -140,14 +152,14 @@ export default async function ShopPage({
             {(categories ?? []).map((c) => (
               <Link
                 key={c.slug}
-                href={`/shop?category=${c.slug}${pet ? `&pet=${pet}` : ""}`}
+                href={filterHref({ category: category === c.slug ? undefined : c.slug })}
                 className={`rounded-full border-2 border-peach px-4 py-1.5 text-sm font-semibold ${category === c.slug ? "bg-peach text-choc" : "bg-cream text-choc-2"}`}
               >
                 {c.name}
               </Link>
             ))}
             <Link
-              href="/shop?deal=short-dated"
+              href={filterHref({ deal: deal === "short-dated" ? undefined : "short-dated" })}
               className={`rounded-full border-2 border-rust px-4 py-1.5 text-sm font-semibold ${deal === "short-dated" ? "bg-rust text-cream" : "bg-cream text-rust"}`}
             >
               Clearance
