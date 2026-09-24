@@ -38,7 +38,7 @@ export function PetCollage() {
             alt="A cheerful border collie with perked ears"
             fill
             sizes={cardSizes}
-            className="object-cover object-bottom"
+            className="object-cover object-top"
           />
           <PawPrint aria-hidden className={`${archSticker} right-5 top-5 size-7 rotate-[16deg] text-cream/85`} />
           <span className="relative rounded-full border-2 border-choc bg-cream px-3 py-1 text-xs font-bold text-choc">
