@@ -35,3 +35,13 @@ export async function signOut() {
   await supabase.auth.signOut();
   redirect("/admin/login");
 }
+
+export async function moderateReview(formData: FormData) {
+  const id = String(formData.get("id"));
+  const status = String(formData.get("status"));
+  if (!["approved", "rejected"].includes(status)) return;
+
+  const supabase = await createClient();
+  await supabase.from("reviews").update({ status }).eq("id", id);
+  redirect("/admin/reviews");
+}

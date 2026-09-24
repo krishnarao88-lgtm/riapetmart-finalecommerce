@@ -33,5 +33,23 @@ export async function GET(req: Request) {
     }
   }
 
-  return NextResponse.json({ sent });
+  const { data: reviewOrders } = await supabase.rpc("get_orders_to_request_review");
+  let reviewsRequested = 0;
+  for (const order of (reviewOrders ?? []) as { order_id: string; email: string }[]) {
+    try {
+      const link = `${site.url}/reviews/new?order=${order.order_id}&email=${encodeURIComponent(order.email)}`;
+      await getResend().emails.send({
+        from: `${site.name} <orders@${new URL(site.url).hostname}>`,
+        to: order.email,
+        subject: "Got a minute? Tell other pet parents how it went 🐾",
+        text: `Hi there,\n\nHope your pet is enjoying the last order! If you have a minute, we'd love a quick honest review — it helps other pet owners in Malaysia decide what to feed their fur babies.\n\nLeave a review here: ${link}\n\nThank you!\n${site.name}\n${site.phone}`,
+      });
+      await supabase.rpc("mark_review_requested", { p_order_id: order.order_id });
+      reviewsRequested += 1;
+    } catch (err) {
+      console.error("Review request email failed:", order.order_id, err);
+    }
+  }
+
+  return NextResponse.json({ sent, reviewsRequested });
 }

@@ -40,6 +40,7 @@ export function SiteFooter() {
           <Link href="/contact" className="hover:text-peach">Contact us</Link>
           <Link href="/returns" className="hover:text-peach">Returns & refunds</Link>
           <Link href="/privacy" className="hover:text-peach">Privacy policy</Link>
+          <Link href="/reviews" className="hover:text-peach">Customer reviews</Link>
           <Link href="/account" className="hover:text-peach">My orders</Link>
         </div>
 
