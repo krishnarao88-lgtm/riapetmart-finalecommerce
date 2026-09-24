@@ -61,3 +61,13 @@ export async function removeStaff(formData: FormData) {
   await supabase.rpc("remove_staff", { p_email: email });
   redirect("/admin/staff");
 }
+
+export async function updateCatHotelBookingStatus(formData: FormData) {
+  const id = String(formData.get("id"));
+  const status = String(formData.get("status"));
+  if (!["confirmed", "declined", "completed"].includes(status)) return;
+
+  const supabase = await createClient();
+  await supabase.from("cat_hotel_bookings").update({ status }).eq("id", id);
+  redirect("/admin/cat-hotel");
+}

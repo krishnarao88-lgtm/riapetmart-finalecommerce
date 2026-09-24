@@ -5,6 +5,7 @@ const links = [
   { href: "/admin", label: "Dashboard", adminOnly: true },
   { href: "/admin/products", label: "Products & stock", adminOnly: true },
   { href: "/admin/orders", label: "Orders", adminOnly: false },
+  { href: "/admin/cat-hotel", label: "Cat Hotel", adminOnly: false },
   { href: "/admin/reviews", label: "Reviews", adminOnly: false },
   { href: "/admin/import", label: "Import & export", adminOnly: true },
   { href: "/admin/staff", label: "Staff", adminOnly: true },
