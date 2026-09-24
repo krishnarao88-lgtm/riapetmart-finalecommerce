@@ -2,9 +2,10 @@ import { AlertTriangle, Boxes, FileSpreadsheet, LogOut, PackageX, Percent, Recei
 import type { Metadata } from "next";
 import Link from "next/link";
 import { redirect } from "next/navigation";
+import { getAdminSession } from "@/lib/auth";
 import { getExpiryBadge, type ExpirySettings } from "@/lib/expiry";
+import { startOfTodayInKL } from "@/lib/kl-time";
 import { formatMyr } from "@/lib/pricing";
-import { createClient } from "@/lib/supabase/server";
 import { signOut } from "./actions";
 
 export const metadata: Metadata = { title: "Admin", robots: { index: false } };
@@ -18,23 +19,16 @@ const sections = [
 ];
 
 export default async function AdminHome() {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user) redirect("/admin/login");
-
-  const { data: profile } = await supabase.from("profiles").select("role").eq("id", user.id).single();
-  if (profile?.role === "staff") redirect("/admin/orders");
-  const isAdmin = profile?.role === "admin";
+  const { supabase, user, role } = await getAdminSession();
+  if (role === "staff") redirect("/admin/orders");
+  const isAdmin = role === "admin";
 
   let stats: { totalSales: string; ordersToday: number; lowStock: number; expiringSoon: number } | null = null;
   if (isAdmin) {
-    const startOfToday = new Date();
-    startOfToday.setHours(0, 0, 0, 0);
+    const startOfToday = startOfTodayInKL();
 
     const [{ data: orders }, { data: products }, { data: settingsRow }] = await Promise.all([
-      supabase.from("orders").select("status, subtotal, shipping_cost, created_at"),
+      supabase.from("orders").select("total, created_at").eq("status", "paid"),
       supabase
         .from("products")
         .select("variants(price, stock_batches(quantity, expiry_date))")
@@ -42,12 +36,8 @@ export default async function AdminHome() {
       supabase.from("settings").select("value").eq("key", "expiry_badges").single(),
     ]);
 
-    const totalSales = (orders ?? [])
-      .filter((o) => o.status === "paid")
-      .reduce((sum, o) => sum + Number(o.subtotal) + Number(o.shipping_cost ?? 0), 0);
-    const ordersToday = (orders ?? []).filter(
-      (o) => o.status === "paid" && new Date(o.created_at) >= startOfToday,
-    ).length;
+    const totalSales = (orders ?? []).reduce((sum, o) => sum + Number(o.total), 0);
+    const ordersToday = (orders ?? []).filter((o) => new Date(o.created_at) >= startOfToday).length;
 
     const expirySettings = (settingsRow?.value ?? {}) as Partial<ExpirySettings>;
     let lowStock = 0;
