@@ -1,6 +1,10 @@
 import { Bike, PackageCheck, ShieldCheck, Store } from "lucide-react";
+import { CategoryQuickLinks } from "@/components/category-quick-links";
+import { FeaturedProducts } from "@/components/featured-products";
 import { Hero } from "@/components/hero";
 import { PetCollage } from "@/components/pet-collage";
+import { PromoBanner } from "@/components/promo-banner";
+import { Testimonial } from "@/components/testimonial";
 import { TrustStats } from "@/components/trust-stats";
 import { createClient } from "@/lib/supabase/server";
 
@@ -21,8 +25,12 @@ export default async function Home() {
   return (
     <>
       <Hero />
+      <CategoryQuickLinks />
+      <PromoBanner />
+      <FeaturedProducts />
       <TrustStats publishedProductCount={count ?? 0} />
       <PetCollage />
+      <Testimonial />
 
       <section aria-label="Why shop with us" className="mx-auto max-w-6xl px-4 pb-14 pt-6">
         <ul className="grid gap-4 rounded-3xl border-2 border-choc bg-cream p-5 sm:grid-cols-2 lg:grid-cols-4">
