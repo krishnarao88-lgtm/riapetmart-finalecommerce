@@ -2,12 +2,14 @@ import { MessageCircle, Search } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { getVariantStock, ProductCard, productStock } from "@/components/product-card";
+import { SortSelect } from "@/components/sort-select";
 import { type ExpirySettings } from "@/lib/expiry";
 import { faqJsonLd, landingSeo } from "@/lib/seo";
+import { searchTerm, sortByPrice } from "@/lib/shop-search";
 import { whatsappLink } from "@/lib/site";
 import { createClient } from "@/lib/supabase/server";
 
-type ShopSearchParams = Promise<{ pet?: string; category?: string; deal?: string; q?: string }>;
+type ShopSearchParams = Promise<{ pet?: string; category?: string; deal?: string; q?: string; sort?: string }>;
 
 const shopAllMetadata: Metadata = {
   title: "Shop all",
@@ -67,9 +69,19 @@ type ProductRow = {
 };
 
 export default async function ShopPage({ searchParams }: { searchParams: ShopSearchParams }) {
-  const { pet, category, deal, q } = await searchParams;
+  const { pet, category, deal, q, sort } = await searchParams;
   const seo = q || deal ? null : landingSeo(category, pet);
   const supabase = await createClient();
+  const term = searchTerm(q);
+
+  // q matches the product name, its brand or its category: resolve brand/category names to ids first,
+  // since PostgREST can't OR a parent column with an embedded table's column.
+  const [{ data: brandHits }, { data: categoryHits }] = term
+    ? await Promise.all([
+        supabase.from("brands").select("id").ilike("name", `%${term}%`),
+        supabase.from("categories").select("id").ilike("name", `%${term}%`),
+      ])
+    : [{ data: null }, { data: null }];
 
   const categoriesQuery = supabase.from("categories").select("id, name, slug").order("sort");
   const settingsQuery = supabase.from("settings").select("value").eq("key", "expiry_badges").single();
@@ -86,7 +98,19 @@ export default async function ShopPage({ searchParams }: { searchParams: ShopSea
 
   if (pet) productsQuery = productsQuery.or(`pet_type.eq.${pet},pet_type.eq.dog_cat`);
   if (category) productsQuery = productsQuery.eq("categories.slug", category);
-  if (q) productsQuery = productsQuery.ilike("name", `%${q}%`);
+  if (term) {
+    const brandIds = (brandHits ?? []).map((b) => b.id);
+    const categoryIds = (categoryHits ?? []).map((c) => c.id);
+    productsQuery = productsQuery.or(
+      [
+        `name.ilike.%${term}%`,
+        brandIds.length && `brand_id.in.(${brandIds.join(",")})`,
+        categoryIds.length && `category_id.in.(${categoryIds.join(",")})`,
+      ]
+        .filter(Boolean)
+        .join(","),
+    );
+  }
 
   const [{ data: categories }, { data: settingsRow }, { data: products }] = await Promise.all([
     categoriesQuery,
@@ -95,7 +119,7 @@ export default async function ShopPage({ searchParams }: { searchParams: ShopSea
   ]);
 
   const expirySettings = (settingsRow?.value ?? {}) as Partial<ExpirySettings>;
-  let rows = (products ?? []) as unknown as ProductRow[];
+  let rows = sortByPrice((products ?? []) as unknown as ProductRow[], sort);
 
   const stock = await getVariantStock(supabase, rows.flatMap((p) => p.variants.map((v) => v.id)));
 
@@ -103,7 +127,7 @@ export default async function ShopPage({ searchParams }: { searchParams: ShopSea
     rows = rows.filter((p) => productStock(p.variants, stock, expirySettings).badge?.kind === "short-dated");
   }
 
-  const current = { pet, category, deal, q };
+  const current = { pet, category, deal, q, sort };
   const filterHref = (overrides: Partial<typeof current>) => {
     const next = { ...current, ...overrides };
     const params = new URLSearchParams();
@@ -151,15 +175,20 @@ export default async function ShopPage({ searchParams }: { searchParams: ShopSea
         </div>
       )}
 
-      <form className="relative mt-4 max-w-md">
-        <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-choc-2" aria-hidden />
-        <input
-          type="search"
-          name="q"
-          defaultValue={q ?? ""}
-          placeholder="Search products…"
-          className="w-full rounded-full border-2 border-choc bg-cream py-2 pl-9 pr-4 text-sm text-choc placeholder:text-choc-2/70"
-        />
+      <form role="search" className="mt-4 flex max-w-xl flex-wrap gap-2">
+        <div className="relative min-w-48 flex-1">
+          <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-choc-2" aria-hidden />
+          <input
+            type="search"
+            name="q"
+            defaultValue={q ?? ""}
+            key={q}
+            placeholder="Search products, brands, categories…"
+            aria-label="Search products"
+            className="w-full rounded-full border-2 border-choc bg-cream py-2 pl-9 pr-4 text-sm text-choc placeholder:text-choc-2/70"
+          />
+        </div>
+        <SortSelect key={sort} value={sort ?? ""} />
         {pet && <input type="hidden" name="pet" value={pet} />}
         {category && <input type="hidden" name="category" value={category} />}
         {deal && <input type="hidden" name="deal" value={deal} />}
