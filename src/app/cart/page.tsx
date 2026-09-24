@@ -4,6 +4,7 @@ import { CreditCard, Loader2, MapPinned, Truck } from "lucide-react";
 import { Minus, Plus, ShoppingBag, Trash2 } from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";
+import { FreeShippingProgress } from "@/components/free-shipping-progress";
 import { useCart } from "@/lib/cart-context";
 import { formatMyr } from "@/lib/pricing";
 import { site, whatsappLink } from "@/lib/site";
@@ -20,8 +21,6 @@ type ShippingOption = {
   price: number;
   serviceId?: string;
 };
-
-const FREE_SHIPPING_THRESHOLD = 150;
 
 export default function CartPage() {
   const { lines, subtotal, setQty, remove } = useCart();
@@ -126,11 +125,9 @@ export default function CartPage() {
     <div className="mx-auto max-w-3xl px-4 py-10">
       <h1 className="font-bubble text-3xl font-extrabold text-choc">Your cart</h1>
 
-      <p className="mt-4 rounded-full bg-peach/40 px-4 py-2 text-center text-sm font-semibold text-choc">
-        {subtotal >= FREE_SHIPPING_THRESHOLD
-          ? "🎉 You've unlocked free delivery!"
-          : `Add ${formatMyr(FREE_SHIPPING_THRESHOLD - subtotal)} more for free delivery`}
-      </p>
+      <div className="mt-4 rounded-2xl bg-peach/40 px-4 py-3">
+        <FreeShippingProgress subtotal={subtotal} />
+      </div>
 
       <ul className="mt-6 grid gap-3">
         {lines.map((l) => (

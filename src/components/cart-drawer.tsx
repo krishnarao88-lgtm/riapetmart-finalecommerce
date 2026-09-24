@@ -2,6 +2,7 @@
 
 import { Minus, Plus, ShoppingBag, X } from "lucide-react";
 import Link from "next/link";
+import { FreeShippingProgress } from "@/components/free-shipping-progress";
 import { useCart } from "@/lib/cart-context";
 import { formatMyr } from "@/lib/pricing";
 
@@ -76,7 +77,8 @@ export function CartDrawer() {
 
         {lines.length > 0 && (
           <div className="border-t-2 border-choc/15 p-4">
-            <div className="flex items-center justify-between font-bold text-choc">
+            <FreeShippingProgress subtotal={subtotal} />
+            <div className="mt-3 flex items-center justify-between font-bold text-choc">
               <span>Subtotal</span>
               <span className="text-xl">{formatMyr(subtotal)}</span>
             </div>

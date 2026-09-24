@@ -1,8 +1,7 @@
-import { PawPrint, Search } from "lucide-react";
+import { Search } from "lucide-react";
 import Link from "next/link";
-import { QuickAddButton } from "@/components/quick-add-button";
-import { discountedPrice, getExpiryBadge, type ExpirySettings } from "@/lib/expiry";
-import { formatMyr } from "@/lib/pricing";
+import { ProductCard } from "@/components/product-card";
+import { getExpiryBadge, type ExpirySettings } from "@/lib/expiry";
 import { createClient } from "@/lib/supabase/server";
 
 export const metadata = {
@@ -73,7 +72,6 @@ export default async function ShopPage({
   if (deal === "short-dated") {
     rows = withBadge.filter((r) => r.badge?.kind === "short-dated").map((r) => r.product);
   }
-  const badgeByProductId = new Map(withBadge.map((r) => [r.product.id, r.badge]));
 
   const current = { pet, category, deal, q };
   const filterHref = (overrides: Partial<typeof current>) => {
@@ -176,66 +174,14 @@ export default async function ShopPage({
         </p>
       ) : (
         <ul className="mt-8 grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
-          {rows.map((p) => {
-            const minPrice = p.variants.length ? Math.min(...p.variants.map((v) => v.price)) : null;
-            const cheapestVariant = [...p.variants].sort((a, b) => a.price - b.price)[0] ?? null;
-            const image = p.product_images[0];
-            const badge = badgeByProductId.get(p.id);
-            const showPrice =
-              minPrice !== null && badge?.kind === "short-dated" ? discountedPrice(minPrice, badge.discount) : minPrice;
-            return (
-              <li key={p.id}>
-                <Link
-                  href={`/shop/${p.slug}`}
-                  className="group flex h-full flex-col overflow-hidden rounded-2xl border-2 border-choc bg-surface shadow-[3px_3px_0_0_var(--color-choc)] transition-transform hover:-translate-y-0.5"
-                >
-                  <div className="relative flex aspect-square items-center justify-center bg-peach/40">
-                    {image ? (
-                      // eslint-disable-next-line @next/next/no-img-element
-                      <img src={image.path} alt={image.alt ?? p.name} className="size-full object-cover" />
-                    ) : (
-                      <PawPrint className="size-10 text-rust/50" aria-hidden />
-                    )}
-                    {badge?.kind === "short-dated" && (
-                      <span className="absolute left-2 top-2 rounded-full bg-rust px-2 py-0.5 text-xs font-bold text-cream">
-                        -{Math.round(badge.discount * 100)}% short-dated
-                      </span>
-                    )}
-                    {badge?.kind === "fresh" && (
-                      <span className="absolute left-2 top-2 rounded-full bg-ok-bg px-2 py-0.5 text-xs font-bold text-ok-fg">
-                        Fresh stock
-                      </span>
-                    )}
-                    {cheapestVariant && showPrice !== null && (
-                      <QuickAddButton
-                        variantId={cheapestVariant.id}
-                        productSlug={p.slug}
-                        productName={p.name}
-                        variantTitle={cheapestVariant.title}
-                        price={showPrice}
-                        image={image?.path ?? null}
-                      />
-                    )}
-                  </div>
-                  <div className="flex flex-1 flex-col gap-1 p-3">
-                    <span className="text-xs font-semibold uppercase tracking-wide text-rust">
-                      {p.categories?.name ?? p.pet_type}
-                    </span>
-                    <span className="line-clamp-2 text-sm font-bold text-choc">{p.name}</span>
-                    {p.size_display && <span className="text-xs text-choc-2">{p.size_display}</span>}
-                    <span className="mt-auto flex items-baseline gap-2 pt-1">
-                      {badge?.kind === "short-dated" && minPrice !== null && (
-                        <span className="text-xs text-choc-2 line-through">{formatMyr(minPrice)}</span>
-                      )}
-                      <span className="font-bold text-choc">
-                        {showPrice !== null ? `from ${formatMyr(showPrice)}` : "Price on request"}
-                      </span>
-                    </span>
-                  </div>
-                </Link>
-              </li>
-            );
-          })}
+          {rows.map((p) => (
+            <li key={p.id}>
+              <ProductCard
+                product={{ ...p, categoryLabel: p.categories?.name ?? p.pet_type }}
+                expirySettings={expirySettings}
+              />
+            </li>
+          ))}
         </ul>
       )}
     </div>
