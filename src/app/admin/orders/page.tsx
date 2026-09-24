@@ -14,6 +14,8 @@ type Order = {
   created_at: string;
   status: "pending" | "paid" | "failed";
   customer_email: string | null;
+  customer_name: string | null;
+  customer_phone: string | null;
   subtotal: number;
   items: OrderItem[];
   shipping_method: string | null;
@@ -34,7 +36,7 @@ export default async function OrdersPage() {
   const { data } = await supabase
     .from("orders")
     .select(
-      "id, created_at, status, customer_email, subtotal, items, shipping_method, shipping_address, easyparcel_order_number, easyparcel_awb_url, easyparcel_tracking_url",
+      "id, created_at, status, customer_email, customer_name, customer_phone, subtotal, items, shipping_method, shipping_address, easyparcel_order_number, easyparcel_awb_url, easyparcel_tracking_url",
     )
     .order("created_at", { ascending: false })
     .limit(200);
@@ -83,7 +85,11 @@ export default async function OrdersPage() {
                 </p>
               )}
               <div className="flex flex-wrap items-center justify-between gap-2 border-t border-line pt-2">
-                <span className="text-sm text-ink-2">{order.customer_email ?? "No email on file"}</span>
+                <span className="text-sm text-ink-2">
+                  {order.customer_name ?? "No name on file"}
+                  {order.customer_phone ? ` · ${order.customer_phone}` : ""}
+                  {order.customer_email ? ` · ${order.customer_email}` : ""}
+                </span>
                 <span className="font-display text-lg font-extrabold">{formatMyr(order.subtotal)}</span>
               </div>
               <Link
@@ -106,7 +112,11 @@ export default async function OrdersPage() {
                     )}
                   </div>
                 ) : role === "admin" ? (
-                  <BookEasyParcel orderId={order.id} />
+                  <BookEasyParcel
+                    orderId={order.id}
+                    defaultName={order.customer_name ?? ""}
+                    defaultPhone={order.customer_phone ?? ""}
+                  />
                 ) : null
               )}
             </li>

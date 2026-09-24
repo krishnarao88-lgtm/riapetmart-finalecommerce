@@ -3,6 +3,9 @@ import Link from "next/link";
 import { ClearCartOnMount } from "@/components/clear-cart-on-mount";
 import { formatMyr } from "@/lib/pricing";
 import { getStripe } from "@/lib/stripe";
+import { createClient } from "@/lib/supabase/server";
+
+type OrderItem = { name: string; title: string; qty: number; price: number };
 
 export default async function OrderSuccessPage({
   searchParams,
@@ -12,6 +15,14 @@ export default async function OrderSuccessPage({
   const { session_id } = await searchParams;
   const session = session_id ? await getStripe().checkout.sessions.retrieve(session_id).catch(() => null) : null;
   const paid = session?.payment_status === "paid";
+
+  const supabase = await createClient();
+  const { data: order } = paid && session_id
+    ? ((await supabase.rpc("get_order_for_email", { p_session_id: session_id }).single()) as {
+        data: { id: string; items: OrderItem[] } | null;
+      })
+    : { data: null };
+  const items = order?.items ?? [];
 
   return (
     <div className="mx-auto max-w-xl px-4 py-16 text-center">
@@ -25,6 +36,24 @@ export default async function OrderSuccessPage({
           ? "We've received your payment and will get your order ready. You'll hear from us on WhatsApp shortly."
           : "If you completed payment, refresh this page in a moment. Otherwise, your cart is still saved."}
       </p>
+
+      {paid && order?.id && (
+        <p className="mt-4 text-sm font-semibold text-choc-2">Order #{String(order.id).slice(0, 8).toUpperCase()}</p>
+      )}
+
+      {paid && items.length > 0 && (
+        <ul className="mt-4 grid gap-1.5 rounded-2xl border-2 border-choc bg-surface p-4 text-left">
+          {items.map((it) => (
+            <li key={`${it.name}-${it.title}`} className="flex justify-between gap-2 text-sm text-choc">
+              <span>
+                {it.name} <span className="text-choc-2">({it.title})</span> × {it.qty}
+              </span>
+              <span className="font-semibold">{formatMyr(it.price * it.qty)}</span>
+            </li>
+          ))}
+        </ul>
+      )}
+
       {paid && session?.amount_total && (
         <p className="mt-4 text-xl font-bold text-choc">{formatMyr(session.amount_total / 100)}</p>
       )}

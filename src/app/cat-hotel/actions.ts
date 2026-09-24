@@ -10,6 +10,7 @@ export async function submitCatHotelBooking(formData: FormData) {
   const customerEmail = String(formData.get("customer_email") ?? "").trim();
   const customerPhone = String(formData.get("customer_phone") ?? "").trim();
   const catName = String(formData.get("cat_name") ?? "").trim();
+  const petCount = Math.max(1, Number(formData.get("pet_count")) || 1);
   const checkIn = String(formData.get("check_in") ?? "");
   const checkOut = String(formData.get("check_out") ?? "");
   const notes = String(formData.get("notes") ?? "").trim();
@@ -27,16 +28,18 @@ export async function submitCatHotelBooking(formData: FormData) {
     p_check_in: checkIn,
     p_check_out: checkOut,
     p_notes: notes || null,
+    p_pet_count: petCount,
   });
   if (error) redirect("/cat-hotel?error=1");
 
-  const summary = `${customerName} (${customerPhone}) — ${checkIn} to ${checkOut}${catName ? ` for ${catName}` : ""}`;
+  const petLabel = `${petCount} cat${petCount > 1 ? "s" : ""}${catName ? ` (${catName})` : ""}`;
+  const summary = `${customerName} (${customerPhone}) — ${checkIn} to ${checkOut} — ${petLabel}`;
   try {
     await getResend().emails.send({
       from: `${site.name} <orders@${new URL(site.url).hostname}>`,
       to: customerEmail,
       subject: "We've received your Cat Hotel booking request",
-      text: `Hi ${customerName},\n\nThanks for your Cat Hotel booking request:\n${checkIn} to ${checkOut}${catName ? ` for ${catName}` : ""}\n\nThis is a request, not a confirmed reservation yet — we'll contact you on WhatsApp or phone (${site.phone}) shortly to confirm availability and the current rate.\n\n${site.name}`,
+      text: `Hi ${customerName},\n\nThanks for your Cat Hotel booking request for ${petLabel}:\n${checkIn} to ${checkOut}\n\nThis is a request, not a confirmed reservation yet — we'll contact you on WhatsApp or phone (${site.phone}) shortly to confirm availability and the current rate.\n\n${site.name}`,
     });
     await getResend().emails.send({
       from: `${site.name} <orders@${new URL(site.url).hostname}>`,

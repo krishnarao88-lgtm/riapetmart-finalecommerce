@@ -85,13 +85,28 @@ export default async function CatHotelPage({
             </label>
           </div>
 
-          <label className="grid gap-1 text-sm font-semibold text-choc">
-            Cat&apos;s name (optional)
-            <input
-              name="cat_name"
-              className="rounded-xl border-2 border-choc bg-cream px-3 py-2 text-base font-normal text-choc"
-            />
-          </label>
+          <div className="grid gap-4 sm:grid-cols-[1fr_auto]">
+            <label className="grid min-w-0 gap-1 text-sm font-semibold text-choc">
+              Cat&apos;s name(s) (optional)
+              <input
+                name="cat_name"
+                placeholder="e.g. Milo, Luna"
+                className="w-full min-w-0 rounded-xl border-2 border-choc bg-cream px-3 py-2 text-base font-normal text-choc"
+              />
+            </label>
+            <label className="grid gap-1 text-sm font-semibold text-choc">
+              Number of cats
+              <input
+                type="number"
+                name="pet_count"
+                min={1}
+                max={10}
+                defaultValue={1}
+                required
+                className="w-24 rounded-xl border-2 border-choc bg-cream px-3 py-2 text-base font-normal text-choc"
+              />
+            </label>
+          </div>
 
           <div className="grid gap-4 sm:grid-cols-2">
             <label className="grid min-w-0 gap-1 text-sm font-semibold text-choc">

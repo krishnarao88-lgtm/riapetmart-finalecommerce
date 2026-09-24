@@ -28,6 +28,8 @@ export default function CartPage() {
   const [payError, setPayError] = useState<string | null>(null);
 
   const [email, setEmail] = useState("");
+  const [name, setName] = useState("");
+  const [phone, setPhone] = useState("");
   const [address, setAddress] = useState({ addressLine: "", city: "", postcode: "", state: "Selangor" });
 
   function trackCart(currentEmail: string) {
@@ -84,6 +86,8 @@ export default function CartPage() {
         body: JSON.stringify({
           lines: lines.map((l) => ({ variantId: l.variantId, qty: l.qty })),
           shipping: selectedShipping ? { ...selectedShipping, ...address } : undefined,
+          customerName: name,
+          customerPhone: phone,
           referralCode: (() => {
             try {
               return localStorage.getItem("riapetmart:ref") ?? undefined;
@@ -182,7 +186,22 @@ export default function CartPage() {
       </ul>
 
       <div className="mt-6 grid gap-3 rounded-2xl border-2 border-choc bg-surface p-4">
-        <h2 className="font-bold text-choc">Your email</h2>
+        <h2 className="font-bold text-choc">Your details</h2>
+        <div className="grid gap-3 sm:grid-cols-2">
+          <input
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            placeholder="Full name"
+            className="min-w-0 rounded-xl border-2 border-choc/40 px-3 py-2"
+          />
+          <input
+            type="tel"
+            value={phone}
+            onChange={(e) => setPhone(e.target.value)}
+            placeholder="Phone / WhatsApp"
+            className="min-w-0 rounded-xl border-2 border-choc/40 px-3 py-2"
+          />
+        </div>
         <input
           type="email"
           value={email}
@@ -191,8 +210,15 @@ export default function CartPage() {
           placeholder="you@example.com"
           className="rounded-xl border-2 border-choc/40 px-3 py-2"
         />
-        <p className="text-xs text-choc-2">For your order confirmation and a reminder if you don&apos;t finish checkout.</p>
+        <p className="text-xs text-choc-2">
+          Your name and phone go straight onto the delivery label — no need to re-enter them for us. Email is for
+          your order confirmation and a reminder if you don&apos;t finish checkout.
+        </p>
       </div>
+
+      <p className="mt-4 rounded-xl border-2 border-dashed border-rust bg-peach/30 px-3 py-2 text-center text-sm font-semibold text-choc">
+        🎟️ First order? Use code <span className="font-mono">WELCOME10</span> at the payment step for 10% off.
+      </p>
 
       <div className="mt-4 grid gap-3 rounded-2xl border-2 border-choc bg-surface p-4">
         <h2 className="flex items-center gap-2 font-bold text-choc">

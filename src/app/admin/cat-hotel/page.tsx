@@ -11,6 +11,7 @@ type Booking = {
   customer_email: string;
   customer_phone: string;
   cat_name: string | null;
+  pet_count: number;
   check_in: string;
   check_out: string;
   notes: string | null;
@@ -29,7 +30,7 @@ export default async function AdminCatHotelPage() {
   const { supabase, role } = await requireStaff();
   const { data } = await supabase
     .from("cat_hotel_bookings")
-    .select("id, customer_name, customer_email, customer_phone, cat_name, check_in, check_out, notes, status, created_at")
+    .select("id, customer_name, customer_email, customer_phone, cat_name, pet_count, check_in, check_out, notes, status, created_at")
     .order("check_in", { ascending: true });
   const bookings = (data ?? []) as Booking[];
 
@@ -49,8 +50,8 @@ export default async function AdminCatHotelPage() {
             <li key={b.id} className="grid gap-2 rounded-2xl border-2 border-line bg-surface p-4">
               <div className="flex flex-wrap items-center justify-between gap-2">
                 <span className="font-bold">
-                  {b.check_in} → {b.check_out}
-                  {b.cat_name && ` · ${b.cat_name}`}
+                  {b.check_in} → {b.check_out} · {b.pet_count} cat{b.pet_count > 1 ? "s" : ""}
+                  {b.cat_name && ` (${b.cat_name})`}
                 </span>
                 <span className={`rounded-full px-2.5 py-1 text-xs font-bold ${statusStyle[b.status]}`}>{b.status}</span>
               </div>
