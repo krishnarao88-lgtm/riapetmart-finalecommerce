@@ -1,6 +1,7 @@
 import { Bike, PackageCheck, ShieldCheck, Store } from "lucide-react";
 import { CategoryQuickLinks } from "@/components/category-quick-links";
 import { FeaturedProducts } from "@/components/featured-products";
+import { GuidesTeaser } from "@/components/guides-teaser";
 import { Hero } from "@/components/hero";
 import { PetCareTips } from "@/components/pet-care-tips";
 import { PetCollage } from "@/components/pet-collage";
@@ -32,6 +33,7 @@ export default async function Home() {
       <TrustStats publishedProductCount={count ?? 0} />
       <PetCollage />
       <PetCareTips />
+      <GuidesTeaser />
       <Testimonial />
 
       <section aria-label="Why shop with us" className="mx-auto max-w-6xl px-4 pb-14 pt-6">

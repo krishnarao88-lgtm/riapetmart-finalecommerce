@@ -36,6 +36,7 @@ export function SiteFooter() {
         <div className="grid content-start gap-2 text-sm">
           <span className="mb-1 text-xs font-bold uppercase tracking-widest text-cream/60">Shop</span>
           <Link href="/shop" className="hover:text-peach">Shop all</Link>
+          <Link href="/guides" className="hover:text-peach">Buying guides</Link>
           <Link href="/about" className="hover:text-peach">About us</Link>
           <Link href="/contact" className="hover:text-peach">Contact us</Link>
           <Link href="/returns" className="hover:text-peach">Returns & refunds</Link>
