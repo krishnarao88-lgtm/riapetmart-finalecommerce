@@ -1,10 +1,12 @@
+import { headers } from "next/headers";
 import { redirect } from "next/navigation";
+import { mfaStepRequired, safeAdminPath } from "@/lib/mfa";
 import { createClient } from "@/lib/supabase/server";
 
 type Role = "admin" | "staff";
 
-/** Signed-in user and their role (null for customers). Sends signed-out visitors to the admin login. */
-export async function getAdminSession() {
+/** Like getAdminSession() but lets through sessions still waiting on their 2-step code. Only for /admin/mfa. */
+export async function getSessionPendingMfa() {
   const supabase = await createClient();
   const {
     data: { user },
@@ -14,6 +16,20 @@ export async function getAdminSession() {
   const { data: profile } = await supabase.from("profiles").select("role").eq("id", user.id).single();
   const role = profile?.role === "admin" || profile?.role === "staff" ? (profile.role as Role) : null;
   return { supabase, user, role };
+}
+
+/**
+ * Signed-in user and their role (null for customers). Sends signed-out visitors to the admin login,
+ * and accounts with 2-step verification on to /admin/mfa until this session has passed it.
+ */
+export async function getAdminSession() {
+  const session = await getSessionPendingMfa();
+  const { data } = await session.supabase.auth.mfa.getAuthenticatorAssuranceLevel();
+  if (mfaStepRequired(data?.currentLevel, session.user.factors)) {
+    const next = safeAdminPath((await headers()).get("x-admin-path"));
+    redirect(`/admin/mfa?next=${encodeURIComponent(next)}`);
+  }
+  return session;
 }
 
 async function requireRole(...roles: Role[]) {

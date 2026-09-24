@@ -5,6 +5,11 @@ import { supabasePublishableKey, supabaseUrl } from "@/lib/site";
 // Refreshes the Supabase session cookie and keeps signed-out visitors out of /admin.
 // Optimistic check only: admin pages still verify the role on the server.
 export async function proxy(request: NextRequest) {
+  const { pathname, search } = request.nextUrl;
+  // Server components can't see the path; auth.ts reads this to send users back after the 2-step check.
+  request.headers.delete("x-admin-path");
+  if (pathname.startsWith("/admin")) request.headers.set("x-admin-path", pathname + search);
+
   let response = NextResponse.next({ request });
 
   const supabase = createServerClient(supabaseUrl, supabasePublishableKey, {
@@ -22,7 +27,6 @@ export async function proxy(request: NextRequest) {
     data: { user },
   } = await supabase.auth.getUser();
 
-  const { pathname } = request.nextUrl;
   if (!user && pathname.startsWith("/admin") && pathname !== "/admin/login") {
     return NextResponse.redirect(new URL("/admin/login", request.url));
   }

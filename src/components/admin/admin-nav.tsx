@@ -10,6 +10,7 @@ const links = [
   { href: "/admin/import", label: "Import & export", adminOnly: true },
   { href: "/admin/staff", label: "Staff", adminOnly: true },
   { href: "/admin/settings", label: "Settings", adminOnly: true },
+  { href: "/admin/security", label: "Sign-in security", adminOnly: false },
 ];
 
 export function AdminNav({ current, role = "admin" }: { current: string; role?: "admin" | "staff" }) {
