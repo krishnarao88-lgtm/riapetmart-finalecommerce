@@ -1,4 +1,4 @@
-import { PawPrint } from "lucide-react";
+import { PawPrint, Search } from "lucide-react";
 import Link from "next/link";
 import { CartBadge } from "@/components/cart-badge";
 
@@ -15,7 +15,7 @@ const nav = [
 export function SiteHeader() {
   return (
     <header className="sticky top-0 z-40 border-b-2 border-rust/20 bg-cream/95 backdrop-blur">
-      <div className="mx-auto flex max-w-6xl items-center gap-4 px-4 py-3">
+      <div className="mx-auto flex max-w-6xl flex-wrap items-center gap-x-4 gap-y-2 px-4 py-3">
         <Link href="/" className="flex items-center gap-2" aria-label="Ria Pet Mart home">
           <span className="grid size-10 place-items-center rounded-full bg-terracotta text-cream shadow-[2px_2px_0_0_var(--color-choc)]">
             <PawPrint className="size-5" aria-hidden />
@@ -39,6 +39,19 @@ export function SiteHeader() {
             ))}
           </ul>
         </nav>
+
+        {/* Below lg it wraps onto its own full-width row; on desktop it sits beside the nav. */}
+        <form action="/shop" role="search" className="relative order-last w-full lg:order-none lg:w-44">
+          <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-choc-2" aria-hidden />
+          <input
+            type="search"
+            name="q"
+            placeholder="Search food, brands…"
+            aria-label="Search products"
+            enterKeyHint="search"
+            className="min-h-11 w-full rounded-full border-2 border-choc bg-cream py-2 pl-9 pr-4 text-sm text-choc placeholder:text-choc-2/70 lg:min-h-0"
+          />
+        </form>
 
         <CartBadge />
       </div>

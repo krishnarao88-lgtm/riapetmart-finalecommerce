@@ -1,11 +1,12 @@
 import { CheckCircle2 } from "lucide-react";
 import Link from "next/link";
 import { ClearCartOnMount } from "@/components/clear-cart-on-mount";
+import { TrackPurchase } from "@/components/track-purchase";
 import { formatMyr } from "@/lib/pricing";
 import { getStripe } from "@/lib/stripe";
 import { createServiceClient } from "@/lib/supabase/service";
 
-type OrderItem = { name: string; title: string; qty: number; price: number };
+type OrderItem = { variant_id: string; name: string; title: string; qty: number; price: number };
 
 export default async function OrderSuccessPage({
   searchParams,
@@ -26,6 +27,19 @@ export default async function OrderSuccessPage({
   return (
     <div className="mx-auto max-w-xl px-4 py-16 text-center">
       {paid && <ClearCartOnMount />}
+      {paid && order?.id && session?.amount_total != null && (
+        <TrackPurchase
+          orderId={order.id}
+          value={session.amount_total / 100}
+          items={items.map((it) => ({
+            item_id: it.variant_id,
+            item_name: it.name,
+            item_variant: it.title,
+            price: it.price,
+            quantity: it.qty,
+          }))}
+        />
+      )}
       <CheckCircle2 className="mx-auto size-14 text-ok-fg" aria-hidden />
       <h1 className="mt-4 font-bubble text-3xl font-extrabold text-choc">
         {paid ? "Thanks for your order!" : "Checking your payment…"}
