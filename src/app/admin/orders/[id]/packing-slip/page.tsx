@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { PrintButton } from "@/components/admin/print-button";
-import { requireAdmin } from "@/lib/auth";
+import { requireStaff } from "@/lib/auth";
 import { formatMyr } from "@/lib/pricing";
 import { site } from "@/lib/site";
 
@@ -11,7 +11,7 @@ type OrderItem = { variant_id: string; name: string; title: string; qty: number;
 type ShippingAddress = { addressLine: string; city: string; postcode: string; state: string } | null;
 
 export default async function PackingSlipPage({ params }: PageProps<"/admin/orders/[id]/packing-slip">) {
-  const { supabase } = await requireAdmin();
+  const { supabase } = await requireStaff();
   const { id } = await params;
 
   const { data } = await supabase

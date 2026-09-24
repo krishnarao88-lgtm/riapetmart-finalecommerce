@@ -2,19 +2,21 @@ import Link from "next/link";
 import { signOut } from "@/app/admin/actions";
 
 const links = [
-  { href: "/admin", label: "Dashboard" },
-  { href: "/admin/products", label: "Products & stock" },
-  { href: "/admin/orders", label: "Orders" },
-  { href: "/admin/reviews", label: "Reviews" },
-  { href: "/admin/import", label: "Import & export" },
-  { href: "/admin/settings", label: "Settings" },
+  { href: "/admin", label: "Dashboard", adminOnly: true },
+  { href: "/admin/products", label: "Products & stock", adminOnly: true },
+  { href: "/admin/orders", label: "Orders", adminOnly: false },
+  { href: "/admin/reviews", label: "Reviews", adminOnly: false },
+  { href: "/admin/import", label: "Import & export", adminOnly: true },
+  { href: "/admin/staff", label: "Staff", adminOnly: true },
+  { href: "/admin/settings", label: "Settings", adminOnly: true },
 ];
 
-export function AdminNav({ current }: { current: string }) {
+export function AdminNav({ current, role = "admin" }: { current: string; role?: "admin" | "staff" }) {
+  const visible = links.filter((link) => role === "admin" || !link.adminOnly);
   return (
     <div className="flex flex-wrap items-center gap-2 border-b-2 border-ink pb-4">
       <nav aria-label="Admin" className="flex flex-wrap gap-2">
-        {links.map((link) => (
+        {visible.map((link) => (
           <Link
             key={link.href}
             href={link.href}

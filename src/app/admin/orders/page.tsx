@@ -3,7 +3,7 @@ import Link from "next/link";
 import { AdminNav } from "@/components/admin/admin-nav";
 import { BookEasyParcel } from "@/components/admin/book-easyparcel";
 import { formatMyr } from "@/lib/pricing";
-import { requireAdmin } from "@/lib/auth";
+import { requireStaff } from "@/lib/auth";
 
 export const metadata: Metadata = { title: "Orders", robots: { index: false } };
 
@@ -30,7 +30,7 @@ const statusStyle: Record<Order["status"], string> = {
 };
 
 export default async function OrdersPage() {
-  const { supabase } = await requireAdmin();
+  const { supabase, role } = await requireStaff();
   const { data } = await supabase
     .from("orders")
     .select(
@@ -43,7 +43,7 @@ export default async function OrdersPage() {
 
   return (
     <div className="mx-auto grid max-w-4xl gap-6 px-4 py-8">
-      <AdminNav current="/admin/orders" />
+      <AdminNav current="/admin/orders" role={role} />
       <div className="grid gap-1">
         <h1 className="font-display text-3xl font-extrabold tracking-tight">Orders</h1>
         <p className="text-ink-2">Paid orders come from Stripe checkout. Pending ones never completed payment.</p>
@@ -105,9 +105,9 @@ export default async function OrdersPage() {
                       </a>
                     )}
                   </div>
-                ) : (
+                ) : role === "admin" ? (
                   <BookEasyParcel orderId={order.id} />
-                )
+                ) : null
               )}
             </li>
           ))}

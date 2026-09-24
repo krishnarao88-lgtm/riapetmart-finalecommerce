@@ -25,6 +25,7 @@ export default async function AdminHome() {
   if (!user) redirect("/admin/login");
 
   const { data: profile } = await supabase.from("profiles").select("role").eq("id", user.id).single();
+  if (profile?.role === "staff") redirect("/admin/orders");
   const isAdmin = profile?.role === "admin";
 
   let stats: { totalSales: string; ordersToday: number; lowStock: number; expiringSoon: number } | null = null;

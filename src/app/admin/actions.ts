@@ -45,3 +45,19 @@ export async function moderateReview(formData: FormData) {
   await supabase.from("reviews").update({ status }).eq("id", id);
   redirect("/admin/reviews");
 }
+
+export async function inviteStaff(formData: FormData) {
+  const email = String(formData.get("email") ?? "").trim().toLowerCase();
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) redirect("/admin/staff?error=email");
+
+  const supabase = await createClient();
+  const { error } = await supabase.rpc("invite_staff", { p_email: email });
+  redirect(error ? "/admin/staff?error=1" : "/admin/staff?invited=1");
+}
+
+export async function removeStaff(formData: FormData) {
+  const email = String(formData.get("email") ?? "");
+  const supabase = await createClient();
+  await supabase.rpc("remove_staff", { p_email: email });
+  redirect("/admin/staff");
+}
