@@ -6,6 +6,23 @@ import { submitEasyParcelOrder } from "@/lib/shipping/easyparcel";
 
 export type ActionState = { ok?: string; error?: string } | null;
 
+const FULFILMENT_STATUSES = ["new", "packed", "shipped", "delivered", "cancelled", "refunded"] as const;
+export type FulfilmentStatus = (typeof FULFILMENT_STATUSES)[number];
+
+// Admin-only: orders RLS gives staff SELECT but not UPDATE.
+export async function setFulfilmentStatus(formData: FormData) {
+  const { supabase } = await requireAdmin();
+  const orderId = String(formData.get("order_id") ?? "");
+  const status = String(formData.get("fulfilment_status") ?? "");
+  if (!orderId || !FULFILMENT_STATUSES.includes(status as FulfilmentStatus)) {
+    throw new Error("Invalid fulfilment update.");
+  }
+
+  const { error } = await supabase.from("orders").update({ fulfilment_status: status }).eq("id", orderId);
+  if (error) throw new Error(`Couldn't update the order: ${error.message}`);
+  revalidatePath("/admin/orders");
+}
+
 type OrderItem = { variant_id: string; name: string; title: string; qty: number; price: number };
 type ShippingAddress = { addressLine: string; city: string; postcode: string; state: string } | null;
 

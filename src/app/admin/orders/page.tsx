@@ -4,6 +4,7 @@ import { AdminNav } from "@/components/admin/admin-nav";
 import { BookEasyParcel } from "@/components/admin/book-easyparcel";
 import { formatMyr } from "@/lib/pricing";
 import { requireStaff } from "@/lib/auth";
+import { setFulfilmentStatus, type FulfilmentStatus } from "./actions";
 
 export const metadata: Metadata = { title: "Orders", robots: { index: false } };
 
@@ -16,7 +17,8 @@ type Order = {
   customer_email: string | null;
   customer_name: string | null;
   customer_phone: string | null;
-  subtotal: number;
+  total: number;
+  fulfilment_status: FulfilmentStatus;
   items: OrderItem[];
   shipping_method: string | null;
   shipping_address: ShippingAddress;
@@ -31,12 +33,27 @@ const statusStyle: Record<Order["status"], string> = {
   failed: "bg-bad-bg text-bad-fg",
 };
 
+const fulfilmentStyle: Record<FulfilmentStatus, string> = {
+  new: "border border-line text-ink-2",
+  packed: "bg-warn-bg text-warn-fg",
+  shipped: "bg-warn-bg text-warn-fg",
+  delivered: "bg-ok-bg text-ok-fg",
+  cancelled: "bg-bad-bg text-bad-fg",
+  refunded: "bg-bad-bg text-bad-fg",
+};
+
+const nextStep: Partial<Record<FulfilmentStatus, FulfilmentStatus>> = {
+  new: "packed",
+  packed: "shipped",
+  shipped: "delivered",
+};
+
 export default async function OrdersPage() {
   const { supabase, role } = await requireStaff();
   const { data } = await supabase
     .from("orders")
     .select(
-      "id, created_at, status, customer_email, customer_name, customer_phone, subtotal, items, shipping_method, shipping_address, easyparcel_order_number, easyparcel_awb_url, easyparcel_tracking_url",
+      "id, created_at, status, customer_email, customer_name, customer_phone, total, fulfilment_status, items, shipping_method, shipping_address, easyparcel_order_number, easyparcel_awb_url, easyparcel_tracking_url",
     )
     .order("created_at", { ascending: false })
     .limit(200);
@@ -63,8 +80,15 @@ export default async function OrdersPage() {
                 <span className="text-sm text-ink-2">
                   {new Date(order.created_at).toLocaleString("en-MY", { timeZone: "Asia/Kuala_Lumpur" })}
                 </span>
-                <span className={`rounded-full px-2.5 py-1 text-xs font-bold ${statusStyle[order.status]}`}>
-                  {order.status}
+                <span className="flex gap-1.5">
+                  {order.status === "paid" && (
+                    <span className={`rounded-full px-2.5 py-1 text-xs font-bold ${fulfilmentStyle[order.fulfilment_status]}`}>
+                      {order.fulfilment_status}
+                    </span>
+                  )}
+                  <span className={`rounded-full px-2.5 py-1 text-xs font-bold ${statusStyle[order.status]}`}>
+                    {order.status}
+                  </span>
                 </span>
               </div>
               <ul className="grid gap-1 text-sm">
@@ -90,8 +114,26 @@ export default async function OrdersPage() {
                   {order.customer_phone ? ` · ${order.customer_phone}` : ""}
                   {order.customer_email ? ` · ${order.customer_email}` : ""}
                 </span>
-                <span className="font-display text-lg font-extrabold">{formatMyr(order.subtotal)}</span>
+                <span className="font-display text-lg font-extrabold">{formatMyr(order.total)}</span>
               </div>
+              {role === "admin" && order.status === "paid" && nextStep[order.fulfilment_status] && (
+                <form action={setFulfilmentStatus} className="flex flex-wrap gap-2">
+                  <input type="hidden" name="order_id" value={order.id} />
+                  <button
+                    type="submit"
+                    name="fulfilment_status"
+                    value={nextStep[order.fulfilment_status]}
+                    className="btn-chunk bg-tangerine px-3 py-1.5 text-sm"
+                  >
+                    Mark {nextStep[order.fulfilment_status]}
+                  </button>
+                  {order.fulfilment_status !== "shipped" && (
+                    <button type="submit" name="fulfilment_status" value="cancelled" className="btn-chunk bg-surface px-3 py-1.5 text-sm">
+                      Cancel order
+                    </button>
+                  )}
+                </form>
+              )}
               <Link
                 href={`/admin/orders/${order.id}/packing-slip`}
                 target="_blank"
