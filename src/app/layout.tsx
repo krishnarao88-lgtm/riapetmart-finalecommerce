@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { Baloo_2, Bricolage_Grotesque, Figtree, Fraunces } from "next/font/google";
 import { Analytics } from "@/components/analytics";
 import { CartDrawer } from "@/components/cart-drawer";
+import { FloatingWhatsApp } from "@/components/floating-whatsapp";
 import { ReferralCapture } from "@/components/referral-capture";
 import { SiteFooter } from "@/components/site-footer";
 import { SiteHeader } from "@/components/site-header";
@@ -99,6 +100,7 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
           </main>
           <SiteFooter />
           <WelcomePopup />
+          <FloatingWhatsApp />
           <CartDrawer freeDeliveryMin={freeDeliveryMin(delivery)} />
         </CartProvider>
       </body>
