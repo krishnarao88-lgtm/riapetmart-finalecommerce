@@ -1,6 +1,7 @@
 "use client";
 
 import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
+import { track } from "@/lib/track";
 
 export type CartLine = {
   variantId: string;
@@ -56,6 +57,9 @@ export function CartProvider({ children }: { children: ReactNode }) {
 
   const value = useMemo<CartContextValue>(() => {
     const add: CartContextValue["add"] = (line, qty = 1) => {
+      track("add_to_cart", [
+        { item_id: line.variantId, item_name: line.productName, item_variant: line.variantTitle, price: line.price, quantity: qty },
+      ]);
       setLines((prev) => {
         const existing = prev.find((l) => l.variantId === line.variantId);
         if (existing) {
