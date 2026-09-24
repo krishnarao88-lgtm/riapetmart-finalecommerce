@@ -1,9 +1,8 @@
-import { BadgeCheck, Star } from "lucide-react";
+import { BadgeCheck } from "lucide-react";
 import Link from "next/link";
-import { supabaseUrl } from "@/lib/site";
+import { Stars } from "@/components/stars";
+import { reviewImageUrl } from "@/lib/reviews";
 import { createClient } from "@/lib/supabase/server";
-
-const reviewImageUrl = (path: string) => `${supabaseUrl}/storage/v1/object/public/review-images/${path}`;
 
 type Review = {
   id: string;
@@ -39,11 +38,7 @@ export async function Testimonial() {
       <ul className="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {reviews.map((r) => (
           <li key={r.id} className="grid gap-2 rounded-2xl border-2 border-choc bg-peach/40 p-5">
-            <div className="flex items-center gap-1 text-terracotta">
-              {Array.from({ length: 5 }).map((_, i) => (
-                <Star key={i} className="size-4" fill={i < r.rating ? "currentColor" : "none"} aria-hidden />
-              ))}
-            </div>
+            <Stars rating={r.rating} className="text-terracotta" />
             <p className="line-clamp-4 text-sm text-choc">&ldquo;{r.body}&rdquo;</p>
             {r.review_images.length > 0 && (
               <div className="flex flex-wrap gap-1.5">

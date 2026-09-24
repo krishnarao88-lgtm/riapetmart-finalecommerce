@@ -1,8 +1,9 @@
 import { PawPrint } from "lucide-react";
 import Link from "next/link";
 import { QuickAddButton } from "@/components/quick-add-button";
-import { discountedPrice, getExpiryBadge } from "@/lib/expiry";
+import { discountedPrice, getExpiryBadge, type ExpirySettings } from "@/lib/expiry";
 import { formatMyr } from "@/lib/pricing";
+import type { createClient } from "@/lib/supabase/server";
 
 export type ProductCardData = {
   id: string;
@@ -11,19 +12,60 @@ export type ProductCardData = {
   size_display: string | null;
   categoryLabel?: string | null;
   product_images: { path: string; alt: string | null }[];
-  variants: { id: string; title: string; price: number; stock_batches: { expiry_date: string | null }[] }[];
+  variants: { id: string; title: string; price: number }[];
 };
 
-/** Shared card used by /shop and the homepage's featured products — same expiry/clearance badges everywhere. */
-export function ProductCard({ product, expirySettings }: { product: ProductCardData; expirySettings: Parameters<typeof getExpiryBadge>[1] }) {
+export type VariantStock = Map<string, { available: number; nearest_expiry: string | null }>;
+
+/** stock_batches is admin-only under RLS, so shoppers read stock through the variant_stock RPC. Null if it fails. */
+export async function getVariantStock(
+  supabase: Awaited<ReturnType<typeof createClient>>,
+  variantIds: string[],
+): Promise<VariantStock | null> {
+  if (variantIds.length === 0) return new Map();
+  const { data, error } = await supabase.rpc("variant_stock", { p_variant_ids: variantIds });
+  if (error) {
+    console.error("variant_stock failed", error.message);
+    return null;
+  }
+  return new Map(
+    (data as { variant_id: string; available: number; nearest_expiry: string | null }[]).map((r) => [r.variant_id, r]),
+  );
+}
+
+/** available is null when stock is unknown (RPC failed); a variant missing from the RPC result is inactive, so 0. */
+export function productStock(
+  variants: { id: string }[],
+  stock: VariantStock | null,
+  expirySettings: Partial<ExpirySettings>,
+) {
+  const rows = variants.map((v) => stock?.get(v.id));
+  const available = stock ? rows.reduce((sum, r) => sum + (r?.available ?? 0), 0) : null;
+  const nearest = rows.map((r) => r?.nearest_expiry).filter((d): d is string => !!d).sort()[0] ?? null;
+  return { available, badge: getExpiryBadge(nearest, expirySettings) };
+}
+
+/** Shared card used by /shop and the homepage's featured products — same stock and expiry badges everywhere. */
+export function ProductCard({
+  product,
+  stock,
+  expirySettings,
+}: {
+  product: ProductCardData;
+  stock: VariantStock | null;
+  expirySettings: Partial<ExpirySettings>;
+}) {
   const p = product;
   const minPrice = p.variants.length ? Math.min(...p.variants.map((v) => v.price)) : null;
-  const cheapestVariant = [...p.variants].sort((a, b) => a.price - b.price)[0] ?? null;
+  const { available, badge } = productStock(p.variants, stock, expirySettings);
+  const soldOut = available === 0;
+  const cheapestVariant =
+    p.variants
+      .filter((v) => !stock || (stock.get(v.id)?.available ?? 0) > 0)
+      .sort((a, b) => a.price - b.price)[0] ?? null;
   const image = p.product_images[0];
-  const expiries = p.variants.flatMap((v) => v.stock_batches.map((b) => b.expiry_date)).filter(Boolean) as string[];
-  const nearest = expiries.sort()[0] ?? null;
-  const badge = getExpiryBadge(nearest, expirySettings);
-  const showPrice = minPrice !== null && badge?.kind === "short-dated" ? discountedPrice(minPrice, badge.discount) : minPrice;
+  const priceNow = (price: number) => (badge?.kind === "short-dated" ? discountedPrice(price, badge.discount) : price);
+  const showPrice = minPrice !== null ? priceNow(minPrice) : null;
 
   return (
     <Link
@@ -33,9 +75,12 @@ export function ProductCard({ product, expirySettings }: { product: ProductCardD
       <div className="relative flex aspect-square items-center justify-center bg-peach/40">
         {image ? (
           // eslint-disable-next-line @next/next/no-img-element
-          <img src={image.path} alt={image.alt ?? p.name} className="size-full object-cover" />
+          <img src={image.path} alt={image.alt ?? p.name} className={`size-full object-cover ${soldOut ? "opacity-60" : ""}`} />
         ) : (
           <PawPrint className="size-10 text-rust/50" aria-hidden />
+        )}
+        {soldOut && (
+          <span className="absolute left-2 top-2 rounded-full bg-choc px-2 py-0.5 text-xs font-bold text-cream">Sold out</span>
         )}
         {badge?.kind === "short-dated" && (
           <span className="absolute left-2 top-2 rounded-full bg-rust px-2 py-0.5 text-xs font-bold text-cream">
@@ -47,13 +92,13 @@ export function ProductCard({ product, expirySettings }: { product: ProductCardD
             Fresh stock
           </span>
         )}
-        {cheapestVariant && showPrice !== null && (
+        {cheapestVariant && (
           <QuickAddButton
             variantId={cheapestVariant.id}
             productSlug={p.slug}
             productName={p.name}
             variantTitle={cheapestVariant.title}
-            price={showPrice}
+            price={priceNow(cheapestVariant.price)}
             image={image?.path ?? null}
           />
         )}
@@ -64,6 +109,9 @@ export function ProductCard({ product, expirySettings }: { product: ProductCardD
         )}
         <span className="line-clamp-2 text-sm font-bold text-choc">{p.name}</span>
         {p.size_display && <span className="text-xs text-choc-2">{p.size_display}</span>}
+        {available !== null && available > 0 && available <= 5 && (
+          <span className="text-xs font-bold text-warn-fg">Only {available} left</span>
+        )}
         <span className="mt-auto flex items-baseline gap-2 pt-1">
           {badge?.kind === "short-dated" && minPrice !== null && (
             <span className="text-xs text-choc-2 line-through">{formatMyr(minPrice)}</span>

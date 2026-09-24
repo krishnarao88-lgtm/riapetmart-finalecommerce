@@ -3,6 +3,7 @@ import { PawPrint } from "lucide-react";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { AddToCart } from "@/components/add-to-cart";
+import { getVariantStock } from "@/components/product-card";
 import { discountedPrice, getExpiryBadge, type ExpirySettings } from "@/lib/expiry";
 import { formatMyr } from "@/lib/pricing";
 import { titleCase } from "@/lib/seo";
@@ -14,7 +15,7 @@ async function getProduct(slug: string) {
   const { data: product } = await supabase
     .from("products")
     .select(
-      "id, name, description, ingredients, usage, size_display, pet_type, category_id, is_regulated, seo_title, seo_description, brands(name), categories(name, slug), product_images(path, alt, sort), variants(id, title, price, sort, stock_batches(quantity, expiry_date))",
+      "id, name, description, ingredients, usage, size_display, pet_type, category_id, is_regulated, seo_title, seo_description, brands(name), categories(name, slug), product_images(path, alt, sort), variants(id, title, price, sort)",
     )
     .eq("slug", slug)
     .eq("status", "published")
@@ -54,26 +55,31 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
 
   if (!product) notFound();
 
-  const { data: related } = product.category_id
-    ? await (await createClient())
-        .from("products")
-        .select("slug, name, product_images(path, alt), variants(price)")
-        .eq("category_id", product.category_id)
-        .eq("status", "published")
-        .neq("id", product.id)
-        .limit(4)
-    : { data: null };
+  const supabase = await createClient();
+  const rawVariants = [...(product.variants ?? [])].sort((a, b) => a.sort - b.sort);
+  const [{ data: related }, stockMap] = await Promise.all([
+    product.category_id
+      ? supabase
+          .from("products")
+          .select("slug, name, product_images(path, alt), variants(price)")
+          .eq("category_id", product.category_id)
+          .eq("status", "published")
+          .neq("id", product.id)
+          .limit(4)
+      : { data: null },
+    getVariantStock(supabase, rawVariants.map((v) => v.id)),
+  ]);
 
   const expirySettings = (settingsRow?.value ?? {}) as Partial<ExpirySettings>;
   const images = [...(product.product_images ?? [])].sort((a, b) => a.sort - b.sort);
-  const rawVariants = [...(product.variants ?? [])].sort((a, b) => a.sort - b.sort);
   const variants = rawVariants.map((v) => {
-    const nearest = v.stock_batches.map((b) => b.expiry_date).filter(Boolean).sort()[0] ?? null;
-    const badge = getExpiryBadge(nearest, expirySettings);
+    const row = stockMap?.get(v.id);
+    const badge = getExpiryBadge(row?.nearest_expiry ?? null, expirySettings);
     const price = badge?.kind === "short-dated" ? discountedPrice(v.price, badge.discount) : v.price;
-    const stock = v.stock_batches.reduce((sum, b) => sum + b.quantity, 0);
-    return { id: v.id, title: v.title, price, originalPrice: v.price, badge, stock };
+    const available = stockMap ? (row?.available ?? 0) : null;
+    return { id: v.id, title: v.title, price, originalPrice: v.price, badge, available };
   });
+  const inStock = variants.some((v) => v.available !== 0);
   const image = images[0] ?? null;
   const brand = (product.brands as unknown as { name: string }[])?.[0]?.name;
   const categoryRow = (product.categories as unknown as { name: string; slug: string }[])?.[0];
@@ -96,7 +102,7 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
             "@type": "Offer",
             priceCurrency: "MYR",
             price: cheapestPrice,
-            availability: "https://schema.org/InStock",
+            availability: inStock ? "https://schema.org/InStock" : "https://schema.org/OutOfStock",
             url: `${site.url}/shop/${slug}`,
           }
         : undefined,
@@ -165,14 +171,6 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
               Short-dated — discount applied at checkout
             </span>
           )}
-          {(() => {
-            const totalStock = variants.reduce((sum, v) => sum + v.stock, 0);
-            return totalStock > 0 && totalStock <= 5 ? (
-              <span className="w-fit rounded-full bg-warn-bg px-3 py-1 text-xs font-bold text-warn-fg">
-                Only {totalStock} left in stock
-              </span>
-            ) : null;
-          })()}
 
           <div className="mt-2 rounded-2xl border-2 border-choc bg-cream p-4">
             <AddToCart

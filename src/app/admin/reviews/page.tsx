@@ -1,13 +1,12 @@
-import { Star, Trash2 } from "lucide-react";
+import { Trash2 } from "lucide-react";
 import type { Metadata } from "next";
 import { AdminNav } from "@/components/admin/admin-nav";
 import { requireAdmin } from "@/lib/auth";
-import { supabaseUrl } from "@/lib/site";
+import { Stars } from "@/components/stars";
+import { reviewImageUrl } from "@/lib/reviews";
 import { deleteReview, moderateReview } from "../actions";
 
 export const metadata: Metadata = { title: "Reviews", robots: { index: false } };
-
-const reviewImageUrl = (path: string) => `${supabaseUrl}/storage/v1/object/public/review-images/${path}`;
 
 type Review = {
   id: string;
@@ -50,11 +49,7 @@ export default async function AdminReviewsPage() {
           {reviews.map((r) => (
             <li key={r.id} className="grid gap-2 rounded-2xl border-2 border-line bg-surface p-4">
               <div className="flex flex-wrap items-center justify-between gap-2">
-                <div className="flex items-center gap-1 text-grape">
-                  {Array.from({ length: 5 }).map((_, i) => (
-                    <Star key={i} className="size-4" fill={i < r.rating ? "currentColor" : "none"} aria-hidden />
-                  ))}
-                </div>
+                <Stars rating={r.rating} className="text-grape" />
                 <span className={`rounded-full px-2.5 py-1 text-xs font-bold ${statusStyle[r.status]}`}>{r.status}</span>
               </div>
               <p className="text-sm">{r.body}</p>

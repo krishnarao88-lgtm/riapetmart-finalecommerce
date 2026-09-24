@@ -1,10 +1,9 @@
-import { Star, BadgeCheck } from "lucide-react";
+import { BadgeCheck } from "lucide-react";
 import Link from "next/link";
 import type { Metadata } from "next";
-import { supabaseUrl } from "@/lib/site";
+import { Stars } from "@/components/stars";
+import { reviewImageUrl } from "@/lib/reviews";
 import { createClient } from "@/lib/supabase/server";
-
-const reviewImageUrl = (path: string) => `${supabaseUrl}/storage/v1/object/public/review-images/${path}`;
 
 export const metadata: Metadata = {
   title: "Customer reviews",
@@ -62,11 +61,7 @@ export default async function ReviewsPage({
           {reviews.map((r) => (
             <li key={r.id} className="grid gap-2 rounded-2xl border-2 border-choc bg-surface p-4">
               <div className="flex flex-wrap items-center justify-between gap-2">
-                <div className="flex items-center gap-1 text-terracotta">
-                  {Array.from({ length: 5 }).map((_, i) => (
-                    <Star key={i} className="size-4" fill={i < r.rating ? "currentColor" : "none"} aria-hidden />
-                  ))}
-                </div>
+                <Stars rating={r.rating} className="text-terracotta" />
                 <span className="text-xs text-choc-2">
                   {new Date(r.created_at).toLocaleDateString("en-MY", { timeZone: "Asia/Kuala_Lumpur" })}
                 </span>
