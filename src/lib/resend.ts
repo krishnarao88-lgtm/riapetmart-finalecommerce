@@ -1,5 +1,9 @@
 import "server-only";
 import { Resend } from "resend";
+import { site } from "@/lib/site";
+
+// Fixed verified domain: deriving it from site.url breaks sending on preview deployments.
+export const FROM = `${site.name} <orders@riapetmart.com>`;
 
 let client: Resend | null = null;
 

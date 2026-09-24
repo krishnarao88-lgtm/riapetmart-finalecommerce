@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { createClient } from "@/lib/supabase/server";
+import { createServiceClient } from "@/lib/supabase/service";
 
 export async function POST(req: Request) {
   const { email, items, subtotal } = (await req.json()) as {
@@ -7,11 +7,11 @@ export async function POST(req: Request) {
     items?: unknown;
     subtotal?: number;
   };
-  if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) || !items || typeof subtotal !== "number") {
+  if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) || !Array.isArray(items) || items.length > 50 || typeof subtotal !== "number" || !Number.isFinite(subtotal)) {
     return NextResponse.json({ error: "Invalid cart data" }, { status: 400 });
   }
 
-  const supabase = await createClient();
+  const supabase = createServiceClient();
   const { error } = await supabase.rpc("save_abandoned_cart", {
     p_email: email,
     p_items: items,

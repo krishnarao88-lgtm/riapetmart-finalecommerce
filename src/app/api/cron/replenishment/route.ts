@@ -1,8 +1,7 @@
 import { NextResponse } from "next/server";
-import { getResend } from "@/lib/resend";
-import { formatMyr } from "@/lib/pricing";
+import { FROM, getResend } from "@/lib/resend";
 import { site } from "@/lib/site";
-import { createClient } from "@/lib/supabase/server";
+import { createServiceClient } from "@/lib/supabase/service";
 
 type OrderItem = { name: string; title: string; qty: number; price: number };
 
@@ -12,7 +11,7 @@ export async function GET(req: Request) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const supabase = await createClient();
+  const supabase = createServiceClient();
   const { data: orders, error } = await supabase.rpc("get_orders_to_replenish");
   if (error) return NextResponse.json({ error: "Could not load orders" }, { status: 500 });
 
@@ -21,7 +20,7 @@ export async function GET(req: Request) {
     try {
       const lines = order.items.map((it) => `${it.name} (${it.title}) x${it.qty}`).join("\n");
       await getResend().emails.send({
-        from: `${site.name} <orders@${new URL(site.url).hostname}>`,
+        from: FROM,
         to: order.email,
         subject: "Running low? Time to restock 🐾",
         text: `It's been about a month since your last order — most food and litter runs out around now.\n\nYour last order:\n${lines}\n\nReorder in a couple of taps: ${site.url}/shop\n\n${site.name}\n${site.phone}`,
@@ -39,7 +38,7 @@ export async function GET(req: Request) {
     try {
       const link = `${site.url}/reviews/new?order=${order.order_id}&email=${encodeURIComponent(order.email)}`;
       await getResend().emails.send({
-        from: `${site.name} <orders@${new URL(site.url).hostname}>`,
+        from: FROM,
         to: order.email,
         subject: "Got a minute? Tell other pet parents how it went 🐾",
         text: `Hi there,\n\nHope your pet is enjoying the last order! If you have a minute, we'd love a quick honest review — it helps other pet owners in Malaysia decide what to feed their fur babies.\n\nLeave a review here: ${link}\n\nThank you!\n${site.name}\n${site.phone}`,
