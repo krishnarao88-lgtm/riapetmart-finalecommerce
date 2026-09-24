@@ -1,16 +1,16 @@
 import { ArrowRight } from "lucide-react";
 import Link from "next/link";
-import { ProductCard, type ProductCardData } from "@/components/product-card";
+import { getVariantStock, ProductCard, type ProductCardData } from "@/components/product-card";
 import { type ExpirySettings } from "@/lib/expiry";
 import { createClient } from "@/lib/supabase/server";
 
-/** Four real published products — same expiry/clearance badges as /shop, no fabricated bestseller/rating badges. */
+/** Four real published products — same stock/expiry badges as /shop, no fabricated bestseller/rating badges. */
 export async function FeaturedProducts() {
   const supabase = await createClient();
   const [{ data }, { data: settingsRow }] = await Promise.all([
     supabase
       .from("products")
-      .select("id, slug, name, size_display, product_images(path, alt), variants(id, title, price, stock_batches(expiry_date))")
+      .select("id, slug, name, size_display, product_images(path, alt), variants(id, title, price)")
       .eq("status", "published")
       .order("created_at", { ascending: false })
       .limit(4),
@@ -19,6 +19,7 @@ export async function FeaturedProducts() {
   const products = (data ?? []) as unknown as ProductCardData[];
   const expirySettings = (settingsRow?.value ?? {}) as Partial<ExpirySettings>;
   if (products.length === 0) return null;
+  const stock = await getVariantStock(supabase, products.flatMap((p) => p.variants.map((v) => v.id)));
 
   return (
     <section aria-labelledby="featured-heading" className="mx-auto max-w-6xl px-4 pt-10">
@@ -33,7 +34,7 @@ export async function FeaturedProducts() {
       <ul className="mt-4 grid grid-cols-2 gap-4 sm:grid-cols-4">
         {products.map((p) => (
           <li key={p.id}>
-            <ProductCard product={p} expirySettings={expirySettings} />
+            <ProductCard product={p} stock={stock} expirySettings={expirySettings} />
           </li>
         ))}
       </ul>

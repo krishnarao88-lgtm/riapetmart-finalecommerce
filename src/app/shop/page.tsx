@@ -1,8 +1,8 @@
 import { MessageCircle, Search } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
-import { ProductCard } from "@/components/product-card";
-import { getExpiryBadge, type ExpirySettings } from "@/lib/expiry";
+import { getVariantStock, ProductCard, productStock } from "@/components/product-card";
+import { type ExpirySettings } from "@/lib/expiry";
 import { faqJsonLd, landingSeo } from "@/lib/seo";
 import { whatsappLink } from "@/lib/site";
 import { createClient } from "@/lib/supabase/server";
@@ -63,7 +63,7 @@ type ProductRow = {
   size_display: string | null;
   categories: { name: string } | null;
   product_images: { path: string; alt: string | null }[];
-  variants: { id: string; title: string; price: number; stock_batches: { expiry_date: string | null }[] }[];
+  variants: { id: string; title: string; price: number }[];
 };
 
 export default async function ShopPage({ searchParams }: { searchParams: ShopSearchParams }) {
@@ -79,7 +79,7 @@ export default async function ShopPage({ searchParams }: { searchParams: ShopSea
   let productsQuery = supabase
     .from("products")
     .select(
-      `id, slug, name, pet_type, size_display, ${categoriesEmbed}, product_images(path, alt), variants(id, title, price, stock_batches(expiry_date))`,
+      `id, slug, name, pet_type, size_display, ${categoriesEmbed}, product_images(path, alt), variants(id, title, price)`,
     )
     .eq("status", "published")
     .order("name");
@@ -97,14 +97,10 @@ export default async function ShopPage({ searchParams }: { searchParams: ShopSea
   const expirySettings = (settingsRow?.value ?? {}) as Partial<ExpirySettings>;
   let rows = (products ?? []) as unknown as ProductRow[];
 
-  const withBadge = rows.map((p) => {
-    const expiries = p.variants.flatMap((v) => v.stock_batches.map((b) => b.expiry_date)).filter(Boolean) as string[];
-    const nearest = expiries.sort()[0] ?? null;
-    return { product: p, badge: getExpiryBadge(nearest, expirySettings) };
-  });
+  const stock = await getVariantStock(supabase, rows.flatMap((p) => p.variants.map((v) => v.id)));
 
   if (deal === "short-dated") {
-    rows = withBadge.filter((r) => r.badge?.kind === "short-dated").map((r) => r.product);
+    rows = rows.filter((p) => productStock(p.variants, stock, expirySettings).badge?.kind === "short-dated");
   }
 
   const current = { pet, category, deal, q };
@@ -115,6 +111,26 @@ export default async function ShopPage({ searchParams }: { searchParams: ShopSea
     const qs = params.toString();
     return qs ? `/shop?${qs}` : "/shop";
   };
+
+  const categoryChips = (
+    <>
+      {(categories ?? []).map((c) => (
+        <Link
+          key={c.slug}
+          href={filterHref({ category: category === c.slug ? undefined : c.slug })}
+          className={`rounded-full border-2 border-peach px-4 py-1.5 text-sm font-semibold ${category === c.slug ? "bg-peach text-choc" : "bg-cream text-choc-2"}`}
+        >
+          {c.name}
+        </Link>
+      ))}
+      <Link
+        href={filterHref({ deal: deal === "short-dated" ? undefined : "short-dated" })}
+        className={`rounded-full border-2 border-rust px-4 py-1.5 text-sm font-semibold ${deal === "short-dated" ? "bg-rust text-cream" : "bg-cream text-rust"}`}
+      >
+        Clearance
+      </Link>
+    </>
+  );
 
   return (
     <div className="mx-auto max-w-6xl px-4 py-10">
@@ -175,44 +191,12 @@ export default async function ShopPage({ searchParams }: { searchParams: ShopSea
           <summary className="mb-1.5 cursor-pointer text-xs font-bold uppercase tracking-widest text-choc-2">
             Category
           </summary>
-          <div className="mt-2 flex flex-wrap gap-2">
-            {(categories ?? []).map((c) => (
-              <Link
-                key={c.slug}
-                href={filterHref({ category: category === c.slug ? undefined : c.slug })}
-                className={`rounded-full border-2 border-peach px-4 py-1.5 text-sm font-semibold ${category === c.slug ? "bg-peach text-choc" : "bg-cream text-choc-2"}`}
-              >
-                {c.name}
-              </Link>
-            ))}
-            <Link
-              href={filterHref({ deal: deal === "short-dated" ? undefined : "short-dated" })}
-              className={`rounded-full border-2 border-rust px-4 py-1.5 text-sm font-semibold ${deal === "short-dated" ? "bg-rust text-cream" : "bg-cream text-rust"}`}
-            >
-              Clearance
-            </Link>
-          </div>
+          <div className="mt-2 flex flex-wrap gap-2">{categoryChips}</div>
         </details>
 
         <div className="hidden md:block">
           <p className="mb-1.5 text-xs font-bold uppercase tracking-widest text-choc-2">Category</p>
-          <div className="flex flex-wrap gap-2">
-            {(categories ?? []).map((c) => (
-              <Link
-                key={c.slug}
-                href={filterHref({ category: category === c.slug ? undefined : c.slug })}
-                className={`rounded-full border-2 border-peach px-4 py-1.5 text-sm font-semibold ${category === c.slug ? "bg-peach text-choc" : "bg-cream text-choc-2"}`}
-              >
-                {c.name}
-              </Link>
-            ))}
-            <Link
-              href={filterHref({ deal: deal === "short-dated" ? undefined : "short-dated" })}
-              className={`rounded-full border-2 border-rust px-4 py-1.5 text-sm font-semibold ${deal === "short-dated" ? "bg-rust text-cream" : "bg-cream text-rust"}`}
-            >
-              Clearance
-            </Link>
-          </div>
+          <div className="flex flex-wrap gap-2">{categoryChips}</div>
         </div>
       </div>
 
@@ -239,6 +223,7 @@ export default async function ShopPage({ searchParams }: { searchParams: ShopSea
             <li key={p.id}>
               <ProductCard
                 product={{ ...p, categoryLabel: p.categories?.name ?? p.pet_type }}
+                stock={stock}
                 expirySettings={expirySettings}
               />
             </li>
