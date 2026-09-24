@@ -1,14 +1,15 @@
 "use client";
 
-import { CreditCard, Loader2, MapPinned, Truck } from "lucide-react";
+import { CreditCard, Loader2, Lock, MapPinned, Truck } from "lucide-react";
 import { Minus, Plus, ShoppingBag, Trash2 } from "lucide-react";
 import Link from "next/link";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { FreeShippingProgress } from "@/components/free-shipping-progress";
 import { useCart } from "@/lib/cart-context";
 import { MY_STATES } from "@/lib/my-states";
 import { formatMyr } from "@/lib/pricing";
 import { site, whatsappLink } from "@/lib/site";
+import { track } from "@/lib/track";
 
 type ShippingOption = {
   method: "pickup" | "lalamove" | "easyparcel";
@@ -21,6 +22,8 @@ type ShippingOption = {
 
 const PICKUP: ShippingOption = { method: "pickup", label: "Free store pickup (Bukit Beruntung, Rawang)", price: 0 };
 const MY_MOBILE = /^(?:\+?60|0)1\d{8,9}$/;
+const DETAILS_KEY = "riapetmart:checkout";
+const EMPTY_ADDRESS = { addressLine: "", city: "", postcode: "", state: "Selangor" };
 const optionClass =
   "flex cursor-pointer items-center justify-between gap-2 rounded-xl border-2 border-choc/30 px-3 py-2 has-[:checked]:border-terracotta has-[:checked]:bg-peach/30";
 
@@ -32,7 +35,35 @@ export function CartView({ freeDeliveryMin, pickupEnabled }: { freeDeliveryMin: 
   const [email, setEmail] = useState("");
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
-  const [address, setAddress] = useState({ addressLine: "", city: "", postcode: "", state: "Selangor" });
+  const [address, setAddress] = useState(EMPTY_ADDRESS);
+  const [remembered, setRemembered] = useState(false);
+
+  useEffect(() => {
+    try {
+      const saved = JSON.parse(localStorage.getItem(DETAILS_KEY) ?? "null");
+      if (!saved) return;
+      // localStorage only exists after mount, so pre-filling has to happen in an effect.
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setName(String(saved.name ?? ""));
+      setPhone(String(saved.phone ?? ""));
+      setEmail(String(saved.email ?? ""));
+      setAddress({ ...EMPTY_ADDRESS, ...saved.address });
+      setRemembered(true);
+    } catch {
+      // corrupt or blocked storage: start with empty fields
+    }
+  }, []);
+
+  function forgetDetails() {
+    try {
+      localStorage.removeItem(DETAILS_KEY);
+    } catch {}
+    setName("");
+    setPhone("");
+    setEmail("");
+    setAddress(EMPTY_ADDRESS);
+    setRemembered(false);
+  }
 
   function trackCart(currentEmail: string) {
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(currentEmail)) return;
@@ -93,6 +124,16 @@ export function CartView({ freeDeliveryMin, pickupEnabled }: { freeDeliveryMin: 
     setPaying(true);
     setPayError(null);
     trackCart(email);
+    track(
+      "begin_checkout",
+      lines.map((l) => ({
+        item_id: l.variantId,
+        item_name: l.productName,
+        item_variant: l.variantTitle,
+        price: l.price,
+        quantity: l.qty,
+      })),
+    );
     try {
       const res = await fetch("/api/checkout", {
         method: "POST",
@@ -114,6 +155,9 @@ export function CartView({ freeDeliveryMin, pickupEnabled }: { freeDeliveryMin: 
       });
       const data = await res.json();
       if (!res.ok || !data.url) throw new Error(data.error ?? "Checkout failed");
+      try {
+        localStorage.setItem(DETAILS_KEY, JSON.stringify({ name, phone, email, address }));
+      } catch {}
       window.location.href = data.url;
     } catch (err) {
       setPayError(err instanceof Error ? err.message : "Checkout failed");
@@ -203,7 +247,14 @@ export function CartView({ freeDeliveryMin, pickupEnabled }: { freeDeliveryMin: 
       </ul>
 
       <div className="mt-6 grid gap-3 rounded-2xl border-2 border-choc bg-surface p-4">
-        <h2 className="font-bold text-choc">Your details</h2>
+        <div className="flex items-center justify-between gap-2">
+          <h2 className="font-bold text-choc">Your details</h2>
+          {remembered && (
+            <button type="button" onClick={forgetDetails} className="text-sm text-choc-2 underline hover:text-choc">
+              Not you? Clear
+            </button>
+          )}
+        </div>
         <div className="grid gap-3 sm:grid-cols-2">
           <input
             value={name}
@@ -359,6 +410,21 @@ export function CartView({ freeDeliveryMin, pickupEnabled }: { freeDeliveryMin: 
           {payError}
         </p>
       )}
+      <p className="mt-2 flex flex-wrap items-center justify-center gap-x-2 gap-y-1 text-center text-xs text-choc-2">
+        <span className="inline-flex items-center gap-1 font-semibold text-choc">
+          <Lock className="size-3.5" aria-hidden /> Secured by Stripe
+        </span>
+        <span aria-hidden>·</span>
+        <span>Card · FPX</span>
+        <span aria-hidden>·</span>
+        <Link href="/returns" className="underline hover:text-choc">
+          Returns &amp; refunds
+        </Link>
+        <span aria-hidden>·</span>
+        <a href={whatsappLink()} target="_blank" rel="noopener noreferrer" className="underline hover:text-choc">
+          Need help? WhatsApp us
+        </a>
+      </p>
 
       <p className="mt-4 text-center text-sm text-choc-2">or</p>
 
@@ -372,9 +438,6 @@ export function CartView({ freeDeliveryMin, pickupEnabled }: { freeDeliveryMin: 
       </a>
       <p className="mt-2 text-center text-sm text-choc-2">
         Prefer to arrange delivery and pay directly? We&apos;ll confirm on WhatsApp instead.
-      </p>
-      <p className="mt-4 text-center text-xs text-choc-2">
-        🔒 Secured by Stripe · <Link href="/returns" className="underline hover:text-choc">Returns & refunds</Link>
       </p>
     </div>
   );
