@@ -7,7 +7,9 @@ import { createClient } from "@/lib/supabase/server";
 
 export const metadata = {
   title: "Shop all",
-  description: "Browse pet food, treats, grooming and health supplies for dogs, cats and small pets at Ria Pet Mart.",
+  description:
+    "Browse dog food, cat food, treats, grooming and health supplies at Ria Pet Mart — pet shop Rawang and Bukit Beruntung, with delivery across Malaysia.",
+  keywords: ["dog food Malaysia", "cat food Malaysia", "pet shop Rawang", "kedai haiwan Rawang", "cat litter Malaysia"],
   alternates: { canonical: "/shop" },
 };
 

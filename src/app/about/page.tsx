@@ -26,7 +26,8 @@ export default function AboutPage() {
         </p>
         <p>
           Rated {site.google.rating}★ from {site.google.reviewCount} Google reviews, we&apos;re proud to be
-          the pet shop locals in Bandar Bukit Beruntung and Rawang keep coming back to.
+          the pet shop locals in Bandar Bukit Beruntung and Rawang keep coming back to — known locally as
+          kedai haiwan Rawang and kedai haiwan Bukit Beruntung.
         </p>
         <p>
           Open {site.hours.days}, {site.hours.opens}–{site.hours.closes}. Closed {site.hours.closed}.
