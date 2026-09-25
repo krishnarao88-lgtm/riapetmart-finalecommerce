@@ -127,12 +127,20 @@ export async function importCatalogue(_prev: ImportState, formData: FormData): P
   const idByRef = new Map((savedProducts ?? []).filter((p) => p.source_ref).map((p) => [p.source_ref, p.id]));
 
   // ---- variants ----
+  // Sheets may carry old-style SKUs; the database renames new variants to the standard BRAND-PPP-VV code
+  // and keeps the sheet's SKU as legacy_sku, so both spellings resolve to the same variant.
+  const { data: existing } = await supabase.from("variants").select("sku, legacy_sku");
+  const currentSku = new Map<string, string>();
+  for (const v of existing ?? []) {
+    currentSku.set(v.sku, v.sku);
+    if (v.legacy_sku) currentSku.set(v.legacy_sku, v.sku);
+  }
   const variantPayload = parsed.products.flatMap((p) => {
     const productId = (p.sourceRef ? idByRef.get(p.sourceRef) : undefined) ?? idBySlug.get(p.slug);
     if (!productId) return [];
     return p.variants.map((v, index) => ({
       product_id: productId,
-      sku: v.sku,
+      sku: currentSku.get(v.sku) ?? v.sku,
       title: v.title,
       unit_multiplier: v.unitMultiplier,
       price: v.price,
@@ -151,8 +159,12 @@ export async function importCatalogue(_prev: ImportState, formData: FormData): P
     if (error) return { ...base, mode: "preview", error: `Variants: ${error.message}` };
   }
 
-  const { data: savedVariants } = await supabase.from("variants").select("id, sku");
-  const variantId = new Map((savedVariants ?? []).map((v) => [v.sku, v.id]));
+  const { data: savedVariants } = await supabase.from("variants").select("id, sku, legacy_sku");
+  const variantId = new Map<string, string>();
+  for (const v of savedVariants ?? []) {
+    variantId.set(v.sku, v.id);
+    if (v.legacy_sku && !variantId.has(v.legacy_sku)) variantId.set(v.legacy_sku, v.id);
+  }
 
   // ---- costs ----
   const costPayload = parsed.products.flatMap((p) =>

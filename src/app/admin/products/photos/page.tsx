@@ -10,7 +10,7 @@ type Row = {
   name: string;
   slug: string;
   source_ref: string | null;
-  variants: { sku: string }[];
+  variants: { sku: string; legacy_sku: string | null }[];
   product_images: { id: string }[];
 };
 
@@ -18,7 +18,7 @@ export default async function BulkPhotosPage() {
   const { supabase } = await requireAdmin();
   const { data, error } = await supabase
     .from("products")
-    .select("id, name, slug, source_ref, variants(sku), product_images(id)")
+    .select("id, name, slug, source_ref, variants(sku, legacy_sku), product_images(id)")
     .order("name")
     .limit(2000);
 
@@ -26,7 +26,7 @@ export default async function BulkPhotosPage() {
     id: p.id,
     name: p.name,
     photos: p.product_images.length,
-    keys: [p.slug, p.source_ref, ...p.variants.map((v) => v.sku)]
+    keys: [p.slug, p.source_ref, ...p.variants.flatMap((v) => [v.sku, v.legacy_sku ?? ""])]
       .filter((k): k is string => Boolean(k))
       .map((k) => k.toLowerCase()),
   }));

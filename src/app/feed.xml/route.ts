@@ -52,7 +52,8 @@ export async function GET() {
         salePrice: badge?.kind === "short-dated" ? discountedPrice(v.price, badge.discount) : null,
         inStock: (row?.available ?? 0) > 0,
         brand: p.brands?.name ?? null,
-        gtin: v.barcode && /^\d{8,14}$/.test(v.barcode) ? v.barcode : null,
+        // Shop-made barcodes (GS1 in-store range 20-29) aren't real GTINs; Google must only get manufacturer codes.
+        gtin: v.barcode && /^\d{8,14}$/.test(v.barcode) && !/^2\d{12}$/.test(v.barcode) ? v.barcode : null,
       };
     });
   });
