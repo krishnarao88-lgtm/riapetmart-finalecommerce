@@ -4,9 +4,10 @@ import Link from "next/link";
 
 // self-start + a fixed height stop the card from being stretched tall by its taller
 // text-panel sibling in the same grid row — that stretch was pushing the crop window
-// down into empty headroom, cropping the animal almost entirely out of frame.
+// down into empty headroom, cropping the animal almost entirely out of frame. On phones the
+// arch takes the photos' own 4:5 shape so the dome never slices off ears or heads.
 const arch =
-  "group relative flex h-80 self-start md:h-96 flex-col items-center justify-end gap-2 overflow-hidden rounded-t-full rounded-b-3xl border-2 border-choc p-6 pb-5 text-center shadow-[5px_5px_0_0_var(--color-choc)] transition-all duration-300 ease-out hover:-translate-y-1.5 hover:rotate-1 hover:shadow-[7px_9px_0_0_var(--color-choc)]";
+  "group relative mx-auto flex aspect-[4/5] w-full max-w-[22rem] self-start md:mx-0 md:aspect-auto md:h-96 md:max-w-none flex-col items-center justify-end gap-2 overflow-hidden rounded-t-full rounded-b-3xl border-2 border-choc p-6 pb-5 text-center shadow-[5px_5px_0_0_var(--color-choc)] transition-all duration-300 ease-out hover:-translate-y-1.5 hover:rotate-1 hover:shadow-[7px_9px_0_0_var(--color-choc)]";
 const archImage = "object-cover transition-transform duration-500 ease-out group-hover:scale-110";
 const archSticker =
   "absolute drop-shadow-[0_1px_3px_rgba(0,0,0,0.45)] transition-transform duration-300 ease-out group-hover:scale-125 group-hover:rotate-[20deg]";
