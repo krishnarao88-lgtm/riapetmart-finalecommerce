@@ -5,6 +5,7 @@ import { CartDrawer } from "@/components/cart-drawer";
 import { FloatingWhatsApp } from "@/components/floating-whatsapp";
 import { ReferralCapture } from "@/components/referral-capture";
 import { SiteFooter } from "@/components/site-footer";
+import { AssistantWidget } from "@/components/assistant-widget";
 import { SaleBanner } from "@/components/sale-banner";
 import { SiteHeader } from "@/components/site-header";
 import { WelcomePopup } from "@/components/welcome-popup";
@@ -103,6 +104,7 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
           <SiteFooter />
           <WelcomePopup />
           <FloatingWhatsApp />
+          {process.env.ANTHROPIC_API_KEY && <AssistantWidget />}
           <CartDrawer freeDeliveryMin={freeDeliveryMin(delivery)} />
         </CartProvider>
       </body>
