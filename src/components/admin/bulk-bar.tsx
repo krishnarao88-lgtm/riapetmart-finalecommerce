@@ -42,6 +42,9 @@ function buildOp(action: string, value: string, number: string, expiry: string, 
     case "review_on":
     case "review_off":
       return { kind: "needs_review", value: action === "review_on" };
+    case "dvs_on":
+    case "dvs_off":
+      return { kind: "is_dvs_approved", value: action === "dvs_on" };
     case "delete":
       return { kind: "delete", confirm };
   }
@@ -140,6 +143,8 @@ export function BulkBar({
               <option value="regulated_off">Unmark regulated</option>
               <option value="review_on">Flag needs review</option>
               <option value="review_off">Clear needs review</option>
+              <option value="dvs_on">Mark DVS approved</option>
+              <option value="dvs_off">Unmark DVS approved</option>
             </optgroup>
             <optgroup label="Price">
               <option value="price_set">Set exact price</option>

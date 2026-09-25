@@ -91,7 +91,7 @@ export default async function ShopPage({ searchParams }: { searchParams: ShopSea
   let productsQuery = supabase
     .from("products")
     .select(
-      `id, slug, name, pet_type, highlights, size_display, ${categoriesEmbed}, product_images(path, alt), variants(id, title, price)`,
+      `id, slug, name, pet_type, highlights, is_dvs_approved, size_display, ${categoriesEmbed}, product_images(path, alt), variants(id, title, price)`,
     )
     .eq("status", "published")
     .order("name");

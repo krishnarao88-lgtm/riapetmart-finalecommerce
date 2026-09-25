@@ -13,7 +13,7 @@ export type BulkOp =
   | { kind: "status"; value: string }
   | { kind: "brand" | "category"; value: string | null }
   | { kind: "pet_type"; value: string }
-  | { kind: "is_regulated" | "needs_review"; value: boolean }
+  | { kind: "is_regulated" | "needs_review" | "is_dvs_approved"; value: boolean }
   | { kind: "price"; mode: string; value: number }
   | { kind: "stock"; mode: string; value: number; expiry: string | null }
   | { kind: "delete"; confirm: string };
@@ -208,6 +208,7 @@ export async function bulkUpdateProducts(rawIds: string[], op: BulkOp): Promise<
         break;
       case "is_regulated":
       case "needs_review":
+      case "is_dvs_approved":
         if (typeof op.value !== "boolean") return { error: "Choose on or off." };
         await updateProducts(supabase, ids, { [op.kind]: op.value });
         result = { ok: `Updated ${ids.length} products.` };

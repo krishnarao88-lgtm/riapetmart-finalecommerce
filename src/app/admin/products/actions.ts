@@ -38,6 +38,7 @@ export async function saveProduct(_prev: ActionState, formData: FormData) {
         .filter(Boolean)
         .slice(0, 8),
       is_regulated: formData.get("is_regulated") === "on",
+      is_dvs_approved: formData.get("is_dvs_approved") === "on",
       needs_review: formData.get("needs_review") === "on",
       seo_title: text(formData, "seo_title"),
       seo_description: text(formData, "seo_description"),

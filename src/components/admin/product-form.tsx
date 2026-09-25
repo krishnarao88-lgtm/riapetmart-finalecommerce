@@ -14,6 +14,7 @@ export type ProductFields = {
   usage: string | null;
   highlights: string[] | null;
   is_regulated: boolean;
+  is_dvs_approved: boolean;
   needs_review: boolean;
   review_notes: string | null;
   seo_title: string | null;
@@ -107,6 +108,10 @@ export function ProductForm({ product }: { product: ProductFields }) {
         <label className="flex items-center gap-3 text-sm font-semibold">
           <input type="checkbox" name="is_regulated" defaultChecked={product.is_regulated} className="size-5" />
           Regulated product (medication or veterinary)
+        </label>
+        <label className="flex items-center gap-3 text-sm font-semibold">
+          <input type="checkbox" name="is_dvs_approved" defaultChecked={product.is_dvs_approved} className="size-5" />
+          DVS Malaysia approved (shows a badge on the shop)
         </label>
         <label className="flex items-center gap-3 text-sm font-semibold">
           <input type="checkbox" name="needs_review" defaultChecked={product.needs_review} className="size-5" />

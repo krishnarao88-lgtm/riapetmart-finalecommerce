@@ -10,7 +10,7 @@ export async function FeaturedProducts() {
   const [{ data }, { data: settingsRow }] = await Promise.all([
     supabase
       .from("products")
-      .select("id, slug, name, pet_type, highlights, size_display, product_images(path, alt), variants(id, title, price)")
+      .select("id, slug, name, pet_type, highlights, is_dvs_approved, size_display, product_images(path, alt), variants(id, title, price)")
       .eq("status", "published")
       .order("created_at", { ascending: false })
       .limit(4),

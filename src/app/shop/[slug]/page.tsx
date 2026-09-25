@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Cat, Dog, FlaskConical, Info, PawPrint, Pill, Target } from "lucide-react";
+import { Cat, Dog, FlaskConical, Info, PawPrint, Pill, ShieldCheck, Target } from "lucide-react";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { AddToCart } from "@/components/add-to-cart";
@@ -17,7 +17,7 @@ async function getProduct(slug: string) {
   const { data: product } = await supabase
     .from("products")
     .select(
-      "id, name, description, ingredients, usage, highlights, size_display, pet_type, category_id, is_regulated, seo_title, seo_description, brands(name, slug), categories(name, slug), product_images(path, alt, sort), variants(id, title, price, sort)",
+      "id, name, description, ingredients, usage, highlights, is_dvs_approved, size_display, pet_type, category_id, is_regulated, seo_title, seo_description, brands(name, slug), categories(name, slug), product_images(path, alt, sort), variants(id, title, price, sort)",
     )
     .eq("slug", slug)
     .eq("status", "published")
@@ -221,6 +221,12 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
           <h1 className="font-bubble text-2xl font-extrabold text-choc">{name}</h1>
           {product.size_display && <p className="text-choc-2">{product.size_display}</p>}
           <ProductTags petType={product.pet_type} highlights={product.highlights} />
+          {product.is_dvs_approved && (
+            <p className="flex w-fit items-center gap-2 rounded-xl bg-ok-bg px-3 py-2 text-sm font-semibold text-ok-fg">
+              <ShieldCheck className="size-5 shrink-0" aria-hidden />
+              Approved by the Department of Veterinary Services (DVS) Malaysia
+            </p>
+          )}
 
           {variants.some((v) => v.badge?.kind === "short-dated") && (
             <span className="w-fit rounded-full bg-rust px-3 py-1 text-xs font-bold text-cream">

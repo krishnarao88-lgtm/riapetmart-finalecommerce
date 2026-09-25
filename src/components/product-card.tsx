@@ -1,4 +1,4 @@
-import { PawPrint } from "lucide-react";
+import { PawPrint, ShieldCheck } from "lucide-react";
 import Link from "next/link";
 import { ProductTags } from "@/components/product-tags";
 import { QuickAddButton } from "@/components/quick-add-button";
@@ -15,6 +15,7 @@ export type ProductCardData = {
   categoryLabel?: string | null;
   pet_type?: string | null;
   highlights?: string[] | null;
+  is_dvs_approved?: boolean;
   product_images: { path: string; alt: string | null }[];
   variants: { id: string; title: string; price: number }[];
 };
@@ -83,6 +84,11 @@ export function ProductCard({
           <img src={image.path} alt={titleCase(image.alt || p.name)} className={`size-full object-cover ${soldOut ? "opacity-60" : ""}`} />
         ) : (
           <PawPrint className="size-10 text-rust/50" aria-hidden />
+        )}
+        {p.is_dvs_approved && (
+          <span className="absolute right-2 top-2 inline-flex items-center gap-1 rounded-full bg-surface/90 px-2 py-0.5 text-[11px] font-bold text-ok-fg shadow-sm">
+            <ShieldCheck className="size-3.5" aria-hidden /> DVS approved
+          </span>
         )}
         {soldOut && (
           <span className="absolute left-2 top-2 rounded-full bg-choc px-2 py-0.5 text-xs font-bold text-cream">Sold out</span>
