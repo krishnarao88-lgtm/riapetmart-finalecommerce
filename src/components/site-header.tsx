@@ -2,6 +2,8 @@ import { PawPrint, Search, Tag } from "lucide-react";
 import Link from "next/link";
 import { AccountLink } from "@/components/account-link";
 import { CartBadge } from "@/components/cart-badge";
+import { MobileMenu } from "@/components/mobile-menu";
+import { whatsappLink } from "@/lib/site";
 
 // Clearance is raised like a sticker so it stands out from the plain links.
 const HOT = "border-2 border-choc bg-terracotta text-cream shadow-[2px_2px_0_0_var(--color-choc)] hover:-translate-y-0.5 hover:bg-terracotta hover:text-cream";
@@ -65,35 +67,28 @@ export function SiteHeader() {
           </nav>
 
           <SearchForm className="hidden lg:block lg:w-44" />
+          <span className="ml-auto md:hidden" aria-hidden />
           <AccountLink />
           <CartBadge />
+          <MobileMenu
+            links={[...nav, { href: "/guides", label: "Buying guides" }, { href: "/reviews", label: "Reviews" }]}
+            whatsappHref={whatsappLink()}
+          />
         </div>
       </header>
 
-      {/* Below lg: search on its own row, plus (phones) the category pills. Not pinned. */}
+      {/* Below lg: search on its own row (phones keep Clearance beside it; everything else is in the ☰ menu). Not pinned. */}
       <div className="border-b-2 border-rust/10 bg-cream lg:hidden">
-        <div className="mx-auto max-w-6xl px-4 pt-3 md:pb-3">
-          <SearchForm className="w-full" />
+        <div className="mx-auto flex max-w-6xl items-center gap-2 px-4 py-3">
+          <SearchForm className="min-w-0 flex-1" />
+          <Link
+            href="/shop?deal=short-dated"
+            className={`inline-flex min-h-11 shrink-0 items-center gap-1 rounded-full px-3.5 text-sm font-semibold md:hidden ${HOT}`}
+          >
+            <Tag className="size-3.5" aria-hidden />
+            Clearance
+          </Link>
         </div>
-        <nav aria-label="Main" className="relative md:hidden">
-          <ul className="flex gap-2 overflow-x-auto px-4 py-3 [scrollbar-width:none]">
-            {nav.map((item) => (
-              <li key={item.href} className="shrink-0">
-                <Link
-                  href={item.href}
-                  className={`inline-flex min-h-11 items-center gap-1 rounded-full px-4 text-sm font-semibold ${item.hot ? HOT : "border-2 border-peach bg-cream text-choc"}`}
-                >
-                  {item.hot && <Tag className="size-3.5" aria-hidden />}
-                  {item.label}
-                </Link>
-              </li>
-            ))}
-          </ul>
-          <div
-            className="pointer-events-none absolute bottom-3 right-0 top-3 w-8 bg-linear-to-l from-cream to-transparent"
-            aria-hidden
-          />
-        </nav>
       </div>
     </>
   );

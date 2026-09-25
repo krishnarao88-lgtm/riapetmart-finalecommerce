@@ -47,7 +47,8 @@ function Tile({ label, value, tone, note }: { label: string; value: number; tone
 }
 
 export default async function FinancePage({ searchParams }: PageProps<"/admin/finance">) {
-  const { days: daysParam, all } = await searchParams;
+  const { days: daysParam, all, per: perParam, page: pageParam } = await searchParams;
+  const per = [20, 50, 100].includes(Number(perParam)) ? Number(perParam) : 20;
   const days = PERIODS.find((p) => String(p.days) === daysParam)?.days ?? 30;
   const showAll = all === "1";
   const { supabase } = await requireAdmin();
@@ -138,11 +139,14 @@ export default async function FinancePage({ searchParams }: PageProps<"/admin/fi
   const losing = items.filter((i) => i.worst.profit < 0);
   const switchFixes = losing.filter((i) => i.fixedBySwitch).length;
   const needRaise = losing.filter((i) => i.safe !== null);
-  const shown = showAll ? items : losing;
+  const list = showAll ? items : losing;
+  const pages = Math.max(1, Math.ceil(list.length / per));
+  const page = Math.min(pages, Math.max(1, Math.floor(Number(pageParam)) || 1));
+  const shown = list.slice((page - 1) * per, page * per);
   const avgMargin = items.length ? items.reduce((s, i) => s + i.rows[0].margin, 0) / items.length : 0;
   const link = (q: Record<string, string | number | undefined>) =>
     `/admin/finance?${new URLSearchParams(
-      Object.entries({ days, all: showAll ? "1" : undefined, ...q })
+      Object.entries({ days, all: showAll ? "1" : undefined, per: per === 20 ? undefined : per, ...q })
         .filter(([, v]) => v !== undefined)
         .map(([k, v]) => [k, String(v)]),
     )}`;
@@ -213,7 +217,7 @@ export default async function FinancePage({ searchParams }: PageProps<"/admin/fi
               </strong>
             </p>
           </div>
-          <Link href={link({ all: showAll ? undefined : "1" })} className="text-sm font-semibold text-ink underline">
+          <Link href={link({ all: showAll ? undefined : "1", page: undefined })} className="text-sm font-semibold text-ink underline">
             {showAll ? "Show only money-losers" : "Show all items"}
           </Link>
         </div>
@@ -302,11 +306,48 @@ export default async function FinancePage({ searchParams }: PageProps<"/admin/fi
             </table>
           </div>
         )}
+        {list.length > 20 && (
+          <nav aria-label="Pages" className="flex flex-wrap items-center justify-between gap-3 text-sm">
+            <span className="text-ink-2">
+              {(page - 1) * per + 1}–{Math.min(page * per, list.length)} of {list.length}
+            </span>
+            <span className="flex items-center gap-1">
+              {page > 1 && (
+                <Link href={link({ page: page - 1 })} className="rounded-full bg-surface px-3 py-1.5 font-semibold">
+                  ← Previous
+                </Link>
+              )}
+              <span className="px-2 text-ink-2">
+                Page {page} of {pages}
+              </span>
+              {page < pages && (
+                <Link href={link({ page: page + 1 })} className="rounded-full bg-surface px-3 py-1.5 font-semibold">
+                  Next →
+                </Link>
+              )}
+            </span>
+            <span className="flex items-center gap-1">
+              <span className="text-ink-2">Per page:</span>
+              {[20, 50, 100].map((n) => (
+                <Link
+                  key={n}
+                  href={link({ per: n === 20 ? undefined : n, page: undefined })}
+                  className={`rounded-full px-2.5 py-1 font-semibold ${n === per ? "bg-ink text-ground" : "bg-surface text-ink-2"}`}
+                >
+                  {n}
+                </Link>
+              ))}
+            </span>
+          </nav>
+        )}
         <p className="text-sm text-ink-2">
           Red = sold below cost after the card fee. Amber = under 10% margin. The shop gives only the single biggest
-          discount, but a sign-up code is taken off at payment on top of it: that&apos;s the &ldquo;Worst&rdquo; case. To
-          protect an item, raise its price, leave it out of the sale in Admin → Offers &amp; sales, or lower the sign-up
-          discount in Settings.
+          discount.{" "}
+          {stacking
+            ? "Right now a promo code can still come off on top of it at payment: that's the \u201cWorst\u201d case."
+            : "Promo codes can't be used on discounted prices, so a code only ever comes off a full-price item."}{" "}
+          To protect an item, raise its price, leave it out of the sale in Admin → Offers &amp; sales, or lower the
+          sign-up discount in Settings.
         </p>
       </section>
     </div>

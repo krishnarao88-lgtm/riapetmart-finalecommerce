@@ -14,7 +14,7 @@ export function AccountLink() {
   return (
     <Link
       href="/account"
-      className="inline-flex min-h-11 items-center gap-1.5 rounded-full border-2 border-choc bg-cream px-3.5 text-sm font-bold text-choc hover:bg-peach/50 max-md:ml-auto"
+      className="hidden min-h-11 items-center gap-1.5 rounded-full border-2 border-choc bg-cream px-3.5 text-sm font-bold text-choc hover:bg-peach/50 md:inline-flex"
     >
       <UserRound className="size-4" aria-hidden />
       {signedIn ? "Account" : "Log in"}
