@@ -9,7 +9,8 @@ import { faqJsonLd, landingSeo } from "@/lib/seo";
 import { searchTerm, sortByPrice } from "@/lib/shop-search";
 import { whatsappLink } from "@/lib/site";
 import { withPromos } from "@/lib/promotions-server";
-import { createClient } from "@/lib/supabase/server";
+import { unstable_cache } from "next/cache";
+import { createPublicClient } from "@/lib/supabase/public";
 
 type ShopSearchParams = Promise<{ pet?: string; category?: string; deal?: string; q?: string; sort?: string; need?: string; stock?: string }>;
 
@@ -31,7 +32,7 @@ export async function generateMetadata({ searchParams }: { searchParams: ShopSea
   const seo = landingSeo(category, pet);
   if (!seo) return shopAllMetadata;
 
-  const supabase = await createClient();
+  const supabase = createPublicClient();
   const { count } = category
     ? await supabase
         .from("products")
@@ -71,62 +72,81 @@ type ProductRow = {
   variants: { id: string; title: string; price: number }[];
 };
 
+/**
+ * The shop grid's data for one filter combination, cached for a minute. Busy sale days then cost one
+ * database round-trip per filter per minute instead of one per visitor; checkout still re-checks live.
+ */
+const loadShop = unstable_cache(
+  async (pet: string | undefined, category: string | undefined, term: string | undefined) => {
+    const supabase = createPublicClient();
+    // q matches the product name, its brand or its category: resolve brand/category names to ids first,
+    // since PostgREST can't OR a parent column with an embedded table's column.
+    const [{ data: brandHits }, { data: categoryHits }] = term
+      ? await Promise.all([
+          supabase.from("brands").select("id").ilike("name", `%${term}%`),
+          supabase.from("categories").select("id").ilike("name", `%${term}%`),
+        ])
+      : [{ data: null }, { data: null }];
+
+    const categoriesQuery = supabase.from("categories").select("id, name, slug").order("sort");
+    const settingsQuery = supabase.from("settings").select("value").eq("key", "expiry_badges").single();
+    // categories!inner makes the category filter actually restrict rows — a plain embed
+    // only filters the nested object, not which products are returned.
+    const categoriesEmbed = category ? "categories!inner(name, slug)" : "categories(name)";
+    let productsQuery = supabase
+      .from("products")
+      .select(
+        `id, slug, name, pet_type, highlights, is_dvs_approved, size_display, brand_id, category_id, brands(is_house_brand), ${categoriesEmbed}, product_images(path, alt), variants(id, title, price)`,
+      )
+      .eq("status", "published")
+      .order("name");
+
+    if (pet) productsQuery = productsQuery.or(`pet_type.eq.${pet},pet_type.eq.dog_cat`);
+    if (category) productsQuery = productsQuery.eq("categories.slug", category);
+    if (term) {
+      const brandIds = (brandHits ?? []).map((b) => b.id);
+      const categoryIds = (categoryHits ?? []).map((c) => c.id);
+      productsQuery = productsQuery.or(
+        [
+          `name.ilike.%${term}%`,
+          brandIds.length && `brand_id.in.(${brandIds.join(",")})`,
+          categoryIds.length && `category_id.in.(${categoryIds.join(",")})`,
+        ]
+          .filter(Boolean)
+          .join(","),
+      );
+    }
+
+    const [{ data: categories }, { data: settingsRow }, { data: products }] = await Promise.all([
+      categoriesQuery,
+      settingsQuery,
+      productsQuery,
+    ]);
+
+    const rows = await withPromos((products ?? []) as unknown as ProductRow[]);
+
+    const stock = await getVariantStock(supabase, rows.flatMap((p) => p.variants.map((v) => v.id)));
+    return {
+      categories: categories ?? [],
+      expiry: (settingsRow?.value ?? {}) as Partial<ExpirySettings>,
+      rows,
+      stock: stock ? [...stock] : null,
+    };
+  },
+  ["shop-grid"],
+  { revalidate: 60 },
+);
+
 export default async function ShopPage({ searchParams }: { searchParams: ShopSearchParams }) {
   const { pet, category, deal, q, sort, need, stock: stockParam } = await searchParams;
   const showSoldOut = stockParam === "all";
   const needLabel = need ? NEED_LABELS[need] : undefined;
   const seo = q || deal || need ? null : landingSeo(category, pet);
-  const supabase = await createClient();
   const term = searchTerm(q);
-
-  // q matches the product name, its brand or its category: resolve brand/category names to ids first,
-  // since PostgREST can't OR a parent column with an embedded table's column.
-  const [{ data: brandHits }, { data: categoryHits }] = term
-    ? await Promise.all([
-        supabase.from("brands").select("id").ilike("name", `%${term}%`),
-        supabase.from("categories").select("id").ilike("name", `%${term}%`),
-      ])
-    : [{ data: null }, { data: null }];
-
-  const categoriesQuery = supabase.from("categories").select("id, name, slug").order("sort");
-  const settingsQuery = supabase.from("settings").select("value").eq("key", "expiry_badges").single();
-  // categories!inner makes the category filter actually restrict rows — a plain embed
-  // only filters the nested object, not which products are returned.
-  const categoriesEmbed = category ? "categories!inner(name, slug)" : "categories(name)";
-  let productsQuery = supabase
-    .from("products")
-    .select(
-      `id, slug, name, pet_type, highlights, is_dvs_approved, size_display, brand_id, category_id, brands(is_house_brand), ${categoriesEmbed}, product_images(path, alt), variants(id, title, price)`,
-    )
-    .eq("status", "published")
-    .order("name");
-
-  if (pet) productsQuery = productsQuery.or(`pet_type.eq.${pet},pet_type.eq.dog_cat`);
-  if (category) productsQuery = productsQuery.eq("categories.slug", category);
-  if (term) {
-    const brandIds = (brandHits ?? []).map((b) => b.id);
-    const categoryIds = (categoryHits ?? []).map((c) => c.id);
-    productsQuery = productsQuery.or(
-      [
-        `name.ilike.%${term}%`,
-        brandIds.length && `brand_id.in.(${brandIds.join(",")})`,
-        categoryIds.length && `category_id.in.(${categoryIds.join(",")})`,
-      ]
-        .filter(Boolean)
-        .join(","),
-    );
-  }
-
-  const [{ data: categories }, { data: settingsRow }, { data: products }] = await Promise.all([
-    categoriesQuery,
-    settingsQuery,
-    productsQuery,
-  ]);
-
-  const expirySettings = (settingsRow?.value ?? {}) as Partial<ExpirySettings>;
-  let rows = sortByPrice(await withPromos((products ?? []) as unknown as ProductRow[]), sort);
-
-  const stock = await getVariantStock(supabase, rows.flatMap((p) => p.variants.map((v) => v.id)));
+  const data = await loadShop(pet, category, term);
+  const { categories, expiry: expirySettings } = data;
+  let rows = sortByPrice(data.rows, sort);
+  const stock = data.stock ? new Map(data.stock) : null;
 
   if (deal === "sale") rows = rows.filter((p) => p.promo);
   if (needLabel) rows = rows.filter((p) => careNeeds({ name: p.name, highlights: p.highlights ?? null }).has(need!));
