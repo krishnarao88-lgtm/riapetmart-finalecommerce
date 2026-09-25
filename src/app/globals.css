@@ -219,7 +219,7 @@ h3 {
   }
 }
 
-/* Brands we carry: slides left to right forever, pauses on hover, fades at the edges. */
+/* Brands we carry: two tilted ribbons sliding in opposite directions, pausing on hover. */
 @keyframes marquee-ltr {
   from {
     transform: translateX(-50%);
@@ -228,19 +228,52 @@ h3 {
     transform: translateX(0);
   }
 }
-.marquee {
-  mask-image: linear-gradient(to right, transparent, #000 6%, #000 94%, transparent);
-}
 .marquee-track {
-  animation: marquee-ltr 50s linear infinite;
+  animation: marquee-ltr 55s linear infinite;
+}
+.marquee-reverse {
+  animation-direction: reverse;
+  animation-duration: 65s;
 }
 .marquee:hover .marquee-track,
 .marquee:focus-within .marquee-track {
   animation-play-state: paused;
 }
+.ribbon {
+  border-block: 2px solid var(--color-choc);
+  box-shadow: 0 10px 24px -16px rgb(46 29 20 / 0.5);
+}
+.ribbon-a {
+  transform: rotate(-1.6deg);
+  position: relative;
+  z-index: 1;
+}
+.ribbon-b {
+  transform: rotate(1.2deg);
+  margin-top: -0.4rem;
+}
+/* Logos are toned into the warm palette so twenty brand colours don't clash; hover restores them. */
+.brand-logo {
+  filter: grayscale(1) contrast(1.15);
+  mix-blend-mode: multiply;
+  opacity: 0.72;
+  transition:
+    filter 300ms ease,
+    opacity 300ms ease,
+    transform 450ms cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+.brand-cell:hover .brand-logo,
+.brand-cell:focus-visible .brand-logo {
+  filter: none;
+  mix-blend-mode: normal;
+  opacity: 1;
+  transform: scale(1.15) rotate(-4deg);
+}
 @media (prefers-reduced-motion: reduce) {
-  .marquee {
-    mask-image: none;
+  .ribbon-a,
+  .ribbon-b {
+    transform: none;
+    margin-top: 0.5rem;
   }
   .marquee-track {
     animation: none;

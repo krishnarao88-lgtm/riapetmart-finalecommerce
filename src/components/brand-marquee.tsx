@@ -1,3 +1,4 @@
+import { PawPrint } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 
@@ -48,47 +49,63 @@ function Logo({ brand, hidden }: { brand: (typeof BRANDS)[number]; hidden?: bool
       width={size.width}
       height={size.height}
       style={size}
-      className="object-contain opacity-90 transition duration-300 group-hover/logo:scale-105 group-hover/logo:opacity-100"
+      className="brand-logo object-contain"
     />
   );
-  const cell = "group/logo grid h-20 w-44 shrink-0 place-items-center rounded-2xl bg-white/70 px-4 ring-1 ring-choc/10";
+  const cell = "brand-cell grid h-16 place-items-center px-3";
   return (
-    <li aria-hidden={hidden || undefined} className="marquee-item">
+    <li aria-hidden={hidden || undefined} className="marquee-item flex items-center gap-6">
       {brand.slug && !hidden ? (
         <Link href={`/brands/${brand.slug}`} className={cell} aria-label={`Shop ${brand.name}`}>
           {img}
         </Link>
       ) : (
-        <span className={cell} tabIndex={-1}>
-          {img}
-        </span>
+        <span className={cell}>{img}</span>
       )}
+      <PawPrint className="size-4 shrink-0 text-rust/40" aria-hidden />
     </li>
   );
 }
 
-/** "Brands we carry": identical cells so every logo lines up, sliding left to right on a loop. */
-export function BrandMarquee() {
+function Ribbon({ brands, reverse, tone }: { brands: typeof BRANDS; reverse?: boolean; tone: string }) {
   return (
-    <section aria-labelledby="brands-heading" className="mx-auto max-w-6xl px-4 pt-12">
-      <div className="flex items-end justify-between gap-3">
+    <div className={`marquee ribbon ${reverse ? "ribbon-b" : "ribbon-a"} overflow-hidden py-2 ${tone}`}>
+      {/* Two identical runs; the track slides by exactly one run, so the loop is seamless. */}
+      <ul className={`marquee-track flex w-max items-center gap-6 px-3 ${reverse ? "marquee-reverse" : ""}`}>
+        {brands.map((b) => (
+          <Logo key={b.file} brand={b} />
+        ))}
+        {brands.map((b) => (
+          <Logo key={`${b.file}-2`} brand={b} hidden />
+        ))}
+      </ul>
+    </div>
+  );
+}
+
+/**
+ * "Brands we carry": two tilted ribbons crossing like shop tape, sliding in opposite directions.
+ * Logos sit on the ribbon (no boxes), toned into the site's warm palette; hovering one restores
+ * its real colours with a little pop, and pauses that ribbon.
+ */
+export function BrandMarquee() {
+  const half = Math.ceil(BRANDS.length / 2);
+  return (
+    <section aria-labelledby="brands-heading" className="pt-12">
+      <div className="mx-auto flex max-w-6xl items-end justify-between gap-3 px-4">
         <h2 id="brands-heading" className="font-bubble text-2xl font-extrabold text-choc">
           Brands we carry
         </h2>
         <Link href="/brands" className="text-sm font-bold text-rust underline">
-          All brands
+          All {BRANDS.length} brands
         </Link>
       </div>
-      <div className="marquee mt-4 overflow-hidden rounded-3xl card-soft bg-peach/40 py-4">
-        {/* Two identical runs; the track slides by exactly one run, so the loop is seamless. */}
-        <ul className="marquee-track flex w-max gap-4 px-2">
-          {BRANDS.map((b) => (
-            <Logo key={b.file} brand={b} />
-          ))}
-          {BRANDS.map((b) => (
-            <Logo key={`${b.file}-2`} brand={b} hidden />
-          ))}
-        </ul>
+      {/* Full-bleed: the ribbons are wider than the screen so their tilted ends are never seen. */}
+      <div className="relative mt-6 overflow-hidden py-5">
+        <div className="-mx-[4%] grid">
+          <Ribbon brands={BRANDS.slice(0, half)} tone="bg-peach" />
+          <Ribbon brands={BRANDS.slice(half)} reverse tone="bg-cream" />
+        </div>
       </div>
     </section>
   );
