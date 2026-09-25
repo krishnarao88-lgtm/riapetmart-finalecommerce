@@ -104,7 +104,7 @@ export function VariantPricingRow({ variant, productId }: { variant: VariantPric
         </label>
 
         <label className="grid gap-1 text-sm font-semibold" htmlFor={`margin-${variant.id}`}>
-          Margin {marginPercent}% <span className="font-normal text-ink-3">(markup {formatPercent(markup)})</span>
+          Margin {marginPercent}% <span className="font-normal text-ink-3">(markup {formatPercent(markup)}, after 3% card fee)</span>
           <input
             id={`margin-${variant.id}`}
             name="margin"

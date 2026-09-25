@@ -119,7 +119,16 @@ export async function POST(req: Request) {
 
   const { error: rpcError } = await createServiceClient().rpc("create_pending_order", {
     p_session_id: session.id,
-    p_items: cart.items.map(({ variant_id, name, title, qty, price }) => ({ variant_id, name, title, qty, price })),
+    // list_price + discount let Admin → Finance show what each discount cost.
+    p_items: cart.items.map(({ variant_id, name, title, qty, price, list_price, discount }) => ({
+      variant_id,
+      name,
+      title,
+      qty,
+      price,
+      list_price,
+      discount,
+    })),
     p_subtotal: cart.subtotal,
     p_total: Math.round((cart.subtotal + shippingPrice) * 100) / 100,
     p_customer_email: null,

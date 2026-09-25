@@ -19,7 +19,7 @@ const NUMBER_INPUT: Record<string, { label: string; placeholder: string; step: s
   price_set: { label: "New price (RM)", placeholder: "29.90", step: "0.01" },
   price_percent: { label: "Change by % (use - to lower)", placeholder: "10", step: "0.1" },
   price_amount: { label: "Change by RM (use - to lower)", placeholder: "2", step: "0.01" },
-  price_margin: { label: "Margin % (needs a cost price)", placeholder: "25", step: "1" },
+  price_margin: { label: "Margin % after card fee (needs a cost price)", placeholder: "25", step: "1" },
   stock_set: { label: "Stock per variant", placeholder: "10", step: "1" },
   stock_add: { label: "Add per variant", placeholder: "10", step: "1" },
 };

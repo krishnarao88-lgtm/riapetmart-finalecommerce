@@ -23,7 +23,7 @@ export function WelcomeOfferButton({ className, children }: { className?: string
   );
 }
 
-export function WelcomePopup() {
+export function WelcomePopup({ percent, delaySeconds }: { percent: number; delaySeconds: number }) {
   const dialogRef = useRef<HTMLDialogElement>(null);
   const pathname = usePathname();
   const suppressed = pathname === "/cart" || pathname.startsWith("/shop/");
@@ -33,18 +33,18 @@ export function WelcomePopup() {
   const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
-    if (suppressed) return;
+    if (suppressed || delaySeconds <= 0) return;
     try {
       if (!localStorage.getItem(STORAGE_KEY)) {
         const timer = setTimeout(() => {
           if (!dialogRef.current?.open) dialogRef.current?.showModal();
-        }, 30_000);
+        }, delaySeconds * 1000);
         return () => clearTimeout(timer);
       }
     } catch {
       // storage blocked — just don't show the popup
     }
-  }, [suppressed]);
+  }, [suppressed, delaySeconds]);
 
   // Runs for every close path: the X, Esc, and the in-dialog buttons.
   function markSeen() {
@@ -100,7 +100,7 @@ export function WelcomePopup() {
       </button>
 
       <Gift className="size-10 text-rust" aria-hidden />
-      <h2 id="welcome-popup-title" className="mt-3 font-bubble text-2xl font-extrabold text-choc">Get 10% off</h2>
+      <h2 id="welcome-popup-title" className="mt-3 font-bubble text-2xl font-extrabold text-choc">Get {percent}% off</h2>
 
       {code ? (
         <div className="mt-3 grid gap-3">
@@ -119,7 +119,7 @@ export function WelcomePopup() {
         </div>
       ) : (
         <form onSubmit={claim} className="mt-3 grid gap-3">
-          <p className="text-choc-2">Your first order, 10% off — just for signing up.</p>
+          <p className="text-choc-2">Your first order, {percent}% off — just for signing up.</p>
           <input
             type="email"
             required
@@ -134,7 +134,7 @@ export function WelcomePopup() {
             disabled={submitting}
             className="btn-bubble bg-terracotta px-6 py-2.5 text-cream disabled:opacity-60"
           >
-            {submitting ? "Claiming…" : "Claim my 10% off"}
+            {submitting ? "Claiming…" : `Claim my ${percent}% off`}
           </button>
           <button type="button" onClick={dismiss} className="text-center text-sm text-choc-2 underline">
             No thanks, I&apos;ll pay full price

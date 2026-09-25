@@ -10,26 +10,27 @@ import {
 } from "../src/lib/pricing.ts";
 
 test("price rounds up to the next 10 sen", () => {
-  // Real catalogue row: Alps Natural Nourish Lamb 4kg, cost RM 45.00 at 19% margin = 55.5555…
-  assert.equal(priceFromMargin(45, 0.19), 55.6);
-  assert.equal(priceFromMargin(2, 0.285), 2.8);
-  assert.equal(priceFromMargin(3.43, 0.2854), 4.8);
+  // Real catalogue row: Alps Natural Nourish Lamb 4kg, cost RM 45.00 at 19% margin + 3% card fee = 57.69…
+  assert.equal(priceFromMargin(45, 0.19), 57.7);
+  assert.equal(priceFromMargin(2, 0.285), 3);
+  assert.equal(priceFromMargin(3.43, 0.2854), 5.1);
 });
 
-test("zero margin sells at cost, and a 0 cost is free", () => {
-  assert.equal(priceFromMargin(12.34, 0), 12.4);
+test("zero margin sells at cost plus the card fee, and a 0 cost is free", () => {
+  assert.equal(priceFromMargin(12.34, 0), 12.8);
   assert.equal(priceFromMargin(0, 0.3), 0);
 });
 
 test("margin and markup are different numbers for the same price", () => {
-  assert.equal(marginFromPrice(10, 14.29), 0.3002);
-  assert.equal(markupFromPrice(10, 13), 0.3);
-  assert.equal(marginFromPrice(10, 13), 0.2308);
+  // Both are after the 3% card fee: RM13 keeps 12.61, so 2.61 profit.
+  assert.equal(marginFromPrice(10, 14.29), 0.2702);
+  assert.equal(markupFromPrice(10, 13), 0.261);
+  assert.equal(marginFromPrice(10, 13), 0.2008);
 });
 
 test("a hand-typed price below cost reports a negative margin", () => {
-  assert.equal(marginFromPrice(10, 8), -0.25);
-  assert.equal(profitPerUnit(10, 8), -2);
+  assert.equal(marginFromPrice(10, 8), -0.28);
+  assert.equal(profitPerUnit(10, 8), -2.24);
 });
 
 test("impossible inputs are refused instead of guessed", () => {
@@ -42,9 +43,9 @@ test("impossible inputs are refused instead of guessed", () => {
 });
 
 test("a custom rounding step is honoured", () => {
-  assert.equal(priceFromMargin(45, 0.19, 0.05), 55.6);
-  assert.equal(priceFromMargin(45, 0.19, 1), 56);
-  assert.equal(priceFromMargin(45, 0.19, 0), 55.56);
+  assert.equal(priceFromMargin(45, 0.19, 0.05), 57.7);
+  assert.equal(priceFromMargin(45, 0.19, 1), 58);
+  assert.equal(priceFromMargin(45, 0.19, 0), 57.69);
 });
 
 test("deliveryCharge: full price under the minimum, capped allowance over it", () => {

@@ -66,7 +66,7 @@ test("rows sharing a source ref group into one product with several variants", (
 
 test("a missing sale price is worked out from cost and margin", () => {
   const { products } = parseCatalogue([{ ...base, sale_price: "", margin_percent: 19, cost_price: 45 }]);
-  assert.equal(products[0].variants[0].price, 55.6);
+  assert.equal(products[0].variants[0].price, 57.7);
   assert.equal(products[0].variants[0].margin, 0.19);
 });
 

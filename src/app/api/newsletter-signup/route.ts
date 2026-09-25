@@ -4,6 +4,19 @@ import { sendEmail } from "@/lib/resend";
 import { site } from "@/lib/site";
 import { getStripe } from "@/lib/stripe";
 import { createServiceClient } from "@/lib/supabase/service";
+import { readWelcomeOffer } from "@/lib/welcome-offer";
+
+/** One Stripe coupon per percentage (welcome10, welcome15…), created the first time it's needed. */
+async function welcomeCoupon(percent: number): Promise<string> {
+  const id = `welcome${percent}`;
+  const stripe = getStripe();
+  try {
+    await stripe.coupons.retrieve(id);
+  } catch {
+    await stripe.coupons.create({ id, percent_off: percent, duration: "once", name: `Welcome ${percent}% off` });
+  }
+  return id;
+}
 
 export async function POST(req: Request) {
   const { email } = (await req.json()) as { email?: string };
@@ -11,13 +24,16 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "Enter a valid email address" }, { status: 400 });
   }
 
+  const offer = await readWelcomeOffer();
+  if (!offer.enabled) return NextResponse.json({ error: "This offer has ended" }, { status: 410 });
+
   const { error } = await createServiceClient().rpc("add_newsletter_signup", { p_email: email });
   if (error) return NextResponse.json({ error: "Could not save your email" }, { status: 500 });
 
   let code: string;
   try {
     const promo = await getStripe().promotionCodes.create({
-      promotion: { type: "coupon", coupon: "welcome10" },
+      promotion: { type: "coupon", coupon: await welcomeCoupon(offer.percent) },
       max_redemptions: 1,
       code: `WELCOME-${randomBytes(4).toString("hex").toUpperCase()}`,
     });
@@ -28,10 +44,12 @@ export async function POST(req: Request) {
   }
 
   try {
-    await sendEmail(email, `Your 10% welcome code — ${site.name}`, {
-      preheader: "Here's 10% off your first order.",
+    await sendEmail(email, `Your ${offer.percent}% welcome code — ${site.name}`, {
+      preheader: `Here's ${offer.percent}% off your first order.`,
       heading: `Welcome to ${site.name}`,
-      paragraphs: ["Thanks for joining us. Here's 10% off your first order: food, treats, litter and care for your pets, with same-day delivery around Rawang, Selangor and KL."],
+      paragraphs: [
+        `Thanks for joining us. Here's ${offer.percent}% off your first order: food, treats, litter and care for your pets, with same-day delivery around Rawang, Selangor and KL.`,
+      ],
       code,
       cta: { label: "Start shopping", url: `${site.url}/shop` },
       note: "Enter the code at the payment step. It works once.",

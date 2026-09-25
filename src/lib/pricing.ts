@@ -1,8 +1,11 @@
-// Margin = profit as a share of the SELLING price. Markup = profit as a share of COST.
-// price = cost / (1 - margin), rounded up to the nearest step (default 10 sen).
+// Margin = profit as a share of the SELLING price, after the card fee. Markup = the same profit as a share of COST.
+// price = cost / (1 - margin - CARD_FEE), rounded up to the nearest step (default 10 sen), so the margin you
+// set is what's left once Stripe takes its cut.
 
 export const DEFAULT_ROUND_UP = 0.1;
 export const MAX_MARGIN = 0.95;
+/** Stripe's percentage fee, built into every price (the RM1 per order is covered by it on orders over ~RM35). */
+export const CARD_FEE = 0.03;
 
 function round2(value: number): number {
   return Math.round((value + Number.EPSILON) * 100) / 100;
@@ -24,23 +27,23 @@ export function priceFromMargin(cost: number, margin: number, roundUp = DEFAULT_
   if (!Number.isFinite(margin) || margin < 0 || margin >= MAX_MARGIN) {
     throw new RangeError(`margin must be between 0 and ${MAX_MARGIN}`);
   }
-  return roundUpTo(cost / (1 - margin), roundUp);
+  return roundUpTo(cost / (1 - margin - CARD_FEE), roundUp);
 }
 
-/** The margin a hand-typed price actually gives. Null when the price is 0 or less. */
+/** The margin (after the card fee) a hand-typed price actually gives. Null when the price is 0 or less. */
 export function marginFromPrice(cost: number, price: number): number | null {
   if (!Number.isFinite(cost) || !Number.isFinite(price) || price <= 0) return null;
-  return round4((price - cost) / price);
+  return round4((price * (1 - CARD_FEE) - cost) / price);
 }
 
 /** Markup on cost, shown next to the margin so the two are never confused. */
 export function markupFromPrice(cost: number, price: number): number | null {
   if (!Number.isFinite(cost) || !Number.isFinite(price) || cost <= 0) return null;
-  return round4((price - cost) / cost);
+  return round4((price * (1 - CARD_FEE) - cost) / cost);
 }
 
 export function profitPerUnit(cost: number, price: number): number {
-  return round2(price - cost);
+  return round2(price * (1 - CARD_FEE) - cost);
 }
 
 /**

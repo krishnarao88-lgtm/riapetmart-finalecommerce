@@ -8,10 +8,11 @@ import { SiteHeader } from "@/components/site-header";
 import { WelcomePopup } from "@/components/welcome-popup";
 import { CartProvider } from "@/lib/cart-context";
 import { freeDeliveryCap, freeDeliveryMin, getDeliverySettings } from "@/lib/delivery-settings";
+import { getWelcomeOffer } from "@/lib/welcome-offer";
 
 /** Storefront frame: header, footer, cart and shopper helpers. Admin pages have their own frame. */
 export async function ShopChrome({ children }: { children: React.ReactNode }) {
-  const delivery = await getDeliverySettings();
+  const [delivery, offer] = await Promise.all([getDeliverySettings(), getWelcomeOffer()]);
   return (
     <CartProvider>
       <SaleBanner />
@@ -20,7 +21,7 @@ export async function ShopChrome({ children }: { children: React.ReactNode }) {
         {children}
       </main>
       <SiteFooter />
-      <WelcomePopup />
+      {offer.enabled && <WelcomePopup percent={offer.percent} delaySeconds={offer.delay_seconds} />}
       <FloatingWhatsApp />
       <ActivityToast />
       {process.env.ANTHROPIC_API_KEY && <AssistantWidget />}

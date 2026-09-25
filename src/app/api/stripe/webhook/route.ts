@@ -72,6 +72,12 @@ export async function POST(req: Request) {
     // false = already processed on an earlier delivery of this event; don't email or reward twice.
     if (justPaid !== true) return NextResponse.json({ received: true });
 
+    const codeDiscount = session.total_details?.amount_discount ?? 0;
+    await supabase
+      .from("orders")
+      .update({ code_discount: codeDiscount / 100 })
+      .eq("stripe_session_id", session.id);
+
     if (customerEmail) await supabase.rpc("mark_cart_recovered", { p_email: customerEmail });
 
     if (customerEmail) {

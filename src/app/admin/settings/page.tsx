@@ -4,6 +4,7 @@ import { SettingsForm, type SettingsValues } from "@/components/admin/settings-f
 import { requireAdmin } from "@/lib/auth";
 import { isEasyParcelConnected } from "@/lib/shipping/easyparcel";
 import { isTikTokConnected } from "@/lib/tiktok";
+import { toWelcomeOffer } from "@/lib/welcome-offer";
 
 export const metadata: Metadata = { title: "Settings", robots: { index: false } };
 
@@ -29,7 +30,11 @@ export default async function SettingsPage({
   const first = sorted[0] ?? { max_days: 90, discount: 0.15 };
   const second = sorted[1];
 
+  const welcome = toWelcomeOffer(byKey.get("welcome_offer"));
   const values: SettingsValues = {
+    welcomeEnabled: welcome.enabled,
+    welcomePercent: welcome.percent,
+    welcomeDelay: welcome.delay_seconds,
     freshMinDays: Number(expiry.fresh_min_days ?? 181),
     shortDays: first.max_days,
     shortDiscount: Math.round(first.discount * 100),

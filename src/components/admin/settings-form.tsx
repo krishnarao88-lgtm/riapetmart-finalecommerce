@@ -16,6 +16,9 @@ export type SettingsValues = {
   pickup: boolean;
   freeDeliveryMin: number | null;
   freeDeliveryCap: number | null;
+  welcomeEnabled: boolean;
+  welcomePercent: number;
+  welcomeDelay: number;
 };
 
 const field = "min-h-11 w-full rounded-xl border-2 border-line bg-ground px-3 font-normal tabular-nums";
@@ -71,6 +74,30 @@ export function SettingsForm({ values }: { values: SettingsValues }) {
             <input id="round_up_sen" name="round_up_sen" type="number" min="1" max="100" defaultValue={values.roundUpSen} className={field} />
           </label>
         </div>
+      </section>
+
+      <section className={card} aria-labelledby="welcome-heading">
+        <h2 id="welcome-heading" className="font-display text-xl font-extrabold">
+          Sign-up offer
+        </h2>
+        <label className="flex items-center gap-3 text-sm font-semibold">
+          <input type="checkbox" name="welcome_enabled" defaultChecked={values.welcomeEnabled} className="size-5" />
+          Offer a discount code for signing up (pop-up and homepage banner)
+        </label>
+        <div className="grid gap-4 sm:grid-cols-2">
+          <label className="grid gap-1 text-sm font-semibold" htmlFor="welcome_percent">
+            Discount on the first order (%)
+            <input id="welcome_percent" name="welcome_percent" type="number" min="1" max="50" defaultValue={values.welcomePercent} className={field} />
+          </label>
+          <label className="grid gap-1 text-sm font-semibold" htmlFor="welcome_delay">
+            Pop up after (seconds, 0 = never pop up)
+            <input id="welcome_delay" name="welcome_delay" type="number" min="0" max="600" defaultValue={values.welcomeDelay} className={field} />
+          </label>
+        </div>
+        <p className="text-sm text-ink-2">
+          The code is used at card payment, on top of any clearance, bundle or sale price, so keep it modest. Codes already
+          sent keep their old percentage.
+        </p>
       </section>
 
       <section className={card} aria-labelledby="delivery-heading">
