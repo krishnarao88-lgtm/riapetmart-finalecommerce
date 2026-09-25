@@ -3,7 +3,7 @@ import { Cat, Dog, FlaskConical, Info, PawPrint, Pill, ShieldCheck, Target } fro
 import Link from "next/link";
 import { notFound, permanentRedirect } from "next/navigation";
 import { AddToCart } from "@/components/add-to-cart";
-import { ProductTags } from "@/components/product-tags";
+import { ProductTags, SizePills } from "@/components/product-tags";
 import { getVariantStock } from "@/components/product-card";
 import { discountedPrice, getExpiryBadge, type ExpirySettings } from "@/lib/expiry";
 import { formatMyr } from "@/lib/pricing";
@@ -69,7 +69,7 @@ function usageIcon(line: string) {
 function InfoSection({ icon: Icon, title, text }: { icon: typeof Info; title: string; text: string | null }) {
   if (!text) return null;
   return (
-    <section className="grid gap-1.5 rounded-2xl bg-peach/30 p-4">
+    <section className="reveal grid gap-1.5 rounded-2xl bg-peach/30 p-4">
       <h2 className="flex items-center gap-2 font-bold text-choc">
         <Icon className="size-5 text-rust" aria-hidden /> {title}
       </h2>
@@ -230,7 +230,7 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
             {category && <span>· {category}</span>}
           </div>
           <h1 className="font-bubble text-2xl font-extrabold text-choc">{name}</h1>
-          {product.size_display && <p className="text-choc-2">{product.size_display}</p>}
+          <SizePills sizes={product.size_display} />
           <ProductTags petType={product.pet_type} highlights={product.highlights} />
           {product.is_dvs_approved && (
             <p className="flex w-fit items-center gap-2 rounded-xl bg-ok-bg px-3 py-2 text-sm font-semibold text-ok-fg">
@@ -263,7 +263,7 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
           <InfoSection icon={Target} title="What it's for" text={product.description} />
           <InfoSection icon={FlaskConical} title="Ingredients" text={product.ingredients} />
           {product.usage && (
-            <section className="grid gap-2 rounded-2xl bg-peach/30 p-4">
+            <section className="reveal grid gap-2 rounded-2xl bg-peach/30 p-4">
               <h2 className="flex items-center gap-2 font-bold text-choc">
                 <Pill className="size-5 text-rust" aria-hidden /> How to use
               </h2>

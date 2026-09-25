@@ -30,9 +30,9 @@ export function QuickAddButton({
         openCart();
       }}
       aria-label={`Add ${productName} to cart`}
-      className="absolute bottom-2 right-2 grid size-9 place-items-center rounded-full bg-terracotta text-cream shadow-[2px_2px_0_0_var(--color-choc)]"
+      className="group/add absolute bottom-2 right-2 grid size-9 place-items-center rounded-full bg-terracotta text-cream shadow-[2px_2px_0_0_var(--color-choc)] transition-transform duration-200 hover:scale-110 active:scale-90"
     >
-      <Plus className="size-5" aria-hidden />
+      <Plus className="size-5 transition-transform duration-300 motion-safe:group-hover/add:rotate-90" aria-hidden />
     </button>
   );
 }

@@ -1,6 +1,6 @@
 import { PawPrint, ShieldCheck } from "lucide-react";
 import Link from "next/link";
-import { ProductTags } from "@/components/product-tags";
+import { ProductTags, SizePills } from "@/components/product-tags";
 import { QuickAddButton } from "@/components/quick-add-button";
 import { discountedPrice, getExpiryBadge, type ExpirySettings } from "@/lib/expiry";
 import { formatMyr } from "@/lib/pricing";
@@ -76,12 +76,12 @@ export function ProductCard({
   return (
     <Link
       href={`/shop/${p.slug}`}
-      className="group flex h-full flex-col overflow-hidden rounded-2xl border-2 border-choc bg-surface shadow-[3px_3px_0_0_var(--color-choc)] transition-transform hover:-translate-y-0.5"
+      className="reveal group flex h-full flex-col overflow-hidden rounded-2xl border-2 border-choc bg-surface shadow-[3px_3px_0_0_var(--color-choc)] transition-[transform,box-shadow] duration-300 hover:-translate-y-1 hover:shadow-[5px_5px_0_0_var(--color-choc)]"
     >
       <div className="relative flex aspect-square items-center justify-center overflow-hidden bg-peach/40">
         {image ? (
           // eslint-disable-next-line @next/next/no-img-element
-          <img src={image.path} alt={titleCase(image.alt || p.name)} className={`absolute inset-0 size-full object-contain ${soldOut ? "opacity-60" : ""}`} />
+          <img src={image.path} alt={titleCase(image.alt || p.name)} className={`absolute inset-0 size-full object-contain transition-transform duration-500 ease-out motion-safe:group-hover:scale-105 ${soldOut ? "opacity-60" : ""}`} />
         ) : (
           <PawPrint className="size-10 text-rust/50" aria-hidden />
         )}
@@ -119,7 +119,7 @@ export function ProductCard({
           <span className="text-xs font-semibold uppercase tracking-wide text-rust">{p.categoryLabel}</span>
         )}
         <span className="line-clamp-2 text-sm font-bold text-choc">{name}</span>
-        {p.size_display && <span className="text-xs text-choc-2">{p.size_display}</span>}
+        <SizePills sizes={p.size_display} compact />
         <div className="mt-1">
           <ProductTags petType={p.pet_type} highlights={p.highlights} max={2} compact />
         </div>

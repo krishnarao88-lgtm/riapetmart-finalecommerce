@@ -138,6 +138,24 @@ h3 {
   }
 }
 
+/* Cards and info panels rise in as they scroll into view. Scroll-driven (no JS); browsers without
+   view timelines, and anyone who prefers reduced motion, simply see them in place. */
+@keyframes reveal {
+  from {
+    opacity: 0;
+    transform: translateY(18px) scale(0.98);
+  }
+}
+@media (prefers-reduced-motion: no-preference) {
+  @supports (animation-timeline: view()) {
+    .reveal {
+      animation: reveal linear both;
+      animation-timeline: view();
+      animation-range: entry 0% entry 40%;
+    }
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,

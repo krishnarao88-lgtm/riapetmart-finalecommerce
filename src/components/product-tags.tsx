@@ -46,3 +46,21 @@ export function ProductTags({
     </ul>
   );
 }
+
+/** Pack sizes as solid pills ("2 kg · 15 kg" → two pills). */
+export function SizePills({ sizes, compact = false }: { sizes: string | null; compact?: boolean }) {
+  const list = (sizes ?? "").split("·").map((s) => s.trim()).filter(Boolean);
+  if (!list.length) return null;
+  return (
+    <ul className="flex flex-wrap gap-1" aria-label="Pack sizes">
+      {list.map((size) => (
+        <li
+          key={size}
+          className={`rounded-md border border-choc/25 bg-cream font-bold tabular-nums text-choc ${compact ? "px-1.5 py-0.5 text-[11px]" : "px-2.5 py-1 text-sm"}`}
+        >
+          {size}
+        </li>
+      ))}
+    </ul>
+  );
+}
