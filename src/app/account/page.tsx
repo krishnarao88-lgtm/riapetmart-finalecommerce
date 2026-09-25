@@ -14,6 +14,7 @@ export const metadata: Metadata = { title: "My orders", robots: { index: false }
 type OrderItem = { variant_id: string; name: string; title: string; qty: number; price: number };
 type Order = {
   id: string;
+  order_number: string | null;
   created_at: string;
   status: "pending" | "paid" | "failed";
   total: number;
@@ -41,7 +42,7 @@ export default async function AccountPage() {
   const [{ data }, { data: referralCode }] = await Promise.all([
     supabase
       .from("orders")
-      .select("id, created_at, status, total, shipping_cost, shipping_method, easyparcel_tracking_url, items")
+      .select("id, order_number, created_at, status, total, shipping_cost, shipping_method, easyparcel_tracking_url, items")
       .order("created_at", { ascending: false }),
     supabase.rpc("get_or_create_my_referral_code"),
   ]);
@@ -125,6 +126,7 @@ export default async function AccountPage() {
             <li key={order.id} className="grid gap-2 rounded-2xl border-2 border-choc bg-surface p-4">
               <div className="flex flex-wrap items-center justify-between gap-2">
                 <span className="text-sm text-choc-2">
+                  {order.order_number && <strong className="mr-2 text-choc">{order.order_number}</strong>}
                   {new Date(order.created_at).toLocaleDateString("en-MY", { timeZone: "Asia/Kuala_Lumpur" })}
                 </span>
                 <span className={`rounded-full px-2.5 py-1 text-xs font-bold ${statusStyle[order.status]}`}>

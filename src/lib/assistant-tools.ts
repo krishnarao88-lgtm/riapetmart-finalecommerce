@@ -88,31 +88,31 @@ export async function searchProducts(keywords: string[], pet?: string) {
   };
 }
 
-/** Order status for a customer who knows both the order number (first 8 characters) and their email. */
+/** Order status for a customer who knows both the order number (e.g. RPM2026-01) and their email. */
 export async function orderStatus(orderNumber: string, email: string) {
-  const code = orderNumber.replace(/^#/, "").trim().toLowerCase();
+  const m = orderNumber.toUpperCase().replace(/[#\s]/g, "").match(/^RPM(\d{4})-?(\d+)$/);
   const mail = email.trim().toLowerCase();
-  if (!/^[0-9a-f]{8}$/.test(code) || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(mail)) {
-    return { found: false, reason: "Ask for the 8-character order number (e.g. #1A2B3C4D) and the email used at checkout." };
+  if (!m || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(mail)) {
+    return { found: false, reason: "Ask for the order number (e.g. RPM2026-01) and the email used at checkout." };
   }
-  const { data } = await createServiceClient()
+  const code = `RPM${m[1]}-${String(Number(m[2])).padStart(2, "0")}`;
+  const { data: order } = await createServiceClient()
     .from("orders")
-    .select("id, created_at, status, fulfilment_status, shipping_method, total, easyparcel_tracking_url, easyparcel_awb_number")
+    .select("id, created_at, status, fulfilment_status, shipping_method, total, easyparcel_tracking_url, easyparcel_awb_number, lalamove_share_link")
     .eq("customer_email", mail)
-    .order("created_at", { ascending: false })
-    .limit(50);
-  const order = (data ?? []).find((o) => String(o.id).startsWith(code));
+    .eq("order_number", code)
+    .maybeSingle();
   // Same answer for "wrong email" and "no such order", so the tool can't be used to probe emails.
   if (!order) return { found: false, reason: "No order matches that number and email." };
   return {
     found: true,
-    order_number: `#${code.toUpperCase()}`,
+    order_number: code,
     placed_on: String(order.created_at).slice(0, 10),
     payment: order.status,
     progress: order.fulfilment_status,
     delivery_method: order.shipping_method,
     total_myr: Number(order.total),
-    tracking_url: order.easyparcel_tracking_url,
+    tracking_url: order.lalamove_share_link ?? order.easyparcel_tracking_url,
     tracking_number: order.easyparcel_awb_number,
   };
 }

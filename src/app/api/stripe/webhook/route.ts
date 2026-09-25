@@ -8,6 +8,7 @@ import { createServiceClient } from "@/lib/supabase/service";
 type OrderItem = { name: string; title: string; qty: number; price: number };
 type OrderForEmail = {
   id: string;
+  order_number: string | null;
   items: OrderItem[];
   shipping_method: string | null;
   shipping_cost: number;
@@ -77,11 +78,11 @@ export async function POST(req: Request) {
       try {
         const { data: order } = (await supabase
           .from("orders")
-          .select("id, items, shipping_method, shipping_cost, total")
+          .select("id, order_number, items, shipping_method, shipping_cost, total")
           .eq("stripe_session_id", session.id)
           .single()) as { data: OrderForEmail | null };
         if (order) {
-          const ref = order.id.slice(0, 8).toUpperCase();
+          const ref = order.order_number ?? `#${order.id.slice(0, 8).toUpperCase()}`;
           const pickup = order.shipping_method === "pickup";
           const lines = order.items.map((it) => ({
             name: it.name,
@@ -95,9 +96,9 @@ export async function POST(req: Request) {
               amount: Number(order.shipping_cost) > 0 ? formatMyr(Number(order.shipping_cost)) : "Free",
             });
           }
-          await sendEmail(customerEmail, `Order confirmed #${ref} — ${site.name}`, {
-            preheader: `Thanks! Your order #${ref} is confirmed.`,
-            heading: `Thanks for your order, #${ref} is confirmed`,
+          await sendEmail(customerEmail, `Order confirmed ${ref} — ${site.name}`, {
+            preheader: `Thanks! Your order ${ref} is confirmed.`,
+            heading: `Thanks for your order. ${ref} is confirmed`,
             paragraphs: [
               pickup
                 ? "We're getting your order ready. We'll message you on WhatsApp as soon as it's ready to collect."
@@ -106,7 +107,7 @@ export async function POST(req: Request) {
             lines,
             total: formatMyr(Number(order.total)),
             cta: { label: "Continue shopping", url: `${site.url}/shop` },
-            note: `Questions about this order? Just reply to this email or WhatsApp us with your order number #${ref}.`,
+            note: `Questions about this order? Just reply to this email or WhatsApp us with your order number ${ref}.`,
           });
         }
       } catch (err) {

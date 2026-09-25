@@ -13,6 +13,7 @@ type OrderItem = { variant_id: string; name: string; title: string; qty: number;
 type ShippingAddress = { addressLine: string; city: string; postcode: string; state: string } | null;
 type Order = {
   id: string;
+  order_number: string | null;
   created_at: string;
   status: "pending" | "paid" | "failed";
   customer_email: string | null;
@@ -67,7 +68,7 @@ export default async function OrdersPage() {
   const { data } = await supabase
     .from("orders")
     .select(
-      "id, created_at, status, customer_email, customer_name, customer_phone, total, fulfilment_status, items, shipping_method, shipping_address, easyparcel_order_number, easyparcel_awb_url, easyparcel_tracking_url, lalamove_order_id, lalamove_status, lalamove_share_link",
+      "id, order_number, created_at, status, customer_email, customer_name, customer_phone, total, fulfilment_status, items, shipping_method, shipping_address, easyparcel_order_number, easyparcel_awb_url, easyparcel_tracking_url, lalamove_order_id, lalamove_status, lalamove_share_link",
     )
     .order("created_at", { ascending: false })
     .limit(200);
@@ -92,6 +93,7 @@ export default async function OrdersPage() {
             <li key={order.id} className="grid gap-2 rounded-[var(--radius-chunk)] border-2 border-ink bg-surface p-4">
               <div className="flex flex-wrap items-center justify-between gap-2">
                 <span className="text-sm text-ink-2">
+                  {order.order_number && <strong className="mr-2 text-ink">{order.order_number}</strong>}
                   {new Date(order.created_at).toLocaleString("en-MY", { timeZone: "Asia/Kuala_Lumpur" })}
                 </span>
                 <span className="flex gap-1.5">

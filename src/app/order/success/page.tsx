@@ -19,7 +19,7 @@ export default async function OrderSuccessPage({
 
   const { data: order } = paid && session_id
     ? ((await createServiceClient().rpc("get_order_for_email", { p_session_id: session_id }).single()) as {
-        data: { id: string; items: OrderItem[] } | null;
+        data: { id: string; items: OrderItem[]; order_number: string | null } | null;
       })
     : { data: null };
   const items = order?.items ?? [];
@@ -50,8 +50,8 @@ export default async function OrderSuccessPage({
           : "If you completed payment, refresh this page in a moment. Otherwise, your cart is still saved."}
       </p>
 
-      {paid && order?.id && (
-        <p className="mt-4 text-sm font-semibold text-choc-2">Order #{String(order.id).slice(0, 8).toUpperCase()}</p>
+      {paid && order?.order_number && (
+        <p className="mt-4 text-sm font-semibold text-choc-2">Order {order.order_number}</p>
       )}
 
       {paid && items.length > 0 && (

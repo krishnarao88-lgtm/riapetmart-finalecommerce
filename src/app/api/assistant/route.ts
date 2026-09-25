@@ -39,7 +39,7 @@ const tools = [
   {
     name: "get_order_status",
     description:
-      "Look up an order. Needs the 8-character order number from the confirmation email (e.g. #1A2B3C4D) and the email used at checkout. Ask the customer for both if missing.",
+      "Look up an order. Needs the order number from the confirmation email (e.g. RPM2026-01) and the email used at checkout. Ask the customer for both if missing.",
     input_schema: {
       type: "object",
       properties: { order_number: { type: "string" }, email: { type: "string" } },

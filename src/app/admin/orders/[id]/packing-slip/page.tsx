@@ -16,13 +16,14 @@ export default async function PackingSlipPage({ params }: PageProps<"/admin/orde
 
   const { data } = await supabase
     .from("orders")
-    .select("id, created_at, customer_email, subtotal, shipping_cost, total, shipping_method, shipping_address, items")
+    .select("id, order_number, created_at, customer_email, subtotal, shipping_cost, total, shipping_method, shipping_address, items")
     .eq("id", id)
     .single();
 
   if (!data) notFound();
   const order = data as unknown as {
     id: string;
+    order_number: string | null;
     created_at: string;
     customer_email: string | null;
     subtotal: number;
@@ -50,7 +51,7 @@ export default async function PackingSlipPage({ params }: PageProps<"/admin/orde
           </div>
           <div className="text-right">
             <p className="font-bold">Packing list</p>
-            <p className="text-sm text-ink-2">Order #{order.id.slice(0, 8).toUpperCase()}</p>
+            <p className="text-sm text-ink-2">Order {order.order_number ?? `#${order.id.slice(0, 8).toUpperCase()}`}</p>
             <p className="text-sm text-ink-2">
               {new Date(order.created_at).toLocaleDateString("en-MY", { timeZone: "Asia/Kuala_Lumpur" })}
             </p>

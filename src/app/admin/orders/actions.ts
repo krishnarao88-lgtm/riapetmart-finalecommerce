@@ -42,7 +42,7 @@ export async function bookEasyParcelShipment(_prev: ActionState, formData: FormD
 
   const { data: order, error: orderError } = await supabase
     .from("orders")
-    .select("shipping_method, shipping_service_id, shipping_address, items, easyparcel_order_number")
+    .select("order_number, shipping_method, shipping_service_id, shipping_address, items, easyparcel_order_number")
     .eq("id", orderId)
     .single();
   if (orderError || !order) return { error: "Order not found." };
@@ -68,7 +68,7 @@ export async function bookEasyParcelShipment(_prev: ActionState, formData: FormD
       order.shipping_service_id,
       weightKg,
       { name: receiverName, phone: receiverPhone, addressLine: address.addressLine, city: address.city, postcode: address.postcode, state: address.state },
-      orderId.slice(0, 8),
+      order.order_number ?? orderId.slice(0, 8),
     );
     await supabase.rpc("save_easyparcel_booking", {
       p_order_id: orderId,
@@ -94,7 +94,7 @@ export async function bookLalamoveRider(_prev: ActionState, formData: FormData):
 
   const { data: order } = await supabase
     .from("orders")
-    .select("status, shipping_method, shipping_address, items, customer_email, lalamove_order_id, lalamove_status")
+    .select("order_number, status, shipping_method, shipping_address, items, customer_email, lalamove_order_id, lalamove_status")
     .eq("id", orderId)
     .single();
   if (!order) return { error: "Order not found." };
@@ -109,7 +109,7 @@ export async function bookLalamoveRider(_prev: ActionState, formData: FormData):
   const { data: variants } = await supabase.from("variants").select("id, weight_grams").in("id", items.map((i) => i.variant_id));
   const weightByVariant = new Map((variants ?? []).map((v) => [v.id, v.weight_grams ?? 500]));
   const weightKg = items.reduce((sum, i) => sum + (weightByVariant.get(i.variant_id) ?? 500) * i.qty, 0) / 1000;
-  const ref = orderId.slice(0, 8);
+  const ref = order.order_number ?? `#${orderId.slice(0, 8).toUpperCase()}`;
 
   try {
     const booked = await bookLalamoveOrder({
@@ -117,7 +117,7 @@ export async function bookLalamoveRider(_prev: ActionState, formData: FormData):
       weightKg,
       recipientName: receiverName,
       recipientPhone: receiverPhone,
-      remarks: `${site.name} order #${ref}`,
+      remarks: `${site.name} order ${ref}`,
       orderRef: ref,
     });
     const { error } = await supabase
@@ -127,10 +127,10 @@ export async function bookLalamoveRider(_prev: ActionState, formData: FormData):
     if (error) return { error: `Rider booked (Lalamove ${booked.orderId}) but saving failed: ${error.message}. Don't book again.` };
 
     if (order.customer_email && booked.shareLink) {
-      await sendEmail(order.customer_email, `Your order #${ref.toUpperCase()} is on its way — ${site.name}`, {
+      await sendEmail(order.customer_email, `Your order ${ref} is on its way — ${site.name}`, {
         preheader: "A Lalamove rider is heading your way. Track it live.",
         heading: "Your order is on its way",
-        paragraphs: [`We've booked a Lalamove rider for order #${ref.toUpperCase()}. You can follow the rider live on the map.`],
+        paragraphs: [`We've booked a Lalamove rider for order ${ref}. You can follow the rider live on the map.`],
         cta: { label: "Track your delivery", url: booked.shareLink },
         note: "The rider may call you on arrival. Please keep your phone nearby.",
       }).catch(() => undefined); // the booking stands even if the email fails
