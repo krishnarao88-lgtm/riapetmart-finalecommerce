@@ -3,7 +3,7 @@ import { parseLines, priceCart } from "@/lib/cart-pricing";
 import { freeDeliveryMin, type DeliverySettings } from "@/lib/delivery-settings";
 import { formatMyr } from "@/lib/pricing";
 import { quoteSecret, signQuote } from "@/lib/quote-signature";
-import { getLalamoveQuote } from "@/lib/shipping/lalamove";
+import { getLalamoveQuote, LALAMOVE_LIVE } from "@/lib/shipping/lalamove";
 import { getEasyParcelQuote } from "@/lib/shipping/easyparcel";
 import { createClient } from "@/lib/supabase/server";
 
@@ -50,7 +50,8 @@ export async function POST(req: Request) {
   const isSameDayZone = delivery.same_day_states?.includes(state) ?? false;
   const fullAddress = `${addressLine}, ${city}, ${postcode} ${state}, Malaysia`;
 
-  if (isSameDayZone && delivery.lalamove_enabled !== false) {
+  // Sandbox riders never show up, so customers are only offered Lalamove once it's live.
+  if (LALAMOVE_LIVE && isSameDayZone && delivery.lalamove_enabled !== false) {
     try {
       const quote = await getLalamoveQuote(fullAddress, weightKg);
       if (quote) {

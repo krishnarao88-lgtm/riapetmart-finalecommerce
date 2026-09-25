@@ -4,9 +4,9 @@ import { geocodeAddress } from "@/lib/geocode";
 import { site } from "@/lib/site";
 import { toE164MY } from "./lalamove-rules";
 
-const BASE_URL = process.env.LALAMOVE_SANDBOX === "false"
-  ? "https://rest.lalamove.com"
-  : "https://rest.sandbox.lalamove.com";
+/** Sandbox until LALAMOVE_SANDBOX=false is set with production keys (needs a topped-up wallet). */
+export const LALAMOVE_LIVE = process.env.LALAMOVE_SANDBOX === "false";
+const BASE_URL = LALAMOVE_LIVE ? "https://rest.lalamove.com" : "https://rest.sandbox.lalamove.com";
 
 function sign(method: string, path: string, body: string, timestamp: string, secret: string): string {
   const raw = `${timestamp}\r\n${method}\r\n${path}\r\n\r\n${body}`;
