@@ -134,8 +134,8 @@ export function ProductCard({
         <div className="mt-1">
           <ProductTags petType={p.pet_type} highlights={p.highlights} max={2} compact />
         </div>
-        {badge?.kind === "short-dated" && nearest && (
-          <span className="text-xs font-bold text-rust">
+        {nearest && !soldOut && (
+          <span className={`text-xs font-bold ${badge?.kind === "short-dated" ? "text-rust" : "text-choc-2"}`}>
             Best before {new Date(nearest).toLocaleDateString("en-MY", { day: "numeric", month: "short", year: "numeric" })}
           </span>
         )}

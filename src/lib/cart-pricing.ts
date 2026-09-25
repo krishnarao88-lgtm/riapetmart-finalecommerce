@@ -1,6 +1,6 @@
 import "server-only";
 import type { SupabaseClient } from "@supabase/supabase-js";
-import { BUNDLE_DISCOUNT, bundleEligible, type CareProduct } from "@/lib/care-needs";
+import { bundleEligible, type CareProduct } from "@/lib/care-needs";
 import { discountedPrice, getExpiryBadge, type ExpirySettings } from "@/lib/expiry";
 import { todayInKL } from "@/lib/kl-time";
 import { type Promotion, promoFor, promoLabel } from "@/lib/promotions";
@@ -48,7 +48,7 @@ export async function priceCart(
     supabase.from("settings").select("value").eq("key", "expiry_badges").maybeSingle(),
     supabase
       .from("promotions")
-      .select("id, name, starts_on, ends_on, discount, scope, brand_id, category_id, banner")
+      .select("id, name, starts_on, ends_on, discount, scope, brand_id, category_id, banner, excluded_product_ids")
       .eq("is_active", true)
       .lte("starts_on", today)
       .gte("ends_on", today),
@@ -80,6 +80,11 @@ export async function priceCart(
     .filter((p): p is Product => p !== null)
     .map((p) => ({ id: p.id, name: p.name, highlights: p.highlights, pet_type: p.pet_type, house: p.brands?.is_house_brand === true }));
   const bundled = bundleEligible(careProducts);
+  // Only offers the owner approved (Admin → Offers), at the approved %.
+  const { data: offerRows } = bundled.size
+    ? await supabase.from("bundle_offers").select("product_id, discount").eq("approved", true).in("product_id", [...bundled])
+    : { data: [] };
+  const bundleOff = new Map((offerRows ?? []).map((o) => [o.product_id as string, Number(o.discount)]));
 
   const items: PricedItem[] = [];
   let subtotal = 0;
@@ -106,13 +111,18 @@ export async function priceCart(
       const pct = Math.round(badge.discount * 100);
       offers.push({ price: discountedPrice(listPrice, badge.discount), kind: "short-dated", label: `Short-dated -${pct}%` });
     }
-    if (product && bundled.has(product.id)) {
-      const pct = Math.round(BUNDLE_DISCOUNT * 100);
-      offers.push({ price: discountedPrice(listPrice, BUNDLE_DISCOUNT), kind: "bundle", label: `Bundle -${pct}%` });
+    const bundleRate = product ? bundleOff.get(product.id) : undefined;
+    if (bundleRate) {
+      offers.push({ price: discountedPrice(listPrice, bundleRate), kind: "bundle", label: `Bundle -${Math.round(bundleRate * 100)}%` });
     }
     const sale = product
       ? promoFor(
-          { brand_id: product.brand_id, category_id: product.category_id, house: product.brands?.is_house_brand === true },
+          {
+            id: product.id,
+            brand_id: product.brand_id,
+            category_id: product.category_id,
+            house: product.brands?.is_house_brand === true,
+          },
           promos,
           today,
         )

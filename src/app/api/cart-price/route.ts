@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { BUNDLE_DISCOUNT, bundleEligible, suggestHouse } from "@/lib/care-needs";
+import { bundleEligible, suggestHouse } from "@/lib/care-needs";
 import { parseLines, priceCart } from "@/lib/cart-pricing";
 import { discountedPrice } from "@/lib/expiry";
 import { getHouseProducts } from "@/lib/house-products";
@@ -25,20 +25,24 @@ export async function POST(request: Request) {
   const cart = await priceCart(supabase, lines);
   if ("error" in cart) return NextResponse.json({ error: cart.error }, { status: 409 });
 
-  const { products, stock } = await getHouseProducts(supabase);
+  const [{ products, stock }, { data: offerRows }] = await Promise.all([
+    getHouseProducts(supabase),
+    supabase.from("bundle_offers").select("product_id, discount").eq("approved", true),
+  ]);
+  const bundleOff = new Map((offerRows ?? []).map((o) => [o.product_id as string, Number(o.discount)]));
   const suggestions: CartSuggestion[] = suggestHouse(cart.care, products, 3).flatMap((p) => {
     const variant = p.variants
       .filter((v) => (stock?.get(v.id)?.available ?? 1) > 0)
       .sort((a, b) => a.price - b.price)[0];
     if (!variant) return [];
-    const bundled = bundleEligible([...cart.care, p]).has(p.id);
+    const rate = bundleEligible([...cart.care, p]).has(p.id) ? bundleOff.get(p.id) : undefined;
     return [
       {
         variantId: variant.id,
         productSlug: p.slug,
         productName: p.name,
         variantTitle: variant.title,
-        price: bundled ? discountedPrice(variant.price, BUNDLE_DISCOUNT) : variant.price,
+        price: rate ? discountedPrice(variant.price, rate) : variant.price,
         listPrice: variant.price,
         image: p.product_images[0]?.path ?? null,
       },

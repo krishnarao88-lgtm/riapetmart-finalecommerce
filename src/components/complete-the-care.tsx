@@ -1,6 +1,6 @@
 import { Sparkles } from "lucide-react";
 import { ProductCard } from "@/components/product-card";
-import { BUNDLE_DISCOUNT, type CareProduct, suggestHouse } from "@/lib/care-needs";
+import { type CareProduct, suggestHouse } from "@/lib/care-needs";
 import type { ExpirySettings } from "@/lib/expiry";
 import { getHouseProducts } from "@/lib/house-products";
 import { createClient } from "@/lib/supabase/server";
@@ -17,6 +17,10 @@ export async function CompleteTheCare({
   const { products, stock } = await getHouseProducts(supabase);
   const picks = suggestHouse([product], products, 3);
   if (picks.length === 0) return null;
+  const { data: offerRows } = product.house
+    ? { data: [] }
+    : await supabase.from("bundle_offers").select("discount").eq("approved", true).in("product_id", picks.map((p) => p.id));
+  const best = Math.max(0, ...(offerRows ?? []).map((o) => Number(o.discount)));
 
   return (
     <section aria-labelledby="care-heading" className="mt-12 rounded-3xl border-2 border-choc bg-peach/30 p-5">
@@ -24,9 +28,9 @@ export async function CompleteTheCare({
         <Sparkles className="size-5 text-rust" aria-hidden /> Complete the care
       </h2>
       <p className="mt-1 text-sm text-choc-2">
-        {product.house
-          ? "Pairs well with these from the same range."
-          : `Add one of these and it's ${Math.round(BUNDLE_DISCOUNT * 100)}% off when bought together.`}
+        {best > 0
+          ? `Save up to ${Math.round(best * 100)}% on these when bought together.`
+          : "Pairs well with these from our own range."}
       </p>
       <ul className="mt-4 grid grid-cols-2 gap-4 sm:grid-cols-3">
         {picks.map((p) => (

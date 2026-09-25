@@ -14,6 +14,7 @@ export type PromotionRow = {
   category_id: string | null;
   banner: string | null;
   is_active: boolean;
+  excluded_product_ids?: string[];
 };
 type Option = { id: string; name: string };
 
@@ -104,8 +105,8 @@ export function PromotionForm({
       </div>
       <div className="flex flex-wrap items-center gap-4">
         <label className="flex items-center gap-2 text-sm font-semibold">
-          <input type="checkbox" name="is_active" defaultChecked={promo?.is_active ?? true} className="size-5" />
-          Switched on
+          <input type="checkbox" name="is_active" defaultChecked={promo?.is_active ?? false} className="size-5" />
+          Approved: runs on its dates
         </label>
         <button type="submit" disabled={pending} className="btn-chunk bg-grape text-sm text-surface disabled:opacity-60">
           {pending ? "Saving…" : promo ? "Save" : "Add sale"}

@@ -1,12 +1,21 @@
 "use client";
 
-import { Minus, Plus, ShoppingBag } from "lucide-react";
+import { CalendarClock, Minus, Plus, ShoppingBag } from "lucide-react";
 import { useState } from "react";
 import { formatMyr } from "@/lib/pricing";
 import { useCart } from "@/lib/cart-context";
 
 // available is null when stock is unknown.
-type Variant = { id: string; title: string; price: number; originalPrice?: number; available?: number | null };
+type Variant = {
+  id: string;
+  title: string;
+  price: number;
+  originalPrice?: number;
+  available?: number | null;
+  /** Soonest best-before date of the stock we'd ship (YYYY-MM-DD), and whether it's short-dated. */
+  bestBefore?: string | null;
+  shortDated?: boolean;
+};
 
 export function AddToCart({
   productSlug,
@@ -83,6 +92,14 @@ export function AddToCart({
         </span>
       </div>
 
+      {variant.bestBefore && !soldOut && (
+        <span className={`flex items-center gap-1.5 text-sm font-semibold ${variant.shortDated ? "text-rust" : "text-choc-2"}`}>
+          <CalendarClock className="size-4" aria-hidden />
+          Best before{" "}
+          {new Date(variant.bestBefore).toLocaleDateString("en-MY", { day: "numeric", month: "short", year: "numeric" })}
+          {variant.shortDated ? " · short-dated, priced down" : ""}
+        </span>
+      )}
       {variant.available != null && variant.available > 0 && variant.available <= 5 && (
         <span className="w-fit rounded-full bg-warn-bg px-3 py-1 text-xs font-bold text-warn-fg">
           Only {variant.available} left in stock

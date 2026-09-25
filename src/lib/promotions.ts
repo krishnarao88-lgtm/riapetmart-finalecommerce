@@ -11,11 +11,13 @@ export type Promotion = {
   brand_id: string | null;
   category_id: string | null;
   banner: string | null;
+  /** Left out at approval because the sale would push their margin under the floor. */
+  excluded_product_ids?: string[];
 };
 
 export type CardPromo = { label: string; discount: number };
 
-export type PromoTarget = { brand_id: string | null; category_id: string | null; house: boolean };
+export type PromoTarget = { id?: string; brand_id: string | null; category_id: string | null; house: boolean };
 
 export function isRunning(p: Pick<Promotion, "starts_on" | "ends_on">, today: string): boolean {
   return p.starts_on <= today && today <= p.ends_on;
@@ -31,7 +33,9 @@ function covers(p: Promotion, t: PromoTarget): boolean {
 /** The biggest running sale that covers this product, or null. */
 export function promoFor(t: PromoTarget, promos: Promotion[], today: string): Promotion | null {
   return (
-    promos.filter((p) => isRunning(p, today) && covers(p, t)).sort((a, b) => b.discount - a.discount)[0] ?? null
+    promos
+      .filter((p) => isRunning(p, today) && covers(p, t) && !(t.id && p.excluded_product_ids?.includes(t.id)))
+      .sort((a, b) => b.discount - a.discount)[0] ?? null
   );
 }
 

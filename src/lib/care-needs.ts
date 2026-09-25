@@ -1,9 +1,6 @@
 // Pairs products by the care need they serve (skin, joints, urinary…), read from each product's name
 // and highlight chips. Drives "Complete the care" suggestions and the own-brand bundle discount.
 
-/** Own-brand item price cut when bought with a product it pairs with. */
-export const BUNDLE_DISCOUNT = 0.1;
-
 const NEEDS: [string, RegExp][] = [
   ["skin", /skin|coat|\bfur\b|fung|dandruff|hair loss|shedding|allerg|itch|mange|wound|derm/],
   ["joint", /joint|\bbones?\b|\bhip\b|mobility|glucosamine|ortho|arthrit/],

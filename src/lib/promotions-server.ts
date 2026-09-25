@@ -10,14 +10,14 @@ export const getRunningPromotions = cache(async (): Promise<{ today: string; pro
   const supabase = await createClient();
   const { data } = await supabase
     .from("promotions")
-    .select("id, name, starts_on, ends_on, discount, scope, brand_id, category_id, banner")
+    .select("id, name, starts_on, ends_on, discount, scope, brand_id, category_id, banner, excluded_product_ids")
     .eq("is_active", true)
     .lte("starts_on", today)
     .gte("ends_on", today);
   return { today, promos: ((data ?? []) as Promotion[]).map((p) => ({ ...p, discount: Number(p.discount) })) };
 });
 
-type Promotable = { brand_id?: string | null; category_id?: string | null; brands?: unknown };
+type Promotable = { id?: string; brand_id?: string | null; category_id?: string | null; brands?: unknown };
 
 /** Attaches today's best sale (if any) to each product for the card badge and price. */
 export async function withPromos<T extends object>(products: T[]): Promise<(T & { promo: CardPromo | null })[]> {
@@ -27,6 +27,7 @@ export async function withPromos<T extends object>(products: T[]): Promise<(T & 
     const hit = promos.length
       ? promoFor(
           {
+            id: p.id,
             brand_id: p.brand_id ?? null,
             category_id: p.category_id ?? null,
             house: (p.brands as { is_house_brand?: boolean } | null)?.is_house_brand === true,

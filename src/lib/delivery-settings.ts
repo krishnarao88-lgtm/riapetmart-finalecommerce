@@ -29,5 +29,6 @@ export const getDeliverySettings = unstable_cache(
     return (data?.value ?? {}) as DeliverySettings;
   },
   ["delivery-settings"],
-  { revalidate: 300 },
+  // Saving Admin → Settings clears this tag, so changes show on the next page load.
+  { revalidate: 300, tags: ["delivery-settings"] },
 );

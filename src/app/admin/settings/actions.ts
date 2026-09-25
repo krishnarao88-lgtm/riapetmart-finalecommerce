@@ -1,6 +1,6 @@
 "use server";
 
-import { revalidatePath } from "next/cache";
+import { revalidatePath, updateTag } from "next/cache";
 import { requireAdmin } from "@/lib/auth";
 import { MAX_MARGIN } from "@/lib/pricing";
 
@@ -53,5 +53,6 @@ export async function saveSettings(_prev: SettingsState, formData: FormData): Pr
 
   const { error } = await supabase.from("settings").upsert(rows, { onConflict: "key" });
   revalidatePath("/admin/settings");
+  updateTag("delivery-settings");
   return error ? { error: error.message } : { ok: "Settings saved. They apply straight away." };
 }

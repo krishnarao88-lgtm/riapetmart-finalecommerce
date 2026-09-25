@@ -3,6 +3,8 @@ import { Cat, Dog, FlaskConical, Info, PawPrint, Pill, ShieldCheck, Target } fro
 import Link from "next/link";
 import { notFound, permanentRedirect } from "next/navigation";
 import { AddToCart } from "@/components/add-to-cart";
+import { DealStrip, ViewCount } from "@/components/deal-strip";
+import { PaymentBadges } from "@/components/payment-badges";
 import { promoFor, promoLabel } from "@/lib/promotions";
 import { getRunningPromotions } from "@/lib/promotions-server";
 import { CompleteTheCare } from "@/components/complete-the-care";
@@ -121,7 +123,7 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
   const running = await getRunningPromotions();
   const isHouse = (product.brands as unknown as { is_house_brand: boolean } | null)?.is_house_brand === true;
   const sale = promoFor(
-    { brand_id: product.brand_id, category_id: product.category_id, house: isHouse },
+    { id: product.id, brand_id: product.brand_id, category_id: product.category_id, house: isHouse },
     running.promos,
     running.today,
   );
@@ -133,7 +135,16 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
     const off = Math.max(badge?.kind === "short-dated" ? badge.discount : 0, sale?.discount ?? 0);
     const price = off > 0 ? discountedPrice(v.price, off) : v.price;
     const available = stockMap ? (row?.available ?? 0) : null;
-    return { id: v.id, title: v.title, price, originalPrice: v.price, badge, available };
+    return {
+      id: v.id,
+      title: v.title,
+      price,
+      originalPrice: v.price,
+      badge,
+      available,
+      bestBefore: row?.nearest_expiry ?? null,
+      shortDated: badge?.kind === "short-dated",
+    };
   });
   const image = images[0] ?? null;
   const name = titleCase(product.name);
@@ -262,6 +273,16 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
             </span>
           )}
 
+          <DealStrip
+            saleName={sale ? promoLabel(sale) : null}
+            // Sales end at the close of their last day, Malaysia time (UTC+8).
+            saleEndsAt={sale ? `${sale.ends_on}T23:59:59+08:00` : null}
+            shortDatedDays={
+              variants.find((v) => v.badge?.kind === "short-dated" && (v.available ?? 1) > 0)?.badge?.daysLeft ?? null
+            }
+          />
+          <ViewCount productId={product.id} />
+
           <div className="mt-2 rounded-2xl border-2 border-choc bg-cream p-4">
             <AddToCart
               productSlug={slug}
@@ -270,6 +291,7 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
               variants={variants}
             />
           </div>
+          <PaymentBadges />
 
           {product.is_regulated && (
             <p className="rounded-xl bg-warn-bg px-3 py-2 text-sm text-warn-fg">
