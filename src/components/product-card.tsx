@@ -47,7 +47,7 @@ export function productStock(
   const rows = variants.map((v) => stock?.get(v.id));
   const available = stock ? rows.reduce((sum, r) => sum + (r?.available ?? 0), 0) : null;
   const nearest = rows.map((r) => r?.nearest_expiry).filter((d): d is string => !!d).sort()[0] ?? null;
-  return { available, badge: getExpiryBadge(nearest, expirySettings) };
+  return { available, nearest, badge: getExpiryBadge(nearest, expirySettings) };
 }
 
 /** Shared card used by /shop and the homepage's featured products — same stock and expiry badges everywhere. */
@@ -62,7 +62,7 @@ export function ProductCard({
 }) {
   const p = product;
   const minPrice = p.variants.length ? Math.min(...p.variants.map((v) => v.price)) : null;
-  const { available, badge } = productStock(p.variants, stock, expirySettings);
+  const { available, nearest, badge } = productStock(p.variants, stock, expirySettings);
   const soldOut = available === 0;
   const cheapestVariant =
     p.variants
@@ -123,6 +123,11 @@ export function ProductCard({
         <div className="mt-1">
           <ProductTags petType={p.pet_type} highlights={p.highlights} max={2} compact />
         </div>
+        {badge?.kind === "short-dated" && nearest && (
+          <span className="text-xs font-bold text-rust">
+            Best before {new Date(nearest).toLocaleDateString("en-MY", { day: "numeric", month: "short", year: "numeric" })}
+          </span>
+        )}
         {available !== null && available > 0 && available <= 5 && (
           <span className="text-xs font-bold text-warn-fg">Only {available} left</span>
         )}

@@ -8,6 +8,7 @@ import { LocalSeo } from "@/components/local-seo";
 import { PetCareTips } from "@/components/pet-care-tips";
 import { PetCollage } from "@/components/pet-collage";
 import { PromoBanner } from "@/components/promo-banner";
+import { ShortDatedDeals } from "@/components/short-dated-deals";
 import { Testimonial } from "@/components/testimonial";
 import { TikTokFeed } from "@/components/tiktok-feed";
 import { TrustStats } from "@/components/trust-stats";
@@ -32,6 +33,7 @@ export default async function Home() {
       <Hero />
       <CategoryQuickLinks />
       <PromoBanner />
+      <ShortDatedDeals />
       <FeaturedProducts />
       <BestSellers />
       <TrustStats publishedProductCount={count ?? 0} />
