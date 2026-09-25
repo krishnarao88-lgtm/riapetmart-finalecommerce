@@ -1,5 +1,6 @@
 import { LogOut } from "lucide-react";
 import type { Metadata } from "next";
+import Link from "next/link";
 import { redirect } from "next/navigation";
 import { BuyAgainButton } from "@/components/buy-again-button";
 import { getVariantStock } from "@/components/product-card";
@@ -96,11 +97,16 @@ export default async function AccountPage() {
           <p className="text-sm text-choc-2">Signed in as {user.email}</p>
           <h1 className="font-bubble text-3xl font-extrabold text-choc">My orders</h1>
         </div>
-        <form action={signOutAccount}>
-          <button type="submit" className="btn-bubble bg-surface px-4 py-2 text-choc">
-            <LogOut className="size-4" aria-hidden /> Sign out
-          </button>
-        </form>
+        <div className="flex flex-wrap items-center gap-3">
+          <Link href="/account/password" className="text-sm text-choc-2 underline hover:text-choc">
+            Change password
+          </Link>
+          <form action={signOutAccount}>
+            <button type="submit" className="btn-bubble bg-surface px-4 py-2 text-choc">
+              <LogOut className="size-4" aria-hidden /> Sign out
+            </button>
+          </form>
+        </div>
       </div>
 
       {referralUrl && (

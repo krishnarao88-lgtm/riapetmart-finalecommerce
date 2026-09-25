@@ -22,7 +22,17 @@ const pick = (a) => a[Math.floor(Math.random() * a.length)];
 // Real product links and variant ids come from the shop's own sitemap and product pages.
 async function discover() {
   const xml = await (await fetch(`${base}/sitemap.xml`, { headers })).text();
-  const products = [...xml.matchAll(/<loc>([^<]*\/shop\/[^<]+)<\/loc>/g)].map((m) => new URL(m[1]).pathname).slice(0, 60);
+  let products = [...xml.matchAll(/<loc>([^<]*\/shop\/[^<]+)<\/loc>/g)].map((m) => new URL(m[1]).pathname);
+  if (!products.length) {
+    // Fall back to the product links on the shop page itself.
+    const html = await (await fetch(`${base}/shop`, { headers })).text();
+    products = [...new Set([...html.matchAll(/href="(\/shop\/[a-z0-9-]+)"/g)].map((m) => m[1]))];
+  }
+  products = products.slice(0, 60);
+  if (!products.length) {
+    console.error("Found no product pages. Is the URL right, and is VERCEL_BYPASS set for a protected preview?");
+    process.exit(1);
+  }
   const variants = new Set();
   for (const path of products.slice(0, 8)) {
     const html = await (await fetch(base + path, { headers })).text();
