@@ -2,6 +2,7 @@ import { ArrowRight, Timer } from "lucide-react";
 import Link from "next/link";
 import { getVariantStock, ProductCard, type ProductCardData, productStock } from "@/components/product-card";
 import { type ExpirySettings } from "@/lib/expiry";
+import { withPromos } from "@/lib/promotions-server";
 import { createClient } from "@/lib/supabase/server";
 
 /** Homepage clearance row: in-stock short-dated products, soonest best-before first. Hidden when there are none. */
@@ -10,11 +11,11 @@ export async function ShortDatedDeals() {
   const [{ data }, { data: settingsRow }] = await Promise.all([
     supabase
       .from("products")
-      .select("id, slug, name, pet_type, highlights, is_dvs_approved, size_display, product_images(path, alt), variants(id, title, price)")
+      .select("id, slug, name, pet_type, highlights, is_dvs_approved, size_display, brand_id, category_id, brands(is_house_brand), product_images(path, alt), variants(id, title, price)")
       .eq("status", "published"),
     supabase.from("settings").select("value").eq("key", "expiry_badges").single(),
   ]);
-  const products = (data ?? []) as unknown as ProductCardData[];
+  const products = await withPromos((data ?? []) as unknown as ProductCardData[]);
   const expirySettings = (settingsRow?.value ?? {}) as Partial<ExpirySettings>;
   const stock = await getVariantStock(supabase, products.flatMap((p) => p.variants.map((v) => v.id)));
   if (!stock) return null;

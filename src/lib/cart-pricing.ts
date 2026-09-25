@@ -2,6 +2,8 @@ import "server-only";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { BUNDLE_DISCOUNT, bundleEligible, type CareProduct } from "@/lib/care-needs";
 import { discountedPrice, getExpiryBadge, type ExpirySettings } from "@/lib/expiry";
+import { todayInKL } from "@/lib/kl-time";
+import { type Promotion, promoFor, promoLabel } from "@/lib/promotions";
 
 export type CartLineInput = { variantId: string; qty: number };
 export type PricedItem = {
@@ -13,7 +15,9 @@ export type PricedItem = {
   image: string | null;
   /** Price before any discount, and which discount applied (the single best one; they never stack). */
   list_price: number;
-  discount: "short-dated" | "bundle" | null;
+  discount: "short-dated" | "bundle" | "sale" | null;
+  /** Shown next to the price, e.g. "Deepavali Sale -10%". */
+  discount_label: string | null;
 };
 /** `care` describes the cart's products so callers can suggest pairings. */
 export type PricedCart = { items: PricedItem[]; subtotal: number; weightGrams: number; care: CareProduct[] };
@@ -34,14 +38,22 @@ export async function priceCart(
   lines: CartLineInput[],
 ): Promise<PricedCart | { error: string }> {
   const ids = lines.map((l) => l.variantId);
-  const [{ data: variants }, { data: stockRows }, { data: settingsRow }] = await Promise.all([
+  const today = todayInKL();
+  const [{ data: variants }, { data: stockRows }, { data: settingsRow }, { data: promoRows }] = await Promise.all([
     supabase
       .from("variants")
-      .select("id, title, price, weight_grams, products(id, name, highlights, pet_type, brands(is_house_brand), product_images(path))")
+      .select("id, title, price, weight_grams, products(id, name, highlights, pet_type, brand_id, category_id, brands(is_house_brand), product_images(path))")
       .in("id", ids),
     supabase.rpc("variant_stock", { p_variant_ids: ids }),
     supabase.from("settings").select("value").eq("key", "expiry_badges").maybeSingle(),
+    supabase
+      .from("promotions")
+      .select("id, name, starts_on, ends_on, discount, scope, brand_id, category_id, banner")
+      .eq("is_active", true)
+      .lte("starts_on", today)
+      .gte("ends_on", today),
   ]);
+  const promos = ((promoRows ?? []) as Promotion[]).map((p) => ({ ...p, discount: Number(p.discount) }));
   if (!variants || variants.length !== ids.length) return { error: "One or more items are no longer available" };
 
   const expirySettings = (settingsRow?.value ?? {}) as Partial<ExpirySettings>;
@@ -57,6 +69,8 @@ export async function priceCart(
     name: string;
     highlights: string[] | null;
     pet_type: string;
+    brand_id: string | null;
+    category_id: string | null;
     brands: { is_house_brand: boolean } | null;
     product_images: { path: string }[];
   };
@@ -85,10 +99,25 @@ export async function priceCart(
     }
     const badge = getExpiryBadge(s.nearest_expiry, expirySettings);
     const listPrice = Number(v.price);
-    // Best single discount wins: short-dated vs own-brand bundle.
-    const offers: { price: number; kind: PricedItem["discount"] }[] = [{ price: listPrice, kind: null }];
-    if (badge?.kind === "short-dated") offers.push({ price: discountedPrice(listPrice, badge.discount), kind: "short-dated" });
-    if (product && bundled.has(product.id)) offers.push({ price: discountedPrice(listPrice, BUNDLE_DISCOUNT), kind: "bundle" });
+    // Best single discount wins: short-dated, own-brand bundle or holiday sale. They never stack.
+    type Offer = { price: number; kind: PricedItem["discount"]; label: string | null };
+    const offers: Offer[] = [{ price: listPrice, kind: null, label: null }];
+    if (badge?.kind === "short-dated") {
+      const pct = Math.round(badge.discount * 100);
+      offers.push({ price: discountedPrice(listPrice, badge.discount), kind: "short-dated", label: `Short-dated -${pct}%` });
+    }
+    if (product && bundled.has(product.id)) {
+      const pct = Math.round(BUNDLE_DISCOUNT * 100);
+      offers.push({ price: discountedPrice(listPrice, BUNDLE_DISCOUNT), kind: "bundle", label: `Bundle -${pct}%` });
+    }
+    const sale = product
+      ? promoFor(
+          { brand_id: product.brand_id, category_id: product.category_id, house: product.brands?.is_house_brand === true },
+          promos,
+          today,
+        )
+      : null;
+    if (sale) offers.push({ price: discountedPrice(listPrice, sale.discount), kind: "sale", label: promoLabel(sale) });
     const best = offers.reduce((a, b) => (b.price < a.price ? b : a));
     const price = best.price;
     subtotal += price * line.qty;
@@ -102,6 +131,7 @@ export async function priceCart(
       image: product?.product_images?.[0]?.path ?? null,
       list_price: listPrice,
       discount: best.kind,
+      discount_label: best.label,
     });
   }
   return { items, subtotal: Math.round(subtotal * 100) / 100, weightGrams, care: careProducts };

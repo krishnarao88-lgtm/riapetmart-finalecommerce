@@ -4,6 +4,7 @@ import { ProductTags, SizePills } from "@/components/product-tags";
 import { QuickAddButton } from "@/components/quick-add-button";
 import { discountedPrice, getExpiryBadge, type ExpirySettings } from "@/lib/expiry";
 import { formatMyr } from "@/lib/pricing";
+import type { CardPromo } from "@/lib/promotions";
 import { titleCase } from "@/lib/seo";
 import type { createClient } from "@/lib/supabase/server";
 
@@ -16,6 +17,7 @@ export type ProductCardData = {
   pet_type?: string | null;
   highlights?: string[] | null;
   is_dvs_approved?: boolean;
+  promo?: CardPromo | null;
   product_images: { path: string; alt: string | null }[];
   variants: { id: string; title: string; price: number }[];
 };
@@ -69,7 +71,11 @@ export function ProductCard({
       .filter((v) => !stock || (stock.get(v.id)?.available ?? 0) > 0)
       .sort((a, b) => a.price - b.price)[0] ?? null;
   const image = p.product_images[0];
-  const priceNow = (price: number) => (badge?.kind === "short-dated" ? discountedPrice(price, badge.discount) : price);
+  const shortDatedOff = badge?.kind === "short-dated" ? badge.discount : 0;
+  const saleOff = p.promo?.discount ?? 0;
+  const bestOff = Math.max(shortDatedOff, saleOff);
+  const showSale = saleOff > 0 && saleOff >= shortDatedOff;
+  const priceNow = (price: number) => (bestOff > 0 ? discountedPrice(price, bestOff) : price);
   const showPrice = minPrice !== null ? priceNow(minPrice) : null;
   const name = titleCase(p.name);
 
@@ -93,12 +99,17 @@ export function ProductCard({
         {soldOut && (
           <span className="absolute left-2 top-2 rounded-full bg-choc px-2 py-0.5 text-xs font-bold text-cream">Sold out</span>
         )}
-        {badge?.kind === "short-dated" && (
+        {!soldOut && showSale && p.promo && (
+          <span className="absolute left-2 top-2 rounded-full bg-terracotta px-2 py-0.5 text-xs font-bold text-cream">
+            {p.promo.label}
+          </span>
+        )}
+        {!showSale && badge?.kind === "short-dated" && (
           <span className="absolute left-2 top-2 rounded-full bg-rust px-2 py-0.5 text-xs font-bold text-cream">
             -{Math.round(badge.discount * 100)}% short-dated
           </span>
         )}
-        {badge?.kind === "fresh" && (
+        {!showSale && badge?.kind === "fresh" && (
           <span className="absolute left-2 top-2 rounded-full bg-ok-bg px-2 py-0.5 text-xs font-bold text-ok-fg">
             Fresh stock
           </span>
@@ -132,7 +143,7 @@ export function ProductCard({
           <span className="text-xs font-bold text-warn-fg">Only {available} left</span>
         )}
         <span className="mt-auto flex items-baseline gap-2 pt-1">
-          {badge?.kind === "short-dated" && minPrice !== null && (
+          {bestOff > 0 && minPrice !== null && (
             <span className="text-xs text-choc-2 line-through">{formatMyr(minPrice)}</span>
           )}
           <span className="font-bold text-choc">

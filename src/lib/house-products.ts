@@ -1,6 +1,7 @@
 import "server-only";
 import { getVariantStock, type ProductCardData, type VariantStock } from "@/components/product-card";
 import type { CareProduct } from "@/lib/care-needs";
+import { withPromos } from "@/lib/promotions-server";
 import type { createClient } from "@/lib/supabase/server";
 
 export type HouseProduct = ProductCardData & CareProduct;
@@ -12,11 +13,12 @@ export async function getHouseProducts(
   const { data } = await supabase
     .from("products")
     .select(
-      "id, slug, name, pet_type, highlights, is_dvs_approved, size_display, brands!inner(is_house_brand), product_images(path, alt, sort), variants(id, title, price)",
+      "id, slug, name, pet_type, highlights, is_dvs_approved, size_display, brand_id, category_id, brands!inner(is_house_brand), product_images(path, alt, sort), variants(id, title, price)",
     )
     .eq("status", "published")
     .eq("brands.is_house_brand", true);
-  const rows = ((data ?? []) as unknown as (ProductCardData & Omit<CareProduct, "house">)[]).map((p) => ({
+  const withSale = await withPromos((data ?? []) as unknown as (ProductCardData & Omit<CareProduct, "house">)[]);
+  const rows = withSale.map((p) => ({
     ...p,
     house: true,
     product_images: [...p.product_images].sort(

@@ -1,5 +1,6 @@
 import { getVariantStock, ProductCard, type ProductCardData } from "@/components/product-card";
 import { type ExpirySettings } from "@/lib/expiry";
+import { withPromos } from "@/lib/promotions-server";
 import { createClient } from "@/lib/supabase/server";
 import { createServiceClient } from "@/lib/supabase/service";
 
@@ -37,12 +38,12 @@ export async function BestSellers() {
   const [{ data }, { data: settingsRow }] = await Promise.all([
     supabase
       .from("products")
-      .select("id, slug, name, pet_type, highlights, is_dvs_approved, size_display, product_images(path, alt), variants(id, title, price)")
+      .select("id, slug, name, pet_type, highlights, is_dvs_approved, size_display, brand_id, category_id, brands(is_house_brand), product_images(path, alt), variants(id, title, price)")
       .eq("status", "published")
       .in("id", top),
     supabase.from("settings").select("value").eq("key", "expiry_badges").single(),
   ]);
-  const products = ((data ?? []) as unknown as ProductCardData[]).sort((a, b) => top.indexOf(a.id) - top.indexOf(b.id));
+  const products = (await withPromos((data ?? []) as unknown as ProductCardData[])).sort((a, b) => top.indexOf(a.id) - top.indexOf(b.id));
   if (products.length < 2) return null;
   const expirySettings = (settingsRow?.value ?? {}) as Partial<ExpirySettings>;
   const stock = await getVariantStock(supabase, products.flatMap((p) => p.variants.map((v) => v.id)));

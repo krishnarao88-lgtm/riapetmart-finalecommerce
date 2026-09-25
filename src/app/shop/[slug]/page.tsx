@@ -3,6 +3,8 @@ import { Cat, Dog, FlaskConical, Info, PawPrint, Pill, ShieldCheck, Target } fro
 import Link from "next/link";
 import { notFound, permanentRedirect } from "next/navigation";
 import { AddToCart } from "@/components/add-to-cart";
+import { promoFor, promoLabel } from "@/lib/promotions";
+import { getRunningPromotions } from "@/lib/promotions-server";
 import { CompleteTheCare } from "@/components/complete-the-care";
 import { ProductTags, SizePills } from "@/components/product-tags";
 import { getVariantStock } from "@/components/product-card";
@@ -18,7 +20,7 @@ async function getProduct(slug: string) {
   const { data: product } = await supabase
     .from("products")
     .select(
-      "id, name, description, ingredients, usage, highlights, is_dvs_approved, size_display, pet_type, category_id, is_regulated, seo_title, seo_description, brands(name, slug, is_house_brand), categories(name, slug), product_images(path, alt, sort), variants(id, title, price, sort)",
+      "id, name, description, ingredients, usage, highlights, is_dvs_approved, size_display, pet_type, brand_id, category_id, is_regulated, seo_title, seo_description, brands(name, slug, is_house_brand), categories(name, slug), product_images(path, alt, sort), variants(id, title, price, sort)",
     )
     .eq("slug", slug)
     .eq("status", "published")
@@ -116,11 +118,20 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
   ]);
 
   const expirySettings = (settingsRow?.value ?? {}) as Partial<ExpirySettings>;
+  const running = await getRunningPromotions();
+  const isHouse = (product.brands as unknown as { is_house_brand: boolean } | null)?.is_house_brand === true;
+  const sale = promoFor(
+    { brand_id: product.brand_id, category_id: product.category_id, house: isHouse },
+    running.promos,
+    running.today,
+  );
   const images = [...(product.product_images ?? [])].sort((a, b) => a.sort - b.sort);
   const variants = rawVariants.map((v) => {
     const row = stockMap?.get(v.id);
     const badge = getExpiryBadge(row?.nearest_expiry ?? null, expirySettings);
-    const price = badge?.kind === "short-dated" ? discountedPrice(v.price, badge.discount) : v.price;
+    // Same rule as checkout: the single best of short-dated and sale.
+    const off = Math.max(badge?.kind === "short-dated" ? badge.discount : 0, sale?.discount ?? 0);
+    const price = off > 0 ? discountedPrice(v.price, off) : v.price;
     const available = stockMap ? (row?.available ?? 0) : null;
     return { id: v.id, title: v.title, price, originalPrice: v.price, badge, available };
   });
@@ -240,7 +251,12 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
             </p>
           )}
 
-          {variants.some((v) => v.badge?.kind === "short-dated") && (
+          {sale && (
+            <span className="w-fit rounded-full bg-terracotta px-3 py-1 text-xs font-bold text-cream">
+              {promoLabel(sale)} — price already reduced
+            </span>
+          )}
+          {!sale && variants.some((v) => v.badge?.kind === "short-dated") && (
             <span className="w-fit rounded-full bg-rust px-3 py-1 text-xs font-bold text-cream">
               Short-dated — discount applied at checkout
             </span>
@@ -294,7 +310,7 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
           name: product.name,
           highlights: product.highlights,
           pet_type: product.pet_type,
-          house: (product.brands as unknown as { is_house_brand: boolean } | null)?.is_house_brand === true,
+          house: isHouse,
         }}
         expirySettings={expirySettings}
       />

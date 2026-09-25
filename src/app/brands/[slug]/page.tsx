@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 import { getVariantStock, ProductCard, type ProductCardData } from "@/components/product-card";
 import { type ExpirySettings } from "@/lib/expiry";
 import { site } from "@/lib/site";
+import { withPromos } from "@/lib/promotions-server";
 import { createClient } from "@/lib/supabase/server";
 
 type BrandProduct = ProductCardData & { categories: { name: string } | null };
@@ -14,11 +15,11 @@ async function getBrand(slug: string) {
   if (!brand) return null;
   const { data } = await supabase
     .from("products")
-    .select("id, slug, name, pet_type, highlights, is_dvs_approved, size_display, categories(name), product_images(path, alt), variants(id, title, price)")
+    .select("id, slug, name, pet_type, highlights, is_dvs_approved, size_display, brand_id, category_id, brands(is_house_brand), categories(name), product_images(path, alt), variants(id, title, price)")
     .eq("brand_id", brand.id)
     .eq("status", "published")
     .order("name");
-  const products = (data ?? []) as unknown as BrandProduct[];
+  const products = await withPromos((data ?? []) as unknown as BrandProduct[]);
   return products.length ? { name: brand.name as string, products } : null;
 }
 

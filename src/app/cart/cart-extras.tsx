@@ -5,10 +5,9 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import type { CartSuggestion } from "@/app/api/cart-price/route";
 import { type CartLine, useCart } from "@/lib/cart-context";
-import { BUNDLE_DISCOUNT } from "@/lib/care-needs";
 import { formatMyr } from "@/lib/pricing";
 
-type PricedLine = { price: number; list_price: number; discount: "short-dated" | "bundle" | null };
+type PricedLine = { price: number; list_price: number; discount: string | null; discount_label: string | null };
 export type PricedCartView = { items: Map<string, PricedLine>; subtotal: number; suggestions: CartSuggestion[] };
 
 /** Asks the server what checkout will actually charge (bundle and short-dated discounts included). */
@@ -59,7 +58,7 @@ export function LinePrice({ fallback, priced }: { fallback: number; priced: Pric
       <span className="text-sm font-normal text-choc-2 line-through">{formatMyr(priced.list_price)}</span>
       {formatMyr(priced.price)}
       <span className="rounded-full bg-ok-bg px-2 py-0.5 text-xs text-ok-fg">
-        {priced.discount === "bundle" ? `Bundle -${Math.round(BUNDLE_DISCOUNT * 100)}%` : "Short-dated"}
+        {priced.discount_label}
       </span>
     </p>
   );

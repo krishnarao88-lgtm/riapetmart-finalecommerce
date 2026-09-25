@@ -7,6 +7,7 @@ import { type ExpirySettings } from "@/lib/expiry";
 import { faqJsonLd, landingSeo } from "@/lib/seo";
 import { searchTerm, sortByPrice } from "@/lib/shop-search";
 import { whatsappLink } from "@/lib/site";
+import { withPromos } from "@/lib/promotions-server";
 import { createClient } from "@/lib/supabase/server";
 
 type ShopSearchParams = Promise<{ pet?: string; category?: string; deal?: string; q?: string; sort?: string }>;
@@ -91,7 +92,7 @@ export default async function ShopPage({ searchParams }: { searchParams: ShopSea
   let productsQuery = supabase
     .from("products")
     .select(
-      `id, slug, name, pet_type, highlights, is_dvs_approved, size_display, ${categoriesEmbed}, product_images(path, alt), variants(id, title, price)`,
+      `id, slug, name, pet_type, highlights, is_dvs_approved, size_display, brand_id, category_id, brands(is_house_brand), ${categoriesEmbed}, product_images(path, alt), variants(id, title, price)`,
     )
     .eq("status", "published")
     .order("name");
@@ -119,10 +120,11 @@ export default async function ShopPage({ searchParams }: { searchParams: ShopSea
   ]);
 
   const expirySettings = (settingsRow?.value ?? {}) as Partial<ExpirySettings>;
-  let rows = sortByPrice((products ?? []) as unknown as ProductRow[], sort);
+  let rows = sortByPrice(await withPromos((products ?? []) as unknown as ProductRow[]), sort);
 
   const stock = await getVariantStock(supabase, rows.flatMap((p) => p.variants.map((v) => v.id)));
 
+  if (deal === "sale") rows = rows.filter((p) => p.promo);
   if (deal === "short-dated") {
     rows = rows.filter((p) => productStock(p.variants, stock, expirySettings).badge?.kind === "short-dated");
   }

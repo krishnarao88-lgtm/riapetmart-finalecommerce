@@ -5,6 +5,7 @@ import { CartDrawer } from "@/components/cart-drawer";
 import { FloatingWhatsApp } from "@/components/floating-whatsapp";
 import { ReferralCapture } from "@/components/referral-capture";
 import { SiteFooter } from "@/components/site-footer";
+import { SaleBanner } from "@/components/sale-banner";
 import { SiteHeader } from "@/components/site-header";
 import { WelcomePopup } from "@/components/welcome-popup";
 import { CartProvider } from "@/lib/cart-context";
@@ -94,6 +95,7 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
           Skip to content
         </a>
         <CartProvider>
+          <SaleBanner />
           <SiteHeader />
           <main id="main" className="flex-1">
             {children}

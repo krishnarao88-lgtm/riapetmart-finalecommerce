@@ -46,7 +46,13 @@ export async function POST(request: Request) {
   });
 
   return NextResponse.json({
-    items: cart.items.map(({ variant_id, price, list_price, discount }) => ({ variant_id, price, list_price, discount })),
+    items: cart.items.map(({ variant_id, price, list_price, discount, discount_label }) => ({
+      variant_id,
+      price,
+      list_price,
+      discount,
+      discount_label,
+    })),
     subtotal: cart.subtotal,
     suggestions,
   });
