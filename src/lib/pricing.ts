@@ -43,6 +43,15 @@ export function profitPerUnit(cost: number, price: number): number {
   return round2(price - cost);
 }
 
+/**
+ * What the customer pays for delivery. Over the free-delivery minimum we cover up to `cap`
+ * (all of it when cap is null), so heavy or far orders don't wipe out the margin.
+ */
+export function deliveryCharge(raw: number, subtotal: number, freeMin: number | null, cap: number | null): number {
+  if (freeMin === null || subtotal < freeMin) return round2(raw);
+  return cap === null ? 0 : round2(Math.max(0, raw - cap));
+}
+
 export function formatMyr(value: number): string {
   return new Intl.NumberFormat("en-MY", { style: "currency", currency: "MYR" }).format(value);
 }

@@ -1,11 +1,14 @@
-import { PawPrint, Search } from "lucide-react";
+import { PawPrint, Search, Tag } from "lucide-react";
 import Link from "next/link";
 import { AccountLink } from "@/components/account-link";
 import { CartBadge } from "@/components/cart-badge";
 
-const nav = [
+// Clearance is raised like a sticker so it stands out from the plain links.
+const HOT = "border-2 border-choc bg-terracotta text-cream shadow-[2px_2px_0_0_var(--color-choc)] hover:-translate-y-0.5 hover:bg-terracotta hover:text-cream";
+
+const nav: { href: string; label: string; hot?: boolean }[] = [
   { href: "/shop", label: "Shop all" },
-  { href: "/shop?deal=short-dated", label: "Clearance" },
+  { href: "/shop?deal=short-dated", label: "Clearance", hot: true },
   { href: "/cat-hotel", label: "Cat Hotel" },
   { href: "/about", label: "About us" },
   { href: "/contact", label: "Contact" },
@@ -51,8 +54,9 @@ export function SiteHeader() {
                 <li key={item.href}>
                   <Link
                     href={item.href}
-                    className="rounded-full px-3 py-2 text-sm font-semibold text-choc-2 hover:bg-peach/50 hover:text-choc"
+                    className={`inline-flex items-center gap-1 rounded-full px-3 py-1.5 text-sm font-semibold transition-transform ${item.hot ? HOT : "text-choc-2 hover:bg-peach/50 hover:text-choc"}`}
                   >
+                    {item.hot && <Tag className="size-3.5" aria-hidden />}
                     {item.label}
                   </Link>
                 </li>
@@ -77,8 +81,9 @@ export function SiteHeader() {
               <li key={item.href} className="shrink-0">
                 <Link
                   href={item.href}
-                  className="inline-flex min-h-11 items-center rounded-full border-2 border-peach bg-cream px-4 text-sm font-semibold text-choc"
+                  className={`inline-flex min-h-11 items-center gap-1 rounded-full px-4 text-sm font-semibold ${item.hot ? HOT : "border-2 border-peach bg-cream text-choc"}`}
                 >
+                  {item.hot && <Tag className="size-3.5" aria-hidden />}
                   {item.label}
                 </Link>
               </li>

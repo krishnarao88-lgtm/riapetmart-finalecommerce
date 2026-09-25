@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { headers } from "next/headers";
 import type Stripe from "stripe";
 import { parseLines, priceCart } from "@/lib/cart-pricing";
-import { freeDeliveryMin, type DeliverySettings } from "@/lib/delivery-settings";
+import type { DeliverySettings } from "@/lib/delivery-settings";
 import { quoteSecret, verifyQuote } from "@/lib/quote-signature";
 import { getStripe } from "@/lib/stripe";
 import { createClient } from "@/lib/supabase/server";
@@ -77,8 +77,8 @@ export async function POST(req: Request) {
         { status: 400 },
       );
     }
-    const freeMin = freeDeliveryMin(delivery);
-    shippingPrice = freeMin !== null && cart.subtotal >= freeMin ? 0 : Math.max(0, quote.price);
+    // The signed quote already has the free-delivery allowance taken off, for this exact subtotal.
+    shippingPrice = Math.max(0, quote.price);
   }
 
   const lineItems: Stripe.Checkout.SessionCreateParams.LineItem[] = cart.items.map((it) => ({

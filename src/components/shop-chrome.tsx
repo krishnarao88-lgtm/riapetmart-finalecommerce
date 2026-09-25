@@ -7,7 +7,7 @@ import { SiteFooter } from "@/components/site-footer";
 import { SiteHeader } from "@/components/site-header";
 import { WelcomePopup } from "@/components/welcome-popup";
 import { CartProvider } from "@/lib/cart-context";
-import { freeDeliveryMin, getDeliverySettings } from "@/lib/delivery-settings";
+import { freeDeliveryCap, freeDeliveryMin, getDeliverySettings } from "@/lib/delivery-settings";
 
 /** Storefront frame: header, footer, cart and shopper helpers. Admin pages have their own frame. */
 export async function ShopChrome({ children }: { children: React.ReactNode }) {
@@ -24,7 +24,7 @@ export async function ShopChrome({ children }: { children: React.ReactNode }) {
       <FloatingWhatsApp />
       <ActivityToast />
       {process.env.ANTHROPIC_API_KEY && <AssistantWidget />}
-      <CartDrawer freeDeliveryMin={freeDeliveryMin(delivery)} />
+      <CartDrawer freeDeliveryMin={freeDeliveryMin(delivery)} freeDeliveryCap={freeDeliveryCap(delivery)} />
     </CartProvider>
   );
 }

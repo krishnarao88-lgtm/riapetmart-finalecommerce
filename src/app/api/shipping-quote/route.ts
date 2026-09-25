@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { parseLines, priceCart } from "@/lib/cart-pricing";
-import { freeDeliveryMin, type DeliverySettings } from "@/lib/delivery-settings";
-import { formatMyr } from "@/lib/pricing";
+import { freeDeliveryCap, freeDeliveryMin, type DeliverySettings } from "@/lib/delivery-settings";
+import { deliveryCharge, formatMyr } from "@/lib/pricing";
 import { quoteSecret, signQuote } from "@/lib/quote-signature";
 import { getLalamoveQuote, LALAMOVE_LIVE } from "@/lib/shipping/lalamove";
 import { getEasyParcelQuote } from "@/lib/shipping/easyparcel";
@@ -42,8 +42,15 @@ export async function POST(req: Request) {
 
   const delivery = (settingsRow?.value ?? {}) as DeliverySettings;
   const freeMin = freeDeliveryMin(delivery);
-  const freeDelivery = freeMin !== null && cart.subtotal >= freeMin;
-  const freeNote = freeMin !== null ? ` — free over ${formatMyr(freeMin)}` : "";
+  const cap = freeDeliveryCap(delivery);
+  const charge = (raw: number) => deliveryCharge(raw, cart.subtotal, freeMin, cap);
+  // "free" when we cover it all, otherwise say how much we took off.
+  const note = (raw: number) =>
+    freeMin === null || cart.subtotal < freeMin
+      ? ""
+      : charge(raw) === 0
+        ? ` — free over ${formatMyr(freeMin)}`
+        : ` — ${formatMyr(raw - charge(raw))} off (order over ${formatMyr(freeMin)})`;
   const weightKg = Math.max(0.5, cart.weightGrams / 1000);
 
   const options: ShippingOption[] = [];
@@ -57,8 +64,8 @@ export async function POST(req: Request) {
       if (quote) {
         options.push({
           method: "lalamove",
-          label: freeDelivery ? `Same-day delivery (Lalamove)${freeNote}` : "Same-day delivery (Lalamove)",
-          price: freeDelivery ? 0 : quote.price,
+          label: `Same-day delivery (Lalamove)${note(quote.price)}`,
+          price: charge(quote.price),
         });
       }
     } catch (err) {
@@ -72,8 +79,8 @@ export async function POST(req: Request) {
       if (quote) {
         options.push({
           method: "easyparcel",
-          label: freeDelivery ? `Courier — ${quote.courierName}${freeNote}` : `Courier — ${quote.courierName}`,
-          price: freeDelivery ? 0 : quote.price,
+          label: `Courier — ${quote.courierName}${note(quote.price)}`,
+          price: charge(quote.price),
           serviceId: quote.serviceId,
         });
       }

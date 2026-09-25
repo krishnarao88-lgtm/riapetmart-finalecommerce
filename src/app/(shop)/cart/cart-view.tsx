@@ -28,7 +28,15 @@ const EMPTY_ADDRESS = { addressLine: "", city: "", postcode: "", state: "Selango
 const optionClass =
   "flex cursor-pointer items-center justify-between gap-2 rounded-xl border border-choc/30 px-3 py-2 has-[:checked]:border-terracotta has-[:checked]:bg-peach/30";
 
-export function CartView({ freeDeliveryMin, pickupEnabled }: { freeDeliveryMin: number | null; pickupEnabled: boolean }) {
+export function CartView({
+  freeDeliveryMin,
+  freeDeliveryCap,
+  pickupEnabled,
+}: {
+  freeDeliveryMin: number | null;
+  freeDeliveryCap: number | null;
+  pickupEnabled: boolean;
+}) {
   const { lines, subtotal: localSubtotal, setQty, remove } = useCart();
   // Server prices once they arrive (bundle / short-dated discounts); the cart's own sum until then.
   const priced = usePricedCart(lines);
@@ -212,7 +220,7 @@ export function CartView({ freeDeliveryMin, pickupEnabled }: { freeDeliveryMin: 
 
       {freeDeliveryMin !== null && (
         <div className="mt-4 rounded-2xl bg-peach/40 px-4 py-3">
-          <FreeShippingProgress subtotal={subtotal} threshold={freeDeliveryMin} />
+          <FreeShippingProgress subtotal={subtotal} threshold={freeDeliveryMin} cap={freeDeliveryCap} />
         </div>
       )}
 

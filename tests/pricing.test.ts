@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 import {
+  deliveryCharge,
   marginFromPrice,
   markupFromPrice,
   MAX_MARGIN,
@@ -44,4 +45,13 @@ test("a custom rounding step is honoured", () => {
   assert.equal(priceFromMargin(45, 0.19, 0.05), 55.6);
   assert.equal(priceFromMargin(45, 0.19, 1), 56);
   assert.equal(priceFromMargin(45, 0.19, 0), 55.56);
+});
+
+test("deliveryCharge: full price under the minimum, capped allowance over it", () => {
+  assert.equal(deliveryCharge(12, 100, 150, 15), 12);
+  assert.equal(deliveryCharge(12, 150, 150, 15), 0);
+  // 5 heavy bags: RM105 courier, we cover RM15, customer pays RM90
+  assert.equal(deliveryCharge(105, 360, 150, 15), 90);
+  assert.equal(deliveryCharge(105, 360, 150, null), 0);
+  assert.equal(deliveryCharge(105, 360, null, 15), 105);
 });

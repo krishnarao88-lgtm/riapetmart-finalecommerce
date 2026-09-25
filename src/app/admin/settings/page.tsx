@@ -44,6 +44,10 @@ export default async function SettingsPage({
       delivery.free_delivery_min === null || delivery.free_delivery_min === undefined
         ? null
         : Number(delivery.free_delivery_min),
+    freeDeliveryCap:
+      delivery.free_delivery_cap === null || delivery.free_delivery_cap === undefined
+        ? null
+        : Number(delivery.free_delivery_cap),
   };
 
   return (

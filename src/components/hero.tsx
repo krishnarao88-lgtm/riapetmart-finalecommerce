@@ -112,7 +112,7 @@ export function Hero() {
           <div className="depth-1 absolute inset-[6%] rounded-[42%_58%_52%_48%/48%_44%_56%_52%] bg-peach" aria-hidden />
 
           <div className="depth-2 absolute left-[14%] top-[10%] h-[74%] w-[62%]">
-            <div className="hero-rise size-full overflow-hidden rounded-t-full rounded-b-3xl border-2 border-choc bg-rust shadow-[6px_6px_0_0_var(--color-choc)]">
+            <div className="hero-rise relative size-full overflow-hidden rounded-t-full rounded-b-3xl border-2 border-choc bg-rust shadow-[6px_6px_0_0_var(--color-choc)]">
               <Image
                 src="/images/pets/hero-dog.png"
                 alt="A happy golden retriever sitting against a warm terracotta backdrop"
@@ -126,7 +126,7 @@ export function Hero() {
 
           {/* The cat peeking through a round window */}
           <div className="depth-3 absolute -left-[2%] top-[4%] size-[28%]">
-            <div className="hero-peek size-full overflow-hidden rounded-full border-2 border-choc bg-rust shadow-[3px_3px_0_0_var(--color-choc)]">
+            <div className="hero-peek relative size-full overflow-hidden rounded-full border-2 border-choc bg-rust shadow-[3px_3px_0_0_var(--color-choc)]">
               <Image src="/images/pets/card-cat.png" alt="" fill sizes="160px" className="origin-[50%_42%] scale-[1.9] object-cover object-[50%_42%]" />
             </div>
           </div>

@@ -22,6 +22,7 @@ export async function saveSettings(_prev: SettingsState, formData: FormData): Pr
   const defaultMargin = int(formData, "default_margin", 25);
   const roundUpSen = int(formData, "round_up_sen", 10);
   const freeMin = String(formData.get("free_delivery_min") ?? "").trim();
+  const freeCap = String(formData.get("free_delivery_cap") ?? "").trim();
 
   if (shortDays < 1 || shortDays > 365) return { error: "Short-dated days must be between 1 and 365." };
   if (shortDiscount < 0 || shortDiscount > 90) return { error: "Discounts must be between 0% and 90%." };
@@ -31,6 +32,7 @@ export async function saveSettings(_prev: SettingsState, formData: FormData): Pr
   if (deepDiscount < 0 || deepDiscount > 90) return { error: "Discounts must be between 0% and 90%." };
   if (freshMinDays <= shortDays) return { error: "“Fresh stock” must start after the short-dated window." };
   if (defaultMargin < 0 || defaultMargin >= MAX_MARGIN * 100) return { error: "Default margin is out of range." };
+  if (freeCap !== "" && !(Number(freeCap) >= 0)) return { error: "“We pay up to” must be 0 or more." };
   if (roundUpSen < 1 || roundUpSen > 100) return { error: "Rounding must be between 1 and 100 sen." };
 
   const tiers = [{ max_days: shortDays, discount: shortDiscount / 100 }];
@@ -47,6 +49,7 @@ export async function saveSettings(_prev: SettingsState, formData: FormData): Pr
         easyparcel_enabled: formData.get("easyparcel_enabled") === "on",
         pickup_enabled: formData.get("pickup_enabled") === "on",
         free_delivery_min: freeMin === "" ? null : Number(freeMin),
+        free_delivery_cap: freeCap === "" ? null : Number(freeCap),
       },
     },
   ];

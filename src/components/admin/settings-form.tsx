@@ -15,6 +15,7 @@ export type SettingsValues = {
   easyparcel: boolean;
   pickup: boolean;
   freeDeliveryMin: number | null;
+  freeDeliveryCap: number | null;
 };
 
 const field = "min-h-11 w-full rounded-xl border-2 border-line bg-ground px-3 font-normal tabular-nums";
@@ -99,6 +100,21 @@ export function SettingsForm({ values }: { values: SettingsValues }) {
             defaultValue={values.freeDeliveryMin ?? ""}
             className={field}
           />
+        </label>
+        <label className="grid max-w-xs gap-1 text-sm font-semibold" htmlFor="free_delivery_cap">
+          We pay up to (RM, blank = all of it)
+          <input
+            id="free_delivery_cap"
+            name="free_delivery_cap"
+            type="number"
+            min="0"
+            step="1"
+            defaultValue={values.freeDeliveryCap ?? ""}
+            className={field}
+          />
+          <span className="font-normal text-ink-2">
+            On free-delivery orders the customer pays anything above this, so heavy or far orders don&apos;t cost you.
+          </span>
         </label>
       </section>
 

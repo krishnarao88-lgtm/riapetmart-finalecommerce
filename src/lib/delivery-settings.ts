@@ -9,11 +9,18 @@ export type DeliverySettings = {
   lalamove_enabled?: boolean;
   easyparcel_enabled?: boolean;
   free_delivery_min?: number | null;
+  /** Most we pay toward delivery on free-delivery orders; the customer pays the rest. null = we pay it all. */
+  free_delivery_cap?: number | null;
 };
 
 /** null means free delivery is switched off. */
 export function freeDeliveryMin(d: DeliverySettings): number | null {
   const v = d.free_delivery_min;
+  return typeof v === "number" && Number.isFinite(v) && v >= 0 ? v : null;
+}
+
+export function freeDeliveryCap(d: DeliverySettings): number | null {
+  const v = d.free_delivery_cap;
   return typeof v === "number" && Number.isFinite(v) && v >= 0 ? v : null;
 }
 
