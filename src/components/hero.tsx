@@ -1,6 +1,7 @@
 import { ArrowRight, Bone, MessageCircle, PawPrint, Search } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
+import { HeroParallax } from "@/components/hero-parallax";
 import { whatsappLink } from "@/lib/site";
 
 const words = ["Happy", "pets,", "delivered", "today."];
@@ -16,6 +17,17 @@ const quickLinks = [
 export function Hero() {
   return (
     <section className="relative overflow-hidden bg-terracotta">
+      {/* A little trail of paw prints trotting across the background */}
+      <div className="pointer-events-none absolute bottom-6 left-[4%] hidden gap-10 md:flex" aria-hidden>
+        {Array.from({ length: 7 }, (_, i) => (
+          <PawPrint
+            key={i}
+            className="paw-step size-6 text-cream/40"
+            strokeWidth={1.5}
+            style={{ animationDelay: `${i * 0.45}s`, transform: `translateY(${i % 2 ? -10 : 6}px) rotate(80deg)` }}
+          />
+        ))}
+      </div>
       <div className="mx-auto grid max-w-6xl gap-8 px-4 py-10 md:grid-cols-[1.15fr_1fr] md:items-center md:gap-10 md:py-16">
         <div className="grid gap-5">
           <p className="w-fit rounded-full bg-cream px-3 py-1 text-xs font-bold uppercase tracking-widest text-choc">
@@ -25,10 +37,23 @@ export function Hero() {
             {words.map((word, i) => (
               <span
                 key={word}
-                className="hero-rise mr-[0.22em] inline-block"
+                className="hero-rise relative mr-[0.22em] inline-block"
                 style={{ transform: `rotate(${i % 2 === 0 ? -1.5 : 1.5}deg)`, animationDelay: `${0.06 * i}s` }}
               >
                 {word}
+                {i === words.length - 1 && (
+                  // Hand-drawn squiggle that draws itself under "today."
+                  <svg viewBox="0 0 200 20" className="absolute -bottom-3 left-0 h-3 w-[92%] text-sunshine" aria-hidden>
+                    <path
+                      className="hero-squiggle"
+                      d="M3 12 Q 28 2 52 11 T 101 11 T 150 11 T 197 9"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="5"
+                      strokeLinecap="round"
+                    />
+                  </svg>
+                )}
               </span>
             ))}
           </h1>
@@ -81,44 +106,97 @@ export function Hero() {
           </a>
         </div>
 
-        {/* Warm photo-card composition, topped by the generated hero portrait. */}
-        <div className="relative mx-auto hidden aspect-square w-full max-w-sm sm:block">
-          <div className="absolute right-0 top-4 h-4/5 w-4/5 rounded-3xl bg-peach" aria-hidden />
-          <div className="absolute left-0 top-0 h-[88%] w-[78%] overflow-hidden rounded-t-full rounded-b-3xl border-2 border-choc bg-rust shadow-[6px_6px_0_0_var(--color-choc)]">
-            <Image
-              src="/images/pets/hero-dog.png"
-              alt="A happy golden retriever sitting against a warm terracotta backdrop"
-              fill
-              priority
-              sizes="(max-width: 768px) 100vw, 384px"
-              className="object-cover object-top"
-            />
+        {/* Playful shop-window scene: the dog on stage, the cat peeking in, real own-brand products
+            bobbing around. Layers drift with the mouse at different depths (HeroParallax). */}
+        <HeroParallax className="hero-scene relative mx-auto aspect-square w-full max-w-[18rem] sm:max-w-md">
+          <div className="depth-1 absolute inset-[6%] rounded-[42%_58%_52%_48%/48%_44%_56%_52%] bg-peach" aria-hidden />
+
+          <div className="depth-2 absolute left-[14%] top-[10%] h-[74%] w-[62%]">
+            <div className="hero-rise size-full overflow-hidden rounded-t-full rounded-b-3xl border-2 border-choc bg-rust shadow-[6px_6px_0_0_var(--color-choc)]">
+              <Image
+                src="/images/pets/hero-dog.png"
+                alt="A happy golden retriever sitting against a warm terracotta backdrop"
+                fill
+                priority
+                sizes="(max-width: 640px) 60vw, 280px"
+                className="object-cover object-top"
+              />
+            </div>
           </div>
 
+          {/* The cat peeking through a round window */}
+          <div className="depth-3 absolute -left-[2%] top-[4%] size-[28%]">
+            <div className="hero-peek size-full overflow-hidden rounded-full border-2 border-choc bg-rust shadow-[3px_3px_0_0_var(--color-choc)]">
+              <Image src="/images/pets/card-cat.png" alt="" fill sizes="160px" className="origin-[50%_42%] scale-[1.9] object-cover object-[50%_42%]" />
+            </div>
+          </div>
+
+          {/* The dog asks the obvious question */}
+          <div className="depth-3 absolute right-[2%] top-[14%]">
+            <span className="hero-wiggle relative block rounded-2xl border-2 border-choc bg-cream px-3 py-1.5 font-bubble text-sm font-extrabold text-choc shadow-[3px_3px_0_0_var(--color-choc)] sm:text-base">
+              Treat time?
+              <span
+                className="absolute -bottom-[9px] left-4 size-4 rotate-45 border-b-2 border-r-2 border-choc bg-cream"
+                aria-hidden
+              />
+            </span>
+          </div>
+
+          {/* Real own-brand products, each a link */}
+          <Link
+            href="/shop/robust-hearty-treats-skin-coat-500g"
+            aria-label="Shop Robust Hearty Treats"
+            className="depth-4 absolute -left-[4%] bottom-[2%] w-[30%]"
+          >
+            <span className="hero-float block" style={{ animationDelay: "-1s" }}>
+              <Image
+                src="/images/products/robust-hearty-treats-skin-coat-500g.webp"
+                alt=""
+                width={200}
+                height={200}
+                className="hero-product rotate-[-10deg]"
+              />
+            </span>
+          </Link>
+          <Link
+            href="/shop/aniamor-skin-and-coat-syrup"
+            aria-label="Shop Aniamor Skin & Coat Syrup"
+            className="depth-5 absolute -right-[4%] top-[42%] w-[24%]"
+          >
+            <span className="hero-float block" style={{ animationDelay: "-2.6s", animationDuration: "5.2s" }}>
+              <Image
+                src="/images/products/aniamor-skin-and-coat-syrup.webp"
+                alt=""
+                width={160}
+                height={160}
+                className="hero-product rotate-[8deg]"
+              />
+            </span>
+          </Link>
+          <Link
+            href="/shop/alps-chunky-lamb-415gm"
+            aria-label="Shop Alps Chunky Lamb"
+            className="depth-4 absolute bottom-[0%] right-[14%] w-[24%]"
+          >
+            <span className="hero-float block" style={{ animationDelay: "-0.4s", animationDuration: "4.4s" }}>
+              <Image
+                src="/images/products/alps-chunky-lamb-415gm.webp"
+                alt=""
+                width={160}
+                height={160}
+                className="hero-product rotate-[-4deg]"
+              />
+            </span>
+          </Link>
+
           <span
-            style={{ transform: "rotate(-4deg)", animationDelay: "0.5s" }}
-            className="hero-pop absolute -right-2 top-2 flex items-center gap-2 rounded-2xl border-2 border-choc bg-cream px-3 py-2 text-xs font-bold text-choc shadow-[3px_3px_0_0_var(--color-choc)]"
+            style={{ transform: "rotate(3deg)", animationDelay: "0.6s" }}
+            className="depth-3 hero-pop absolute -bottom-[3%] left-[26%] hidden items-center gap-2 rounded-2xl border-2 border-choc bg-cream px-3 py-1.5 text-xs font-bold text-choc shadow-[3px_3px_0_0_var(--color-choc)] sm:flex"
           >
             <PawPrint className="size-4 text-rust" aria-hidden /> Same-day in Klang Valley
           </span>
-          <span
-            style={{ transform: "rotate(3deg)", animationDelay: "0.62s" }}
-            className="hero-pop absolute bottom-6 -right-4 flex items-center gap-2 rounded-2xl border-2 border-choc bg-cream px-3 py-2 text-xs font-bold text-choc shadow-[3px_3px_0_0_var(--color-choc)]"
-          >
-            <Bone className="size-4 text-rust" aria-hidden /> Real ingredients
-          </span>
-
-          <PawPrint
-            aria-hidden
-            className="absolute -left-3 bottom-10 size-8 rotate-[-18deg] text-cream/80"
-            strokeWidth={1.5}
-          />
-          <PawPrint
-            aria-hidden
-            className="absolute left-10 -top-2 size-6 rotate-[14deg] text-cream/70"
-            strokeWidth={1.5}
-          />
-        </div>
+          <Bone aria-hidden className="depth-2 hero-spin absolute right-[18%] top-[2%] size-7 text-cream/80" strokeWidth={1.5} />
+        </HeroParallax>
       </div>
     </section>
   );

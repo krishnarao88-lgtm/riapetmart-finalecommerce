@@ -322,3 +322,70 @@ h3 {
     animation: none;
   }
 }
+
+/* Hero scene: parallax depths (driven by --mx/--my from HeroParallax) and playful idle motion. */
+.hero-scene {
+  --mx: 0;
+  --my: 0;
+}
+.hero-scene :is(.depth-1, .depth-2, .depth-3, .depth-4, .depth-5) {
+  transition: translate 500ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+.hero-scene .depth-1 { translate: calc(var(--mx) * -5px) calc(var(--my) * -5px); }
+.hero-scene .depth-2 { translate: calc(var(--mx) * 6px) calc(var(--my) * 6px); }
+.hero-scene .depth-3 { translate: calc(var(--mx) * 12px) calc(var(--my) * 12px); }
+.hero-scene .depth-4 { translate: calc(var(--mx) * 18px) calc(var(--my) * 18px); }
+.hero-scene .depth-5 { translate: calc(var(--mx) * 26px) calc(var(--my) * 26px); }
+.hero-product {
+  filter: drop-shadow(0 12px 14px rgb(46 29 20 / 0.35));
+  transition:
+    scale 450ms cubic-bezier(0.34, 1.56, 0.64, 1),
+    rotate 450ms cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+a:hover > .hero-float .hero-product,
+a:focus-visible > .hero-float .hero-product {
+  scale: 1.12;
+  rotate: 0deg;
+}
+@keyframes hero-float {
+  0%, 100% { translate: 0 0; }
+  50% { translate: 0 -10px; }
+}
+@keyframes hero-wiggle {
+  0%, 84%, 100% { rotate: 0deg; }
+  88% { rotate: -7deg; }
+  92% { rotate: 6deg; }
+  96% { rotate: -3deg; }
+}
+@keyframes hero-peek {
+  0%, 100% { translate: 0 0; }
+  50% { translate: 0 -5px; }
+}
+@keyframes hero-spin {
+  to { rotate: 360deg; }
+}
+@keyframes paw-step {
+  0%, 100% { opacity: 0; }
+  12%, 45% { opacity: 1; }
+  65% { opacity: 0; }
+}
+@keyframes squiggle-draw {
+  from { stroke-dashoffset: 260; }
+  to { stroke-dashoffset: 0; }
+}
+.paw-step { opacity: 0.6; }
+@media (prefers-reduced-motion: no-preference) {
+  .hero-float { animation: hero-float 4.8s ease-in-out infinite; }
+  .hero-wiggle { transform-origin: 20% 100%; animation: hero-wiggle 4.5s ease-in-out infinite 1.5s; }
+  .hero-peek { animation: hero-peek 3.6s ease-in-out infinite; }
+  .hero-spin { animation: hero-spin 18s linear infinite; }
+  .paw-step { opacity: 0; animation: paw-step 4.2s ease-in-out infinite; }
+  .hero-squiggle {
+    stroke-dasharray: 260;
+    stroke-dashoffset: 260;
+    animation: squiggle-draw 900ms cubic-bezier(0.65, 0, 0.35, 1) 0.6s forwards;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .hero-scene :is(.depth-1, .depth-2, .depth-3, .depth-4, .depth-5) { translate: none; }
+}
