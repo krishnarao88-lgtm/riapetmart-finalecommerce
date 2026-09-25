@@ -16,10 +16,10 @@ import { formatMyr } from "@/lib/pricing";
 import { TrackViewItem } from "@/components/track-view-item";
 import { productDescription, productTitle, titleCase } from "@/lib/seo";
 import { site } from "@/lib/site";
-import { createPublicClient } from "@/lib/supabase/public";
+import { createClient } from "@/lib/supabase/server";
 
 async function getProduct(slug: string) {
-  const supabase = createPublicClient();
+  const supabase = await createClient();
   const { data: product } = await supabase
     .from("products")
     .select(
@@ -29,13 +29,6 @@ async function getProduct(slug: string) {
     .eq("status", "published")
     .single();
   return product;
-}
-
-// Each product page is kept as a ready-made copy and rebuilt at most once a minute (built on first visit).
-// The cart and checkout re-price and re-check stock on the server, so a cached price can't be charged wrongly.
-export const revalidate = 60;
-export async function generateStaticParams() {
-  return [];
 }
 
 export async function generateMetadata({
@@ -116,12 +109,12 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
   const { slug } = await params;
   const [product, { data: settingsRow }] = await Promise.all([
     getProduct(slug),
-    createPublicClient().from("settings").select("value").eq("key", "expiry_badges").single(),
+    (await createClient()).from("settings").select("value").eq("key", "expiry_badges").single(),
   ]);
 
   if (!product) {
     // Products merged into another (e.g. separate sizes combined) keep their old address working.
-    const supabase = createPublicClient();
+    const supabase = await createClient();
     const { data: moved } = await supabase
       .from("product_redirects")
       .select("products(slug, status)")
@@ -132,7 +125,7 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
     notFound();
   }
 
-  const supabase = createPublicClient();
+  const supabase = await createClient();
   const rawVariants = [...(product.variants ?? [])].sort((a, b) => a.sort - b.sort);
   const [{ data: related }, stockMap, { data: reviews }] = await Promise.all([
     product.category_id
