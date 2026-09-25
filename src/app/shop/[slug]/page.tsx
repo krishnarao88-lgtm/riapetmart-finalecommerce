@@ -3,6 +3,7 @@ import { Cat, Dog, FlaskConical, Info, PawPrint, Pill, ShieldCheck, Target } fro
 import Link from "next/link";
 import { notFound, permanentRedirect } from "next/navigation";
 import { AddToCart } from "@/components/add-to-cart";
+import { CompleteTheCare } from "@/components/complete-the-care";
 import { ProductTags, SizePills } from "@/components/product-tags";
 import { getVariantStock } from "@/components/product-card";
 import { discountedPrice, getExpiryBadge, type ExpirySettings } from "@/lib/expiry";
@@ -17,7 +18,7 @@ async function getProduct(slug: string) {
   const { data: product } = await supabase
     .from("products")
     .select(
-      "id, name, description, ingredients, usage, highlights, is_dvs_approved, size_display, pet_type, category_id, is_regulated, seo_title, seo_description, brands(name, slug), categories(name, slug), product_images(path, alt, sort), variants(id, title, price, sort)",
+      "id, name, description, ingredients, usage, highlights, is_dvs_approved, size_display, pet_type, category_id, is_regulated, seo_title, seo_description, brands(name, slug, is_house_brand), categories(name, slug), product_images(path, alt, sort), variants(id, title, price, sort)",
     )
     .eq("slug", slug)
     .eq("status", "published")
@@ -286,6 +287,17 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
           )}
         </div>
       </div>
+
+      <CompleteTheCare
+        product={{
+          id: product.id,
+          name: product.name,
+          highlights: product.highlights,
+          pet_type: product.pet_type,
+          house: (product.brands as unknown as { is_house_brand: boolean } | null)?.is_house_brand === true,
+        }}
+        expirySettings={expirySettings}
+      />
 
       {related && related.length > 0 && (
         <section className="mt-12">

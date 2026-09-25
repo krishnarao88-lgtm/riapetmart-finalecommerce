@@ -10,6 +10,7 @@ import { MY_STATES } from "@/lib/my-states";
 import { formatMyr } from "@/lib/pricing";
 import { site, whatsappLink } from "@/lib/site";
 import { track } from "@/lib/track";
+import { CartSuggestions, LinePrice, usePricedCart } from "./cart-extras";
 
 type ShippingOption = {
   method: "pickup" | "lalamove" | "easyparcel";
@@ -28,7 +29,10 @@ const optionClass =
   "flex cursor-pointer items-center justify-between gap-2 rounded-xl border-2 border-choc/30 px-3 py-2 has-[:checked]:border-terracotta has-[:checked]:bg-peach/30";
 
 export function CartView({ freeDeliveryMin, pickupEnabled }: { freeDeliveryMin: number | null; pickupEnabled: boolean }) {
-  const { lines, subtotal, setQty, remove } = useCart();
+  const { lines, subtotal: localSubtotal, setQty, remove } = useCart();
+  // Server prices once they arrive (bundle / short-dated discounts); the cart's own sum until then.
+  const priced = usePricedCart(lines);
+  const subtotal = priced?.subtotal ?? localSubtotal;
   const [paying, setPaying] = useState(false);
   const [payError, setPayError] = useState<string | null>(null);
 
@@ -213,7 +217,7 @@ export function CartView({ freeDeliveryMin, pickupEnabled }: { freeDeliveryMin: 
                 {l.productName}
               </Link>
               <p className="text-sm text-choc-2">{l.variantTitle}</p>
-              <p className="font-bold text-choc">{formatMyr(l.price)}</p>
+              <LinePrice fallback={l.price} priced={priced?.items.get(l.variantId)} />
             </div>
             <div className="flex items-center rounded-full border-2 border-choc">
               <button
@@ -245,6 +249,8 @@ export function CartView({ freeDeliveryMin, pickupEnabled }: { freeDeliveryMin: 
           </li>
         ))}
       </ul>
+
+      <CartSuggestions suggestions={priced?.suggestions ?? []} />
 
       <div className="mt-6 grid gap-3 rounded-2xl border-2 border-choc bg-surface p-4">
         <div className="flex items-center justify-between gap-2">
