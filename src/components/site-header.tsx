@@ -4,8 +4,6 @@ import { CartBadge } from "@/components/cart-badge";
 
 const nav = [
   { href: "/shop", label: "Shop all" },
-  { href: "/shop?pet=dog", label: "Dogs" },
-  { href: "/shop?pet=cat", label: "Cats" },
   { href: "/shop?deal=short-dated", label: "Clearance" },
   { href: "/cat-hotel", label: "Cat Hotel" },
   { href: "/about", label: "About us" },
