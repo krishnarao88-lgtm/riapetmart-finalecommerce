@@ -1,12 +1,13 @@
 import { NextResponse } from "next/server";
 import { getStripe } from "@/lib/stripe";
-import { FROM, getResend } from "@/lib/resend";
+import { sendEmail } from "@/lib/resend";
 import { formatMyr } from "@/lib/pricing";
 import { site } from "@/lib/site";
 import { createServiceClient } from "@/lib/supabase/service";
 
 type OrderItem = { name: string; title: string; qty: number; price: number };
 type OrderForEmail = {
+  id: string;
   items: OrderItem[];
   shipping_method: string | null;
   shipping_cost: number;
@@ -76,24 +77,36 @@ export async function POST(req: Request) {
       try {
         const { data: order } = (await supabase
           .from("orders")
-          .select("items, shipping_method, shipping_cost, total")
+          .select("id, items, shipping_method, shipping_cost, total")
           .eq("stripe_session_id", session.id)
           .single()) as { data: OrderForEmail | null };
         if (order) {
-          const lines = order.items
-            .map((it) => `${it.name} (${it.title}) x${it.qty} — ${formatMyr(it.price * it.qty)}`)
-            .join("\n");
-          const shippingLine = order.shipping_method
-            ? `\n${order.shipping_method === "pickup" ? "Store pickup" : `Delivery (${order.shipping_method})`}: ${
-                Number(order.shipping_cost) > 0 ? formatMyr(Number(order.shipping_cost)) : "Free"
-              }`
-            : "";
-          const total = formatMyr(Number(order.total));
-          await getResend().emails.send({
-            from: FROM,
-            to: customerEmail,
-            subject: `Your ${site.name} order — ${total}`,
-            text: `Thanks for your order!\n\n${lines}${shippingLine}\n\nTotal: ${total}\n\nWe'll be in touch on WhatsApp with delivery updates.\n\n${site.name}\n${site.phone}`,
+          const ref = order.id.slice(0, 8).toUpperCase();
+          const pickup = order.shipping_method === "pickup";
+          const lines = order.items.map((it) => ({
+            name: it.name,
+            detail: `${it.title} × ${it.qty}`,
+            amount: formatMyr(it.price * it.qty),
+          }));
+          if (order.shipping_method) {
+            lines.push({
+              name: pickup ? "Store pickup" : order.shipping_method === "lalamove" ? "Same-day delivery (Lalamove)" : "Courier delivery",
+              detail: "",
+              amount: Number(order.shipping_cost) > 0 ? formatMyr(Number(order.shipping_cost)) : "Free",
+            });
+          }
+          await sendEmail(customerEmail, `Order confirmed #${ref} — ${site.name}`, {
+            preheader: `Thanks! Your order #${ref} is confirmed.`,
+            heading: `Thanks for your order, #${ref} is confirmed`,
+            paragraphs: [
+              pickup
+                ? "We're getting your order ready. We'll message you on WhatsApp as soon as it's ready to collect."
+                : "We're packing your order now. We'll send delivery updates on WhatsApp and by email.",
+            ],
+            lines,
+            total: formatMyr(Number(order.total)),
+            cta: { label: "Continue shopping", url: `${site.url}/shop` },
+            note: `Questions about this order? Just reply to this email or WhatsApp us with your order number #${ref}.`,
           });
         }
       } catch (err) {
@@ -110,11 +123,13 @@ export async function POST(req: Request) {
           max_redemptions: 1,
           code: `REF${Math.random().toString(36).slice(2, 8).toUpperCase()}`,
         });
-        await getResend().emails.send({
-          from: FROM,
-          to: referral.owner_email,
-          subject: "Your friend just ordered — here's your 10% off 🐾",
-          text: `Thanks for sharing ${site.name}! Your friend just placed their first order.\n\nHere's your reward code: ${promo.code}\n\nUse it at checkout for 10% off your next order: ${site.url}/shop\n\n${site.name}`,
+        await sendEmail(referral.owner_email, `Your friend just ordered, here's 10% off — ${site.name}`, {
+          preheader: "A thank-you for sharing: 10% off your next order.",
+          heading: "Thanks for sharing us with a friend",
+          paragraphs: ["Your friend just placed their first order. As a thank-you, here's 10% off your next one."],
+          code: promo.code,
+          cta: { label: "Shop now", url: `${site.url}/shop` },
+          note: "Enter the code at the payment step. It works once.",
         });
         await supabase.rpc("mark_referral_rewarded", { p_order_id: referral.order_id });
       }

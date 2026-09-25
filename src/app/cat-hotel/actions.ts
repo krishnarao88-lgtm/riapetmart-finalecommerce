@@ -1,7 +1,7 @@
 "use server";
 
 import { redirect } from "next/navigation";
-import { FROM, getResend } from "@/lib/resend";
+import { FROM, getResend, sendEmail } from "@/lib/resend";
 import { site, whatsappLink } from "@/lib/site";
 import { createClient } from "@/lib/supabase/server";
 
@@ -35,11 +35,20 @@ export async function submitCatHotelBooking(formData: FormData) {
   const petLabel = `${petCount} cat${petCount > 1 ? "s" : ""}${catName ? ` (${catName})` : ""}`;
   const summary = `${customerName} (${customerPhone}) — ${checkIn} to ${checkOut} — ${petLabel}`;
   try {
-    await getResend().emails.send({
-      from: FROM,
-      to: customerEmail,
-      subject: "We've received your Cat Hotel booking request",
-      text: `Hi ${customerName},\n\nThanks for your Cat Hotel booking request for ${petLabel}:\n${checkIn} to ${checkOut}\n\nThis is a request, not a confirmed reservation yet — we'll contact you on WhatsApp or phone (${site.phone}) shortly to confirm availability and the current rate.\n\n${site.name}`,
+    await sendEmail(customerEmail, `Cat Hotel request received — ${site.name}`, {
+      preheader: `Your stay request for ${checkIn} to ${checkOut} is with us.`,
+      heading: `Thanks, ${customerName}. We've got your request`,
+      paragraphs: [
+        "Here's what you asked for. This is a request, not a confirmed reservation yet: we'll contact you on WhatsApp shortly to confirm availability and the rate.",
+      ],
+      lines: [
+        { name: "Guests", detail: petLabel },
+        { name: "Check-in", detail: checkIn },
+        { name: "Check-out", detail: checkOut },
+        ...(notes ? [{ name: "Notes", detail: notes }] : []),
+      ],
+      cta: { label: "Chat with us on WhatsApp", url: whatsappLink(`Hi ${site.name}, about my Cat Hotel request for ${checkIn} to ${checkOut}.`) },
+      note: "Need to change the dates? Just reply to this email.",
     });
     await getResend().emails.send({
       from: FROM,

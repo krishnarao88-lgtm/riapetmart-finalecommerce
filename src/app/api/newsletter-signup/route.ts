@@ -1,6 +1,6 @@
 import { randomBytes } from "node:crypto";
 import { NextResponse } from "next/server";
-import { FROM, getResend } from "@/lib/resend";
+import { sendEmail } from "@/lib/resend";
 import { site } from "@/lib/site";
 import { getStripe } from "@/lib/stripe";
 import { createServiceClient } from "@/lib/supabase/service";
@@ -28,11 +28,13 @@ export async function POST(req: Request) {
   }
 
   try {
-    await getResend().emails.send({
-      from: FROM,
-      to: email,
-      subject: `Your 10% off code for ${site.name} 🐾`,
-      text: `Welcome to ${site.name}!\n\nYour code: ${code}\n\nEnter it at the payment step for 10% off your first order. It works once.\n\nShop now: ${site.url}/shop\n\n${site.name}\n${site.phone}`,
+    await sendEmail(email, `Your 10% welcome code — ${site.name}`, {
+      preheader: "Here's 10% off your first order.",
+      heading: `Welcome to ${site.name}`,
+      paragraphs: ["Thanks for joining us. Here's 10% off your first order: food, treats, litter and care for your pets, with same-day delivery around Rawang, Selangor and KL."],
+      code,
+      cta: { label: "Start shopping", url: `${site.url}/shop` },
+      note: "Enter the code at the payment step. It works once.",
     });
   } catch (err) {
     console.error("Welcome code email failed:", err);

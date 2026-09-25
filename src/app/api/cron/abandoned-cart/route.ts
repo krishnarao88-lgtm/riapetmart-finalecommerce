@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { FROM, getResend } from "@/lib/resend";
+import { sendEmail } from "@/lib/resend";
 import { formatMyr } from "@/lib/pricing";
 import { site } from "@/lib/site";
 import { createServiceClient } from "@/lib/supabase/service";
@@ -19,13 +19,20 @@ export async function GET(req: Request) {
   let sent = 0;
   for (const cart of (carts ?? []) as { email: string; items: CartItem[]; subtotal: number }[]) {
     try {
-      const lines = cart.items.map((it) => `${it.name} (${it.title}) x${it.qty}`).join("\n");
-      await getResend().emails.send({
-        from: FROM,
-        to: cart.email,
-        subject: "You left something in your cart 🐾",
-        text: `Still thinking it over?\n\n${lines}\n\nTotal: ${formatMyr(cart.subtotal)}\n\nCome back and finish your order: ${site.url}/cart\n\n${site.name}\n${site.phone}`,
-      });
+      await sendEmail(
+        cart.email,
+        `Your cart is saved — ${site.name}`,
+        {
+          preheader: "Your items are still waiting in your cart.",
+          heading: "You left a few things in your cart",
+          paragraphs: ["We've saved your cart so you can pick up where you left off."],
+          lines: cart.items.map((it) => ({ name: it.name, detail: `${it.title} × ${it.qty}`, amount: formatMyr(it.price * it.qty) })),
+          total: formatMyr(cart.subtotal),
+          cta: { label: "Return to your cart", url: `${site.url}/cart` },
+          note: "Need help choosing? Reply to this email or WhatsApp us and we'll help.",
+        },
+        { marketing: true },
+      );
       await supabase.rpc("mark_cart_reminded", { p_email: cart.email });
       sent += 1;
     } catch (err) {

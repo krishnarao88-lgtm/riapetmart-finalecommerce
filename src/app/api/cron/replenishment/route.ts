@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { FROM, getResend } from "@/lib/resend";
+import { sendEmail } from "@/lib/resend";
 import { site } from "@/lib/site";
 import { createServiceClient } from "@/lib/supabase/service";
 
@@ -18,13 +18,19 @@ export async function GET(req: Request) {
   let sent = 0;
   for (const order of (orders ?? []) as { order_id: string; email: string; items: OrderItem[]; subtotal: number }[]) {
     try {
-      const lines = order.items.map((it) => `${it.name} (${it.title}) x${it.qty}`).join("\n");
-      await getResend().emails.send({
-        from: FROM,
-        to: order.email,
-        subject: "Running low? Time to restock 🐾",
-        text: `It's been about a month since your last order — most food and litter runs out around now.\n\nYour last order:\n${lines}\n\nReorder in a couple of taps: ${site.url}/shop\n\n${site.name}\n${site.phone}`,
-      });
+      await sendEmail(
+        order.email,
+        `Time to restock? — ${site.name}`,
+        {
+          preheader: "It's been about a month since your last order.",
+          heading: "Running low on anything?",
+          paragraphs: ["It's been about a month since your last order, which is usually when food and litter start running out. Here's what you had last time:"],
+          lines: order.items.map((it) => ({ name: it.name, detail: `${it.title} × ${it.qty}` })),
+          cta: { label: "Reorder now", url: `${site.url}/shop` },
+          note: "Prefer to order on WhatsApp? Reply to this email or message us and we'll sort it.",
+        },
+        { marketing: true },
+      );
       await supabase.rpc("mark_order_replenished", { p_order_id: order.order_id });
       sent += 1;
     } catch (err) {
@@ -37,12 +43,20 @@ export async function GET(req: Request) {
   for (const order of (reviewOrders ?? []) as { order_id: string; email: string }[]) {
     try {
       const link = `${site.url}/reviews/new?order=${order.order_id}&email=${encodeURIComponent(order.email)}`;
-      await getResend().emails.send({
-        from: FROM,
-        to: order.email,
-        subject: "Got a minute? Tell other pet parents how it went 🐾",
-        text: `Hi there,\n\nHope your pet is enjoying the last order! If you have a minute, we'd love a quick honest review — it helps other pet owners in Malaysia decide what to feed their fur babies.\n\nLeave a review here: ${link}\n\nThank you!\n${site.name}\n${site.phone}`,
-      });
+      await sendEmail(
+        order.email,
+        `How was your order? — ${site.name}`,
+        {
+          preheader: "A quick review helps other pet owners choose.",
+          heading: "How is your pet enjoying it?",
+          paragraphs: [
+            "We hope your last order went down well. If you have a minute, an honest review helps other pet owners in Malaysia choose the right food and care.",
+          ],
+          cta: { label: "Write a quick review", url: link },
+          note: "It takes about a minute. Thank you!",
+        },
+        { marketing: true },
+      );
       await supabase.rpc("mark_review_requested", { p_order_id: order.order_id });
       reviewsRequested += 1;
     } catch (err) {

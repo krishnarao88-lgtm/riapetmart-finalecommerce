@@ -5,7 +5,7 @@ import { requireAdmin } from "@/lib/auth";
 import { submitEasyParcelOrder } from "@/lib/shipping/easyparcel";
 import { bookLalamoveOrder } from "@/lib/shipping/lalamove";
 import { LALAMOVE_REBOOKABLE, toE164MY } from "@/lib/shipping/lalamove-rules";
-import { FROM, getResend } from "@/lib/resend";
+import { sendEmail } from "@/lib/resend";
 import { site } from "@/lib/site";
 
 export type ActionState = { ok?: string; error?: string } | null;
@@ -127,14 +127,13 @@ export async function bookLalamoveRider(_prev: ActionState, formData: FormData):
     if (error) return { error: `Rider booked (Lalamove ${booked.orderId}) but saving failed: ${error.message}. Don't book again.` };
 
     if (order.customer_email && booked.shareLink) {
-      await getResend()
-        .emails.send({
-          from: FROM,
-          to: order.customer_email,
-          subject: `Your ${site.name} order #${ref} is on its way`,
-          text: `A Lalamove rider has been booked for your order #${ref}.\n\nTrack your delivery live: ${booked.shareLink}\n\n${site.name}`,
-        })
-        .catch(() => undefined); // the booking stands even if the email fails
+      await sendEmail(order.customer_email, `Your order #${ref.toUpperCase()} is on its way — ${site.name}`, {
+        preheader: "A Lalamove rider is heading your way. Track it live.",
+        heading: "Your order is on its way",
+        paragraphs: [`We've booked a Lalamove rider for order #${ref.toUpperCase()}. You can follow the rider live on the map.`],
+        cta: { label: "Track your delivery", url: booked.shareLink },
+        note: "The rider may call you on arrival. Please keep your phone nearby.",
+      }).catch(() => undefined); // the booking stands even if the email fails
     }
     revalidatePath("/admin/orders");
     return { ok: `Rider booked (RM${booked.price}). Lalamove is finding a driver.` };
