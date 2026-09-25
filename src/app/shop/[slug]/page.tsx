@@ -138,7 +138,8 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
           .limit(4)
       : { data: null },
     getVariantStock(supabase, rawVariants.map((v) => v.id)),
-    supabase.from("reviews").select("rating").eq("product_id", product.id).eq("status", "approved"),
+    // Structured-data ratings must be first-party: marketplace imports are shown, never marked up.
+    supabase.from("reviews").select("rating").eq("product_id", product.id).eq("status", "approved").eq("source", "website"),
   ]);
 
   const expirySettings = (settingsRow?.value ?? {}) as Partial<ExpirySettings>;

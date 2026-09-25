@@ -1,7 +1,7 @@
 import { BadgeCheck } from "lucide-react";
 import Link from "next/link";
 import { Stars } from "@/components/stars";
-import { reviewImageUrl } from "@/lib/reviews";
+import { reviewImageUrl, verifiedLabel } from "@/lib/reviews";
 import { createClient } from "@/lib/supabase/server";
 
 type Review = {
@@ -10,6 +10,7 @@ type Review = {
   rating: number;
   body: string;
   order_id: string | null;
+  source: string;
   review_images: { path: string }[];
 };
 
@@ -18,8 +19,9 @@ export async function Testimonial() {
   const supabase = await createClient();
   const { data } = await supabase
     .from("reviews")
-    .select("id, customer_name, rating, body, order_id, review_images(path)")
+    .select("id, customer_name, rating, body, order_id, source, review_images(path)")
     .eq("status", "approved")
+    .neq("body", "")
     .order("created_at", { ascending: false })
     .limit(6);
   const reviews = (data ?? []) as unknown as Review[];
@@ -55,9 +57,9 @@ export async function Testimonial() {
             )}
             <p className="flex items-center gap-1 text-xs font-bold text-choc-2">
               {r.customer_name}
-              {r.order_id && (
+              {verifiedLabel(r.source, r.order_id) && (
                 <span className="inline-flex items-center gap-0.5 text-ok-fg">
-                  <BadgeCheck className="size-3.5" aria-hidden /> Verified
+                  <BadgeCheck className="size-3.5" aria-hidden /> {verifiedLabel(r.source, r.order_id)}
                 </span>
               )}
             </p>

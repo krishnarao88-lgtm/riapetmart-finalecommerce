@@ -1,6 +1,7 @@
 import { Trash2 } from "lucide-react";
 import type { Metadata } from "next";
 import { AdminNav } from "@/components/admin/admin-nav";
+import { ImportReviews } from "@/components/admin/import-reviews";
 import { requireAdmin } from "@/lib/auth";
 import { Stars } from "@/components/stars";
 import { reviewImageUrl } from "@/lib/reviews";
@@ -11,7 +12,7 @@ export const metadata: Metadata = { title: "Reviews", robots: { index: false } }
 type Review = {
   id: string;
   customer_name: string;
-  customer_email: string;
+  source: "website" | "tiktok" | "shopee";
   rating: number;
   body: string;
   status: "pending" | "approved" | "rejected";
@@ -19,6 +20,8 @@ type Review = {
   order_id: string | null;
   review_images: { path: string }[];
 };
+
+const SOURCE_LABEL = { website: "Website", tiktok: "TikTok Shop", shopee: "Shopee" } as const;
 
 const statusStyle: Record<Review["status"], string> = {
   pending: "bg-warn-bg text-warn-fg",
@@ -28,11 +31,18 @@ const statusStyle: Record<Review["status"], string> = {
 
 export default async function AdminReviewsPage() {
   const { supabase } = await requireAdmin();
-  const { data } = await supabase
-    .from("reviews")
-    .select("id, customer_name, customer_email, rating, body, status, created_at, order_id, review_images(path)")
-    .order("created_at", { ascending: false });
-  const reviews = (data ?? []) as unknown as Review[];
+  const [{ data }, { data: emailRows }] = await Promise.all([
+    supabase
+      .from("reviews")
+      .select("id, customer_name, rating, body, status, created_at, order_id, source, review_images(path)")
+      .order("created_at", { ascending: false }),
+    supabase.rpc("admin_review_emails"),
+  ]);
+  const all = (data ?? []) as unknown as Review[];
+  const emails = new Map(((emailRows ?? []) as { id: string; customer_email: string | null }[]).map((e) => [e.id, e.customer_email]));
+  // Star-only marketplace ratings count toward the average but have nothing to moderate.
+  const reviews = all.filter((r) => r.source === "website" || r.body.trim());
+  const bySource = (s: Review["source"]) => all.filter((r) => r.source === s).length;
 
   return (
     <div className="mx-auto grid max-w-4xl gap-6 px-4 py-8">
@@ -41,6 +51,12 @@ export default async function AdminReviewsPage() {
         <h1 className="font-display text-3xl font-extrabold tracking-tight">Reviews</h1>
         <p className="text-ink-2">Approve reviews to publish them on the storefront. Never edit or invent review text.</p>
       </div>
+
+      <ImportReviews />
+      <p className="text-sm text-ink-2">
+        On file: {bySource("website")} from this website, {bySource("tiktok")} from TikTok Shop, {bySource("shopee")} from
+        Shopee. Star-only ratings are counted in the average but not listed below.
+      </p>
 
       {reviews.length === 0 ? (
         <p className="rounded-2xl border-2 border-line bg-surface p-6 text-ink-2">No reviews yet.</p>
@@ -67,7 +83,9 @@ export default async function AdminReviewsPage() {
                 </div>
               )}
               <p className="text-xs text-ink-2">
-                {r.customer_name} · {r.customer_email} · {new Date(r.created_at).toLocaleDateString("en-MY")}
+                {r.customer_name}
+                {emails.get(r.id) && ` · ${emails.get(r.id)}`} · {new Date(r.created_at).toLocaleDateString("en-MY")}
+                {r.source !== "website" && ` · ${SOURCE_LABEL[r.source]}`}
                 {r.order_id && " · Verified purchase"}
               </p>
               <div className="flex flex-wrap gap-2">

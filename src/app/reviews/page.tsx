@@ -2,7 +2,7 @@ import { BadgeCheck } from "lucide-react";
 import Link from "next/link";
 import type { Metadata } from "next";
 import { Stars } from "@/components/stars";
-import { reviewImageUrl } from "@/lib/reviews";
+import { reviewImageUrl, verifiedLabel } from "@/lib/reviews";
 import { createClient } from "@/lib/supabase/server";
 
 export const metadata: Metadata = {
@@ -17,6 +17,7 @@ type Review = {
   body: string;
   created_at: string;
   order_id: string | null;
+  source: string;
   review_images: { path: string }[];
 };
 
@@ -27,12 +28,20 @@ export default async function ReviewsPage({
 }) {
   const { submitted } = await searchParams;
   const supabase = await createClient();
-  const { data } = await supabase
-    .from("reviews")
-    .select("id, customer_name, rating, body, created_at, order_id, review_images(path)")
-    .eq("status", "approved")
-    .order("created_at", { ascending: false });
+  const [{ data }, { data: allRatings }] = await Promise.all([
+    supabase
+      .from("reviews")
+      .select("id, customer_name, rating, body, created_at, order_id, source, review_images(path)")
+      .eq("status", "approved")
+      .neq("body", "")
+      .order("created_at", { ascending: false })
+      .limit(100),
+    // Every approved rating, star-only ones included, so the average isn't cherry-picked.
+    supabase.from("reviews").select("rating").eq("status", "approved"),
+  ]);
   const reviews = (data ?? []) as unknown as Review[];
+  const ratings = (allRatings ?? []).map((r) => r.rating as number);
+  const average = ratings.length ? ratings.reduce((a, b) => a + b, 0) / ratings.length : 0;
 
   return (
     <div className="mx-auto grid max-w-3xl gap-6 px-4 py-10">
@@ -45,6 +54,18 @@ export default async function ReviewsPage({
           Write a review
         </Link>
       </div>
+
+      {ratings.length > 0 && (
+        <div className="flex flex-wrap items-center gap-3 rounded-2xl border-2 border-choc bg-peach/40 p-4">
+          <span className="font-bubble text-4xl font-extrabold text-choc">{average.toFixed(1)}</span>
+          <div className="grid gap-0.5">
+            <Stars rating={Math.round(average)} className="text-terracotta" />
+            <span className="text-sm text-choc-2">
+              from {ratings.length} verified ratings on our website, TikTok Shop and Shopee
+            </span>
+          </div>
+        </div>
+      )}
 
       {submitted && (
         <p className="rounded-xl border-2 border-ok-fg bg-ok-bg px-3 py-2 text-sm text-ok-fg">
@@ -82,9 +103,9 @@ export default async function ReviewsPage({
               )}
               <p className="flex items-center gap-1 text-xs font-semibold text-choc-2">
                 {r.customer_name}
-                {r.order_id && (
+                {verifiedLabel(r.source, r.order_id) && (
                   <span className="inline-flex items-center gap-0.5 text-ok-fg">
-                    <BadgeCheck className="size-3.5" aria-hidden /> Verified purchase
+                    <BadgeCheck className="size-3.5" aria-hidden /> {verifiedLabel(r.source, r.order_id)}
                   </span>
                 )}
               </p>
