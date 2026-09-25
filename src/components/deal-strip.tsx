@@ -3,7 +3,7 @@
 import { Eye, Zap } from "lucide-react";
 import { useEffect, useState } from "react";
 
-function useNow(active: boolean) {
+export function useNow(active: boolean) {
   const [now, setNow] = useState<number | null>(null);
   useEffect(() => {
     if (!active) return;

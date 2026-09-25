@@ -39,3 +39,20 @@ export async function withPromos<T extends object>(products: T[]): Promise<(T & 
     return { ...row, promo: hit ? { label: promoLabel(hit), discount: hit.discount } : null };
   });
 }
+
+/** The next approved sale starting within `days` days (for the "starts in" teaser), or null. */
+export const getUpcomingPromotion = cache(async (days = 7): Promise<Promotion | null> => {
+  const today = todayInKL();
+  const horizon = new Date(Date.parse(`${today}T00:00:00Z`) + days * 86_400_000).toISOString().slice(0, 10);
+  const supabase = await createClient();
+  const { data } = await supabase
+    .from("promotions")
+    .select("id, name, starts_on, ends_on, discount, scope, brand_id, category_id, banner, excluded_product_ids")
+    .eq("is_active", true)
+    .gt("starts_on", today)
+    .lte("starts_on", horizon)
+    .order("starts_on")
+    .limit(1);
+  const p = (data ?? [])[0] as Promotion | undefined;
+  return p ? { ...p, discount: Number(p.discount) } : null;
+});
