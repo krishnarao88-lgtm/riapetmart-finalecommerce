@@ -6,7 +6,7 @@ import Link from "next/link";
 // text-panel sibling in the same grid row — that stretch was pushing the crop window
 // down into empty headroom, cropping the animal almost entirely out of frame.
 const arch =
-  "group relative flex h-72 self-start flex-col items-center justify-end gap-2 overflow-hidden rounded-t-full rounded-b-3xl border-2 border-choc p-6 pb-5 text-center shadow-[5px_5px_0_0_var(--color-choc)] transition-all duration-300 ease-out hover:-translate-y-1.5 hover:rotate-1 hover:shadow-[7px_9px_0_0_var(--color-choc)]";
+  "group relative flex h-80 self-start md:h-96 flex-col items-center justify-end gap-2 overflow-hidden rounded-t-full rounded-b-3xl border-2 border-choc p-6 pb-5 text-center shadow-[5px_5px_0_0_var(--color-choc)] transition-all duration-300 ease-out hover:-translate-y-1.5 hover:rotate-1 hover:shadow-[7px_9px_0_0_var(--color-choc)]";
 const archImage = "object-cover transition-transform duration-500 ease-out group-hover:scale-110";
 const archSticker =
   "absolute drop-shadow-[0_1px_3px_rgba(0,0,0,0.45)] transition-transform duration-300 ease-out group-hover:scale-125 group-hover:rotate-[20deg]";
@@ -39,7 +39,7 @@ export function PetCollage() {
 
         {/* The collie sits in the middle of a tall photo: frame on its head and body, and give this
             wide arch more height on larger screens so the dog isn't cut down to its ears. */}
-        <Link href="/shop?pet=dog" className={`${arch} bg-rust text-cream md:h-96`}>
+        <Link href="/shop?pet=dog" className={`${arch} bg-rust text-cream`}>
           <Image
             src="/images/pets/card-dog.png"
             alt="A cheerful border collie with perked ears"
@@ -59,7 +59,7 @@ export function PetCollage() {
             alt="A curious tabby cat sitting upright"
             fill
             sizes={cardSizes}
-            className={`${archImage} object-[50%_60%]`}
+            className={`${archImage} object-[50%_75%]`}
           />
           <PawPrint aria-hidden className={`${archSticker} left-5 top-5 size-6 rotate-[-12deg] text-cream/85`} />
           <span className={archBadge}>For cats</span>
@@ -83,7 +83,7 @@ export function PetCollage() {
             alt="An alert grey rabbit with ears up"
             fill
             sizes={cardSizes}
-            className={`${archImage} object-bottom`}
+            className={`${archImage} object-[50%_88%]`}
           />
           <PawPrint aria-hidden className={`${archSticker} right-5 top-6 size-6 rotate-[10deg] text-cream/85`} />
           <span className={archBadge}>Small pets</span>
