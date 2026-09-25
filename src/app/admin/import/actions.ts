@@ -28,7 +28,7 @@ function sample(products: ParsedProduct[]) {
     name: p.name,
     variants: p.variants.length,
     price: p.variants[0]?.price ?? 0,
-    stock: p.variants.reduce((s, v) => s + v.stock, 0),
+    stock: p.variants.reduce((s, v) => s + (v.stock ?? 0), 0),
     expiry: p.variants.map((v) => v.expiry).filter(Boolean).sort()[0] ?? null,
   }));
 }
@@ -167,24 +167,12 @@ export async function importCatalogue(_prev: ImportState, formData: FormData): P
     if (error) return { ...base, mode: "preview", error: `Cost prices: ${error.message}` };
   }
 
-  // ---- stock batches ----
-  // Re-importing replaces the batch this tool created before; batches you added by hand are untouched.
-  const importedVariantIds = parsed.products
-    .flatMap((p) => p.variants.map((v) => variantId.get(v.sku)))
-    .filter((id): id is string => Boolean(id));
-
-  for (let i = 0; i < importedVariantIds.length; i += 200) {
-    const { error } = await supabase
-      .from("stock_batches")
-      .delete()
-      .eq("batch_no", IMPORT_BATCH_NO)
-      .in("variant_id", importedVariantIds.slice(i, i + 200));
-    if (error) return { ...base, mode: "preview", error: `Stock: ${error.message}` };
-  }
-
-  const batchPayload = parsed.products.flatMap((p) =>
+  // ---- stock ----
+  // stock_qty is the variant's total (what the export writes), so it sets stock rather than adding,
+  // and re-importing an export never doubles it. A blank cell leaves that variant's stock alone.
+  const stockItems = parsed.products.flatMap((p) =>
     p.variants
-      .filter((v) => variantId.has(v.sku) && (v.stock > 0 || v.expiry !== null))
+      .filter((v) => v.stock !== null && variantId.has(v.sku))
       .map((v) => ({
         variant_id: variantId.get(v.sku)!,
         quantity: v.stock,
@@ -192,8 +180,8 @@ export async function importCatalogue(_prev: ImportState, formData: FormData): P
         batch_no: v.batchNo ?? IMPORT_BATCH_NO,
       })),
   );
-  for (let i = 0; i < batchPayload.length; i += 200) {
-    const { error } = await supabase.from("stock_batches").insert(batchPayload.slice(i, i + 200));
+  for (let i = 0; i < stockItems.length; i += 1000) {
+    const { error } = await supabase.rpc("admin_set_stock", { p_items: stockItems.slice(i, i + 1000), p_mode: "set" });
     if (error) return { ...base, mode: "preview", error: `Stock: ${error.message}` };
   }
 

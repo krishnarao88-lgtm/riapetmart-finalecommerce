@@ -2,7 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { requireAdmin } from "@/lib/auth";
-import { DEFAULT_ROUND_UP, MAX_MARGIN, priceFromMargin } from "@/lib/pricing";
+import { MAX_MARGIN, priceFromMargin } from "@/lib/pricing";
 
 function num(form: FormData, key: string): number | null {
   const raw = String(form.get(key) ?? "").trim();
@@ -195,49 +195,4 @@ export async function deleteProductImage(_prev: ActionState, formData: FormData)
   const { error } = await supabase.from("product_images").delete().eq("id", imageId);
   revalidatePath(`/admin/products/${productId}`);
   return error ? { error: error.message } : { ok: "Image removed." };
-}
-
-/**
- * Applies one margin to every variant that already has a cost price, for the
- * products matching the current search filter. Products without a cost are skipped.
- */
-export async function applyBulkMargin(_prev: ActionState, formData: FormData) {
-  const { supabase } = await requireAdmin();
-  const marginPercent = num(formData, "bulk_margin");
-  const q = text(formData, "q");
-  const status = text(formData, "status");
-  if (marginPercent === null) return { error: "Enter a margin first." };
-  const margin = marginPercent / 100;
-  if (margin < 0 || margin >= MAX_MARGIN) {
-    return { error: `Margin must be between 0% and ${MAX_MARGIN * 100}%.` };
-  }
-
-  let productQuery = supabase.from("products").select("id, variants(id, variant_costs(cost_price))");
-  if (q) productQuery = productQuery.ilike("name", `%${q}%`);
-  if (status && status !== "all") productQuery = productQuery.eq("status", status);
-
-  const { data, error } = await productQuery;
-  if (error) return { error: error.message };
-
-  type Bulk = { id: string; variants: { id: string; variant_costs: { cost_price: number } | null }[] };
-  const targets = (data as unknown as Bulk[]).flatMap((p) =>
-    p.variants
-      .filter((v) => v.variant_costs?.cost_price != null)
-      .map((v) => ({ id: v.id, cost: Number(v.variant_costs!.cost_price) })),
-  );
-
-  let updated = 0;
-  for (const target of targets) {
-    const price = priceFromMargin(target.cost, margin, DEFAULT_ROUND_UP);
-    const { error: e1 } = await supabase.from("variants").update({ price }).eq("id", target.id);
-    const { error: e2 } = await supabase
-      .from("variant_costs")
-      .update({ margin })
-      .eq("variant_id", target.id);
-    if (!e1 && !e2) updated += 1;
-  }
-
-  revalidatePath("/admin/products");
-  const skipped = targets.length === 0 ? " No variants had a cost price yet." : "";
-  return { ok: `Repriced ${updated} variants at ${marginPercent}% margin.${skipped}` };
 }

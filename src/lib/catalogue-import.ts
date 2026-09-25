@@ -11,7 +11,8 @@ export type ParsedVariant = {
   price: number;
   cost: number | null;
   margin: number | null;
-  stock: number;
+  /** Null when the cell is blank: the import leaves that variant's stock as it is. */
+  stock: number | null;
   expiry: string | null;
   batchNo: string | null;
   weightGrams: number | null;
@@ -227,8 +228,8 @@ export function parseCatalogue(rows: RawRow[]): ParseResult {
       return;
     }
 
-    const stock = int(raw.stock_qty) ?? 0;
-    if (stock < 0) {
+    const stock = int(raw.stock_qty);
+    if (stock !== null && stock < 0) {
       issues.push({ row: rowNumber, field: "stock_qty", message: "Stock can't be negative." });
       return;
     }

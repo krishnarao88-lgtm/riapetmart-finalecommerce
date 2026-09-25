@@ -44,6 +44,12 @@ test("a clean row becomes one product with one variant and a stock batch", () =>
   assert.equal(product.variants[0].expiry, "2027-09-14");
 });
 
+test("a blank stock cell means leave stock alone, not zero it", () => {
+  const { products, issues } = parseCatalogue([{ ...base, stock_qty: "" }]);
+  assert.deepEqual(issues, []);
+  assert.equal(products[0].variants[0].stock, null);
+});
+
 test("rows sharing a source ref group into one product with several variants", () => {
   const { products, variantCount } = parseCatalogue([
     base,
