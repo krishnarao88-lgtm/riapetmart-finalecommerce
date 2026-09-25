@@ -7,6 +7,7 @@ import { quoteSecret, verifyQuote } from "@/lib/quote-signature";
 import { getStripe } from "@/lib/stripe";
 import { createClient } from "@/lib/supabase/server";
 import { createServiceClient } from "@/lib/supabase/service";
+import { readWelcomeOffer } from "@/lib/welcome-offer";
 
 type ShippingInput = {
   method?: string;
@@ -103,10 +104,14 @@ export async function POST(req: Request) {
   const h = await headers();
   const origin = h.get("origin") ?? `https://${h.get("host")}`;
 
+  // Promo codes on top of clearance/bundle/sale prices can sell below cost; the owner can switch that off.
+  const offer = await readWelcomeOffer();
+  const codesAllowed = offer.stack_with_discounts || !cart.items.some((it) => it.discount);
+
   const session = await getStripe().checkout.sessions.create({
     mode: "payment",
     line_items: lineItems,
-    allow_promotion_codes: true,
+    allow_promotion_codes: codesAllowed,
     customer_email: EMAIL.test(email) ? email : undefined,
     metadata: { customer_phone: customerPhone },
     success_url: `${origin}/order/success?session_id={CHECKOUT_SESSION_ID}`,

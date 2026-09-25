@@ -32,10 +32,12 @@ export function CartView({
   freeDeliveryMin,
   freeDeliveryCap,
   pickupEnabled,
+  codesStack,
 }: {
   freeDeliveryMin: number | null;
   freeDeliveryCap: number | null;
   pickupEnabled: boolean;
+  codesStack: boolean;
 }) {
   const { lines, subtotal: localSubtotal, setQty, remove } = useCart();
   // Server prices once they arrive (bundle / short-dated discounts); the cart's own sum until then.
@@ -437,6 +439,11 @@ export function CartView({
             ? "Choose pickup or delivery to continue"
             : (detailsMissing ?? "Pay now")}
       </button>
+      {!codesStack && priced && [...priced.items.values()].some((it) => it.discount) && (
+        <p className="mt-2 text-center text-xs text-choc-2">
+          Promo codes can&apos;t be added to orders with clearance, bundle or sale prices: those are already discounted.
+        </p>
+      )}
       {payError && (
         <p role="alert" className="mt-2 text-center text-sm font-medium text-bad-fg">
           {payError}

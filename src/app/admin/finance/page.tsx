@@ -1,10 +1,12 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { requireAdmin } from "@/lib/auth";
-import { moneySummary, productScenarios, type FinanceOrder, type Scenario } from "@/lib/finance";
+import { AutoRefresh } from "@/components/admin/auto-refresh";
+import { moneySummary, productScenarios, safePrice, type FinanceOrder, type Scenario } from "@/lib/finance";
 import { formatMyr } from "@/lib/pricing";
 import { promoFor, type Promotion } from "@/lib/promotions";
 import { toWelcomeOffer } from "@/lib/welcome-offer";
+import { raisePrices, stopCodeStacking } from "./actions";
 
 export const metadata: Metadata = { title: "Finance", robots: { index: false } };
 
@@ -86,7 +88,21 @@ export default async function FinancePage({ searchParams }: PageProps<"/admin/fi
   const discountTotal = money.discounts.clearance + money.discounts.bundle + money.discounts.sale + money.codes;
 
   // ---- Per-item margins under every discount
-  type Row = { product: string; variant: string; cost: number; rows: Scenario[]; worst: Scenario };
+  type Row = {
+    id: string;
+    product: string;
+    variant: string;
+    price: number;
+    cost: number;
+    rows: Scenario[];
+    worst: Scenario;
+    /** Safe again once codes stop stacking on discounted prices. */
+    fixedBySwitch: boolean;
+    /** Price that keeps 5% margin at its deepest discount, when a raise is still needed after the switch. */
+    safe: number | null;
+  };
+  const stacking = welcome.stack_with_discounts;
+  const lowest = (rows: Scenario[]) => rows.reduce((a, b) => (b.profit < a.profit ? b : a));
   const items: Row[] = [];
   for (const p of products) {
     const target = { id: p.id, brand_id: p.brand_id, category_id: p.category_id, house: p.brands?.is_house_brand ?? false };
@@ -95,17 +111,33 @@ export default async function FinancePage({ searchParams }: PageProps<"/admin/fi
     for (const v of p.variants) {
       if (!v.variant_costs || Number(v.price) <= 0) continue;
       const cost = Number(v.variant_costs.cost_price);
-      const rows = productScenarios(Number(v.price), cost, {
+      const price = Number(v.price);
+      const offers = {
         clearance,
         bundle: bundles.get(p.id) ?? null,
         sale: sale || null,
         welcome: welcome.enabled ? welcome.percent / 100 : null,
+      };
+      const rows = productScenarios(price, cost, { ...offers, stack: stacking });
+      const worst = lowest(rows);
+      const afterSwitch = lowest(productScenarios(price, cost, { ...offers, stack: false }));
+      items.push({
+        id: v.id,
+        product: p.name,
+        variant: v.title,
+        price,
+        cost,
+        rows,
+        worst,
+        fixedBySwitch: stacking && worst.profit < 0 && afterSwitch.profit >= 0,
+        safe: afterSwitch.profit < 0 ? safePrice(cost, 1 - afterSwitch.price / price) : null,
       });
-      items.push({ product: p.name, variant: v.title, cost, rows, worst: rows.reduce((a, b) => (b.profit < a.profit ? b : a)) });
     }
   }
   items.sort((a, b) => a.worst.margin - b.worst.margin);
   const losing = items.filter((i) => i.worst.profit < 0);
+  const switchFixes = losing.filter((i) => i.fixedBySwitch).length;
+  const needRaise = losing.filter((i) => i.safe !== null);
   const shown = showAll ? items : losing;
   const avgMargin = items.length ? items.reduce((s, i) => s + i.rows[0].margin, 0) / items.length : 0;
   const link = (q: Record<string, string | number | undefined>) =>
@@ -122,6 +154,7 @@ export default async function FinancePage({ searchParams }: PageProps<"/admin/fi
         <p className="text-ink-2">
           What the shop is making and what discounts cost you. Every profit figure is after the 3% + RM1 card fee.
         </p>
+        <AutoRefresh seconds={60} />
       </div>
 
       <section aria-labelledby="money-heading" className="grid gap-4">
@@ -185,6 +218,38 @@ export default async function FinancePage({ searchParams }: PageProps<"/admin/fi
           </Link>
         </div>
 
+        {(switchFixes > 0 || needRaise.length > 0) && (
+          <div className="grid gap-3 rounded-2xl border-2 border-ink bg-surface p-4">
+            <h3 className="font-display text-lg font-extrabold">Suggested fixes</h3>
+            {switchFixes > 0 && (
+              <form action={stopCodeStacking} className="flex flex-wrap items-center justify-between gap-3 rounded-xl bg-ground p-3">
+                <p className="text-sm">
+                  <strong>Stop promo codes stacking on discounted prices.</strong> Codes still work on full-price items.
+                  Fixes <strong>{switchFixes}</strong> item{switchFixes === 1 ? "" : "s"}.
+                </p>
+                <button type="submit" className="min-h-9 rounded-full bg-ok-bg px-4 text-sm font-semibold text-ok-fg">
+                  Approve
+                </button>
+              </form>
+            )}
+            {needRaise.length > 0 && (
+              <form action={raisePrices} className="flex flex-wrap items-center justify-between gap-3 rounded-xl bg-ground p-3">
+                {needRaise.map((i) => (
+                  <input key={i.id} type="hidden" name="raise" value={`${i.id}:${i.safe}`} />
+                ))}
+                <p className="text-sm">
+                  <strong>Raise {needRaise.length} price{needRaise.length === 1 ? "" : "s"}</strong> so each keeps at least 5%
+                  margin even at its deepest discount. The new price is shown on each item below.
+                </p>
+                <button type="submit" className="min-h-9 rounded-full bg-ok-bg px-4 text-sm font-semibold text-ok-fg">
+                  Approve all
+                </button>
+              </form>
+            )}
+            <p className="text-xs text-ink-2">Approved fixes apply to the live shop straight away.</p>
+          </div>
+        )}
+
         {shown.length === 0 ? (
           <p className="rounded-2xl border-2 border-line bg-surface p-6 text-ink-2">No item loses money under any discount.</p>
         ) : (
@@ -203,6 +268,19 @@ export default async function FinancePage({ searchParams }: PageProps<"/admin/fi
                     <td className="p-3">
                       <span className="font-semibold">{i.product}</span>
                       <span className="block text-xs text-ink-2">{i.variant}</span>
+                      {i.fixedBySwitch && <span className="mt-1 block text-xs font-semibold text-ok-fg">Fixed by stopping code stacking</span>}
+                      {i.safe !== null && (
+                        <form action={raisePrices} className="mt-1 flex flex-wrap items-center gap-2 text-xs">
+                          <input type="hidden" name="raise" value={`${i.id}:${i.safe}`} />
+                          <span>
+                            Raise {formatMyr(i.price)} → <strong>{formatMyr(i.safe)}</strong> (+
+                            {Math.round((i.safe / i.price - 1) * 100)}%)
+                          </span>
+                          <button type="submit" className="rounded-full bg-ok-bg px-2.5 py-0.5 font-semibold text-ok-fg">
+                            Approve
+                          </button>
+                        </form>
+                      )}
                     </td>
                     <td className="p-3 text-right tabular-nums">{formatMyr(i.cost)}</td>
                     <td className="p-3">

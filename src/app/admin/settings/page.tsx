@@ -35,6 +35,7 @@ export default async function SettingsPage({
     welcomeEnabled: welcome.enabled,
     welcomePercent: welcome.percent,
     welcomeDelay: welcome.delay_seconds,
+    welcomeStack: welcome.stack_with_discounts,
     freshMinDays: Number(expiry.fresh_min_days ?? 181),
     shortDays: first.max_days,
     shortDiscount: Math.round(first.discount * 100),

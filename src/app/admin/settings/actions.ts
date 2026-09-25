@@ -62,6 +62,7 @@ export async function saveSettings(_prev: SettingsState, formData: FormData): Pr
         enabled: formData.get("welcome_enabled") === "on",
         percent: welcomePercent,
         delay_seconds: welcomeDelay,
+        stack_with_discounts: formData.get("welcome_stack") === "on",
       },
     },
   ];

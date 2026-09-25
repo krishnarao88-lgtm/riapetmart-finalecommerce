@@ -4,9 +4,10 @@ import { unstable_cache } from "next/cache";
 import { supabasePublishableKey, supabaseUrl } from "@/lib/site";
 
 /** The sign-up offer, set in Admin → Settings. delay_seconds 0 = never pops up by itself (the homepage banner still opens it). */
-export type WelcomeOffer = { enabled: boolean; percent: number; delay_seconds: number };
+/** stack_with_discounts false = promo codes can't be used when the cart has clearance, bundle or sale prices. */
+export type WelcomeOffer = { enabled: boolean; percent: number; delay_seconds: number; stack_with_discounts: boolean };
 
-export const DEFAULT_WELCOME_OFFER: WelcomeOffer = { enabled: true, percent: 10, delay_seconds: 30 };
+export const DEFAULT_WELCOME_OFFER: WelcomeOffer = { enabled: true, percent: 10, delay_seconds: 30, stack_with_discounts: true };
 
 export function toWelcomeOffer(value: unknown): WelcomeOffer {
   const v = (value ?? {}) as Partial<WelcomeOffer>;
@@ -16,6 +17,7 @@ export function toWelcomeOffer(value: unknown): WelcomeOffer {
     enabled: v.enabled ?? DEFAULT_WELCOME_OFFER.enabled,
     percent: percent >= 1 && percent <= 50 ? Math.round(percent) : DEFAULT_WELCOME_OFFER.percent,
     delay_seconds: delay >= 0 ? Math.round(delay) : DEFAULT_WELCOME_OFFER.delay_seconds,
+    stack_with_discounts: v.stack_with_discounts ?? DEFAULT_WELCOME_OFFER.stack_with_discounts,
   };
 }
 

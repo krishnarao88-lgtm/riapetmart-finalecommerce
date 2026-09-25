@@ -23,14 +23,15 @@ function scenario(label: string, price: number, cost: number): Scenario {
 export function productScenarios(
   price: number,
   cost: number,
-  offers: { clearance: number[]; bundle: number | null; sale: number | null; welcome: number | null },
+  offers: { clearance: number[]; bundle: number | null; sale: number | null; welcome: number | null; stack?: boolean },
 ): Scenario[] {
   const rows = [scenario("Full price", price, cost)];
   for (const d of offers.clearance) rows.push(scenario(`Clearance -${Math.round(d * 100)}%`, price * (1 - d), cost));
   if (offers.bundle) rows.push(scenario(`Bundle -${Math.round(offers.bundle * 100)}%`, price * (1 - offers.bundle), cost));
   if (offers.sale) rows.push(scenario(`Sale -${Math.round(offers.sale * 100)}%`, price * (1 - offers.sale), cost));
   if (offers.welcome) {
-    const biggest = Math.max(0, ...offers.clearance, offers.bundle ?? 0, offers.sale ?? 0);
+    // When codes can't combine with discounted prices, the worst a code can do is 10% off full price.
+    const biggest = offers.stack === false ? 0 : Math.max(0, ...offers.clearance, offers.bundle ?? 0, offers.sale ?? 0);
     const label = biggest ? `Worst: -${Math.round(biggest * 100)}% + sign-up ${Math.round(offers.welcome * 100)}%` : `Sign-up code -${Math.round(offers.welcome * 100)}%`;
     rows.push(scenario(label, price * (1 - biggest) * (1 - offers.welcome), cost));
   }
@@ -50,6 +51,15 @@ export type FinanceOrder = {
   code_discount: number | null;
   items: FinanceItem[];
 };
+
+/**
+ * The lowest price (rounded up to 10 sen) that still leaves `floor` margin after the card fee when the item is
+ * sold at its deepest discount `discount`.
+ */
+export function safePrice(cost: number, discount: number, floor = 0.05) {
+  const raw = cost / ((1 - discount) * (1 - STRIPE_FEE.rate - floor));
+  return Math.ceil(Math.round(raw * 1000) / 100 - 1e-9) / 10;
+}
 
 /** Where the money went over a set of paid orders. Older orders didn't record list prices, so they're counted separately. */
 export function moneySummary(orders: FinanceOrder[], costs: Map<string, number>) {

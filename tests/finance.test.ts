@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
-import { moneySummary, productScenarios, unitProfit } from "../src/lib/finance.ts";
+import { moneySummary, productScenarios, safePrice, unitProfit } from "../src/lib/finance.ts";
 
 test("unitProfit takes the 3% card fee off the price", () => {
   // IQ Dog 15 kg: RM74.30 at cost RM58.76 → 72.07 kept → RM13.31
@@ -39,4 +39,17 @@ test("moneySummary splits discounts, codes, costs and fees", () => {
   assert.equal(s.fees, 6.35);
   assert.equal(s.profit, 34.15);
   assert.equal(s.unknownDiscountOrders, 1);
+});
+
+test("codes that can't stack only take the sign-up % off full price", () => {
+  const rows = productScenarios(28.5, 25.42, { clearance: [0.15], bundle: null, sale: null, welcome: 0.1, stack: false });
+  assert.equal(rows.at(-1)?.label, "Sign-up code -10%");
+  assert.equal(rows.at(-1)?.price, 25.65);
+});
+
+test("safePrice keeps 5% after the card fee at the deepest discount", () => {
+  // cost 24.25, clearance 15%: 24.25 / (0.85 × 0.92) = 31.01… → RM31.10
+  assert.equal(safePrice(24.25, 0.15), 31.1);
+  const p = safePrice(24.25, 0.15);
+  assert.ok((p * 0.85 * 0.97 - 24.25) / (p * 0.85) >= 0.05);
 });

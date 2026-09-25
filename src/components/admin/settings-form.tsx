@@ -19,6 +19,7 @@ export type SettingsValues = {
   welcomeEnabled: boolean;
   welcomePercent: number;
   welcomeDelay: number;
+  welcomeStack: boolean;
 };
 
 const field = "min-h-11 w-full rounded-xl border-2 border-line bg-ground px-3 font-normal tabular-nums";
@@ -94,9 +95,13 @@ export function SettingsForm({ values }: { values: SettingsValues }) {
             <input id="welcome_delay" name="welcome_delay" type="number" min="0" max="600" defaultValue={values.welcomeDelay} className={field} />
           </label>
         </div>
+        <label className="flex items-center gap-3 text-sm font-semibold">
+          <input type="checkbox" name="welcome_stack" defaultChecked={values.welcomeStack} className="size-5" />
+          Let promo codes be used on clearance, bundle and sale prices too
+        </label>
         <p className="text-sm text-ink-2">
-          The code is used at card payment, on top of any clearance, bundle or sale price, so keep it modest. Codes already
-          sent keep their old percentage.
+          Leave that unticked to stop codes stacking on discounts, which is what sells items below cost (see Finance).
+          Codes already sent keep their old percentage.
         </p>
       </section>
 
