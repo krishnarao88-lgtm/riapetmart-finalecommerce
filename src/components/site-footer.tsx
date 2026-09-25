@@ -2,67 +2,80 @@ import { MessageCircle } from "lucide-react";
 import Link from "next/link";
 import { site, whatsappLink } from "@/lib/site";
 
+const COLUMNS = [
+  {
+    title: "Shop",
+    links: [
+      ["/shop", "Shop all"],
+      ["/cat-hotel", "Cat hotel"],
+      ["/guides", "Buying guides"],
+      ["/reviews", "Reviews"],
+    ],
+  },
+  {
+    title: "Help",
+    links: [
+      ["/account", "My orders"],
+      ["/contact", "Contact us"],
+      ["/returns", "Returns & refunds"],
+      ["/about", "About us"],
+    ],
+  },
+] as const;
+
 export function SiteFooter() {
   const a = site.address;
   return (
-    <footer className="mt-16 bg-rust text-cream">
-      <div className="mx-auto grid max-w-6xl gap-10 px-4 py-12 sm:grid-cols-2 lg:grid-cols-4">
-        <div className="grid content-start gap-3">
-          <p className="font-bubble text-2xl font-extrabold">
+    <footer className="mt-16 bg-rust text-sm text-cream">
+      <div className="mx-auto grid max-w-6xl grid-cols-2 gap-8 px-4 py-10 sm:grid-cols-[1.4fr_1fr_1fr]">
+        <div className="col-span-2 grid content-start gap-2 sm:col-span-1">
+          <p className="font-bubble text-xl font-extrabold">
             ria<span className="text-peach">petmart</span>
           </p>
-          <p className="text-sm text-cream/75">{site.tagline}</p>
-        </div>
-
-        <address className="grid content-start gap-1 text-sm not-italic text-cream/85">
-          <span className="mb-1 text-xs font-bold uppercase tracking-widest text-cream/60">Visit the shop</span>
-          <a
-            href={site.mapsUrl}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="grid gap-1 underline decoration-cream/40 underline-offset-2 hover:text-peach hover:decoration-peach"
-          >
-            <span>{a.street}</span>
-            <span>
-              {a.postcode} {a.city}, {a.state}
-            </span>
+          <a href={site.mapsUrl} target="_blank" rel="noopener noreferrer" className="w-fit text-cream/80 hover:text-peach">
+            {a.street}, {a.postcode} {a.city}
           </a>
-          <span className="mt-2">
-            {site.hours.days} · {site.hours.opens}–{site.hours.closes}
-          </span>
-          <span>{site.hours.closed}: closed</span>
-        </address>
-
-        <div className="grid content-start gap-2 text-sm">
-          <span className="mb-1 text-xs font-bold uppercase tracking-widest text-cream/60">Shop</span>
-          <Link href="/shop" className="hover:text-peach">Shop all</Link>
-          <Link href="/cat-hotel" className="hover:text-peach">Cat hotel booking</Link>
-          <Link href="/guides" className="hover:text-peach">Buying guides</Link>
-          <Link href="/about" className="hover:text-peach">About us</Link>
-          <Link href="/contact" className="hover:text-peach">Contact us</Link>
-          <Link href="/returns" className="hover:text-peach">Returns & refunds</Link>
-          <Link href="/privacy" className="hover:text-peach">Privacy policy</Link>
-          <Link href="/terms" className="hover:text-peach">Terms of service</Link>
-          <Link href="/reviews" className="hover:text-peach">Customer reviews</Link>
-          <Link href="/account" className="hover:text-peach">My orders</Link>
-        </div>
-
-        <div className="grid content-start gap-3">
-          <span className="text-xs font-bold uppercase tracking-widest text-cream/60">Questions?</span>
+          <p className="text-cream/80">
+            {site.hours.days} {site.hours.opens}–{site.hours.closes} · {site.hours.closed} closed
+          </p>
           <a
             href={whatsappLink()}
             target="_blank"
             rel="noopener noreferrer"
-            className="btn-bubble w-fit bg-terracotta text-cream"
+            className="mt-1 inline-flex w-fit items-center gap-2 rounded-full bg-cream/10 px-3 py-1.5 font-semibold hover:bg-cream/20"
           >
-            <MessageCircle className="size-5" aria-hidden />
-            WhatsApp us now
+            <MessageCircle className="size-4" aria-hidden />
+            WhatsApp {site.phone}
           </a>
         </div>
+
+        {COLUMNS.map((col) => (
+          <nav key={col.title} aria-label={col.title} className="grid content-start gap-2">
+            <span className="text-xs font-bold uppercase tracking-widest text-cream/60">{col.title}</span>
+            {col.links.map(([href, label]) => (
+              <Link key={href} href={href} className="w-fit text-cream/85 hover:text-peach">
+                {label}
+              </Link>
+            ))}
+          </nav>
+        ))}
       </div>
-      <p className="border-t border-cream/15 px-4 py-4 text-center text-xs text-cream/60">
-        © {new Date().getFullYear()} {site.name}. Prices in MYR.
-      </p>
+
+      <div className="border-t border-cream/15">
+        <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-x-4 gap-y-1 px-4 py-3 text-xs text-cream/60">
+          <span>
+            © {new Date().getFullYear()} {site.name} · Prices in MYR
+          </span>
+          <span className="flex gap-4">
+            <Link href="/privacy" className="hover:text-peach">
+              Privacy
+            </Link>
+            <Link href="/terms" className="hover:text-peach">
+              Terms
+            </Link>
+          </span>
+        </div>
+      </div>
     </footer>
   );
 }

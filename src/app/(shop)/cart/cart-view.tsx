@@ -182,11 +182,29 @@ export function CartView({ freeDeliveryMin, pickupEnabled }: { freeDeliveryMin: 
     );
   }
 
+  // Everything the shop needs to confirm the order in one message; blank fields are left out.
+  const fullAddress = [address.addressLine, `${address.postcode} ${address.city}`.trim(), address.state]
+    .map((s) => s.trim())
+    .filter(Boolean)
+    .join(", ");
   const orderText = [
     `Hi ${site.name}, I'd like to order:`,
-    ...lines.map((l) => `- ${l.productName} (${l.variantTitle}) x${l.qty} — ${formatMyr(l.price * l.qty)}`),
+    "",
+    ...lines.map((l, i) => `${i + 1}. ${l.productName} (${l.variantTitle}) x${l.qty} — ${formatMyr(l.price * l.qty)}`),
+    "",
     `Subtotal: ${formatMyr(subtotal)}`,
-  ].join("\n");
+    selectedShipping && `${selectedShipping.label}: ${selectedShipping.price ? formatMyr(selectedShipping.price) : "Free"}`,
+    selectedShipping && `Total: ${formatMyr(subtotal + selectedShipping.price)}`,
+    "",
+    name.trim() && `Name: ${name.trim()}`,
+    phone.trim() && `Phone: ${phone.trim()}`,
+    email.trim() && `Email: ${email.trim()}`,
+    selectedShipping?.method === "pickup" ? "Collect from the shop" : address.addressLine.trim() && `Deliver to: ${fullAddress}`,
+  ]
+    .filter((line) => typeof line === "string")
+    .join("\n")
+    .replace(/\n{3,}/g, "\n\n")
+    .trim();
 
   return (
     <div className="mx-auto max-w-3xl px-4 py-10">
