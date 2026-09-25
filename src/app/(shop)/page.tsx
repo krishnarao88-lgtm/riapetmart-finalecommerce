@@ -46,7 +46,7 @@ export default async function Home() {
       <TikTokFeed />
 
       <section aria-label="Why shop with us" className="mx-auto max-w-6xl px-4 pb-14 pt-6">
-        <ul className="grid gap-4 rounded-3xl border-2 border-choc bg-cream p-5 sm:grid-cols-2 lg:grid-cols-4">
+        <ul className="grid gap-4 rounded-3xl card-soft bg-cream p-5 sm:grid-cols-2 lg:grid-cols-4">
           {promises.map(({ Icon, title, body }) => (
             <li key={title} className="flex gap-3">
               <span className="grid size-11 shrink-0 place-items-center rounded-full bg-peach">

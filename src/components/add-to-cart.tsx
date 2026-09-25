@@ -51,7 +51,7 @@ export function AddToCart({
               setVariantId(e.target.value);
               setQty(1);
             }}
-            className="rounded-xl border-2 border-choc bg-surface px-3 py-2 font-semibold text-choc"
+            className="rounded-xl border border-choc/30 bg-surface px-3 py-2 font-semibold text-choc"
           >
             {variants.map((v) => (
               <option key={v.id} value={v.id}>

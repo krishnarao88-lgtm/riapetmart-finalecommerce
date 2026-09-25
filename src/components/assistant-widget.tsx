@@ -63,7 +63,7 @@ export function AssistantWidget() {
       {open && (
         <section
           aria-label="Shopping assistant"
-          className="fixed bottom-[calc(10rem+env(safe-area-inset-bottom))] right-4 z-40 flex max-h-[70dvh] w-[min(24rem,calc(100vw-2rem))] flex-col overflow-hidden rounded-3xl border-2 border-choc bg-cream shadow-[4px_4px_0_0_var(--color-choc)]"
+          className="fixed bottom-[calc(10rem+env(safe-area-inset-bottom))] right-4 z-40 flex max-h-[70dvh] w-[min(24rem,calc(100vw-2rem))] flex-col overflow-hidden rounded-3xl card-soft bg-cream"
         >
           <header className="border-b-2 border-choc/15 bg-terracotta px-4 py-3 text-cream">
             <p className="font-bubble text-lg font-extrabold">Ask Ria</p>
@@ -80,7 +80,7 @@ export function AssistantWidget() {
                       key={s}
                       type="button"
                       onClick={() => ask(s)}
-                      className="rounded-full border-2 border-choc/30 bg-surface px-3 py-1.5 text-xs font-semibold text-choc hover:border-rust"
+                      className="rounded-full border border-choc/30 bg-surface px-3 py-1.5 text-xs font-semibold text-choc hover:border-rust"
                     >
                       {s}
                     </button>
@@ -104,7 +104,7 @@ export function AssistantWidget() {
                         <Link
                           href={p.url}
                           onClick={() => setOpen(false)}
-                          className="flex items-center gap-3 rounded-xl border-2 border-choc/15 bg-surface p-2 hover:border-rust"
+                          className="flex items-center gap-3 rounded-xl border border-choc/15 bg-surface p-2 hover:border-rust"
                         >
                           <span className="size-12 shrink-0 overflow-hidden rounded-lg bg-peach/40">
                             {p.image && (
@@ -151,7 +151,7 @@ export function AssistantWidget() {
               onChange={(e) => setInput(e.target.value)}
               maxLength={800}
               placeholder="Ask about food, care or your order"
-              className="min-h-11 flex-1 rounded-full border-2 border-choc/30 bg-surface px-4 text-sm text-choc"
+              className="min-h-11 flex-1 rounded-full border border-choc/30 bg-surface px-4 text-sm text-choc"
             />
             <button
               type="submit"

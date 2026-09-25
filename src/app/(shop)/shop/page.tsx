@@ -232,7 +232,7 @@ export default async function ShopPage({ searchParams }: { searchParams: ShopSea
       </div>
 
       {rows.length === 0 ? (
-        <div className="mt-10 grid justify-items-center gap-3 rounded-3xl border-2 border-choc bg-cream p-8 text-center">
+        <div className="mt-10 grid justify-items-center gap-3 rounded-3xl card-soft bg-cream p-8 text-center">
           <p className="text-choc-2">No products match this filter online yet.</p>
           <p className="max-w-md text-choc">
             Many more products are on the shelves at our Rawang shop. Ask us on WhatsApp and we&apos;ll deliver it or
@@ -268,7 +268,7 @@ export default async function ShopPage({ searchParams }: { searchParams: ShopSea
             Questions pet owners ask
           </h2>
           {seo.faqs.map((faq) => (
-            <details key={faq.q} className="rounded-2xl border-2 border-choc/30 bg-surface p-4">
+            <details key={faq.q} className="rounded-2xl border border-choc/30 bg-surface p-4">
               <summary className="cursor-pointer font-bold text-choc">{faq.q}</summary>
               <p className="mt-2 text-sm text-choc-2">{faq.a}</p>
             </details>

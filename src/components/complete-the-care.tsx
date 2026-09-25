@@ -23,7 +23,7 @@ export async function CompleteTheCare({
   const best = Math.max(0, ...(offerRows ?? []).map((o) => Number(o.discount)));
 
   return (
-    <section aria-labelledby="care-heading" className="mt-12 rounded-3xl border-2 border-choc bg-peach/30 p-5">
+    <section aria-labelledby="care-heading" className="mt-12 rounded-3xl card-soft bg-peach/30 p-5">
       <h2 id="care-heading" className="flex items-center gap-2 font-bubble text-xl font-extrabold text-choc">
         <Sparkles className="size-5 text-rust" aria-hidden /> Complete the care
       </h2>

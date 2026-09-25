@@ -29,7 +29,7 @@ export default function ContactPage() {
 
         <a
           href={`tel:${site.phone.replace(/\s+/g, "")}`}
-          className="flex items-center gap-3 rounded-2xl border-2 border-choc bg-surface p-4 font-semibold text-choc"
+          className="flex items-center gap-3 rounded-2xl card-soft bg-surface p-4 font-semibold text-choc"
         >
           <Phone className="size-5 text-rust" aria-hidden />
           {site.phone}
@@ -37,7 +37,7 @@ export default function ContactPage() {
 
         <a
           href={`mailto:${site.email}`}
-          className="flex items-center gap-3 rounded-2xl border-2 border-choc bg-surface p-4 font-semibold text-choc"
+          className="flex items-center gap-3 rounded-2xl card-soft bg-surface p-4 font-semibold text-choc"
         >
           <Mail className="size-5 text-rust" aria-hidden />
           {site.email}
@@ -47,7 +47,7 @@ export default function ContactPage() {
           href={site.mapsUrl}
           target="_blank"
           rel="noopener noreferrer"
-          className="flex items-start gap-3 rounded-2xl border-2 border-choc bg-surface p-4 text-choc"
+          className="flex items-start gap-3 rounded-2xl card-soft bg-surface p-4 text-choc"
         >
           <MapPin className="mt-0.5 size-5 shrink-0 text-rust" aria-hidden />
           <span>
@@ -62,7 +62,7 @@ export default function ContactPage() {
         <iframe
           title="Ria Pet Mart location"
           src={`https://www.google.com/maps?q=${site.geo.lat},${site.geo.lng}&z=16&output=embed`}
-          className="h-64 w-full rounded-2xl border-2 border-choc"
+          className="h-64 w-full rounded-2xl card-soft"
           loading="lazy"
         />
       </div>

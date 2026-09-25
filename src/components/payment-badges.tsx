@@ -4,7 +4,7 @@ import { Lock } from "lucide-react";
 export function PaymentBadges() {
   const chip = "grid h-7 min-w-11 place-items-center rounded-md border border-choc/15 bg-white px-2";
   return (
-    <div className="grid gap-2 rounded-2xl border-2 border-choc/15 bg-surface px-4 py-3">
+    <div className="grid gap-2 rounded-2xl border border-choc/15 bg-surface px-4 py-3">
       <p className="flex items-center gap-1.5 text-sm font-semibold text-choc">
         <Lock className="size-4 text-ok-fg" aria-hidden />
         Secure checkout powered by <span className="font-extrabold tracking-tight text-[#635bff]">stripe</span>

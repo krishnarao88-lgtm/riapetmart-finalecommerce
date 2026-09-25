@@ -257,7 +257,7 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
       </nav>
       {cheapest && <TrackViewItem id={cheapest.id} name={name} price={cheapest.price} />}
       <div className="grid gap-8 md:grid-cols-2">
-        <div className="relative flex aspect-square max-h-[45vh] items-center justify-center overflow-hidden rounded-3xl border-2 border-choc bg-peach/40 sm:max-h-none">
+        <div className="relative flex aspect-square max-h-[45vh] items-center justify-center overflow-hidden rounded-3xl card-soft bg-peach/40 sm:max-h-none">
           {image ? (
             // eslint-disable-next-line @next/next/no-img-element
             <img src={image.path} alt={titleCase(image.alt || product.name)} className="absolute inset-0 size-full object-contain" />
@@ -306,7 +306,7 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
           />
           <ViewCount productId={product.id} />
 
-          <div className="mt-2 rounded-2xl border-2 border-choc bg-cream p-4">
+          <div className="mt-2 rounded-2xl card-soft bg-cream p-4">
             <AddToCart
               productSlug={slug}
               productName={name}
@@ -380,7 +380,7 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
                 <li key={p.slug}>
                   <Link
                     href={`/shop/${p.slug}`}
-                    className="flex h-full flex-col overflow-hidden rounded-2xl border-2 border-choc bg-surface transition-transform hover:-translate-y-0.5"
+                    className="flex h-full flex-col overflow-hidden rounded-2xl card-soft bg-surface transition-transform hover:-translate-y-0.5"
                   >
                     <div className="relative flex aspect-square items-center justify-center overflow-hidden bg-peach/40">
                       {relImage ? (

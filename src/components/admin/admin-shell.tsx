@@ -98,7 +98,7 @@ export function AdminShell({
 
   const brand = (
     <Link href="/admin" className="grid leading-none">
-      <span className="font-editorial text-xl font-bold text-cream">Ria Pet Mart</span>
+      <span className="font-bubble text-xl font-extrabold text-cream">Ria Pet Mart</span>
       <span className="mt-1 text-[10px] font-bold uppercase tracking-[0.2em] text-peach">Staff portal</span>
     </Link>
   );

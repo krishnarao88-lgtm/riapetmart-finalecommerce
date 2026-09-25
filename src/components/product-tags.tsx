@@ -1,11 +1,11 @@
 import { Cat, Check, Dog, Rabbit } from "lucide-react";
 
 const PETS: Record<string, { label: string; icon: typeof Dog; tone: string }[]> = {
-  dog: [{ label: "Dogs", icon: Dog, tone: "bg-sunshine/30" }],
-  cat: [{ label: "Cats", icon: Cat, tone: "bg-lagoon/20" }],
+  dog: [{ label: "Dogs", icon: Dog, tone: "bg-peach/60" }],
+  cat: [{ label: "Cats", icon: Cat, tone: "bg-terracotta/15" }],
   dog_cat: [
-    { label: "Dogs", icon: Dog, tone: "bg-sunshine/30" },
-    { label: "Cats", icon: Cat, tone: "bg-lagoon/20" },
+    { label: "Dogs", icon: Dog, tone: "bg-peach/60" },
+    { label: "Cats", icon: Cat, tone: "bg-terracotta/15" },
   ],
   small_pet: [{ label: "Small pets", icon: Rabbit, tone: "bg-peach/60" }],
 };

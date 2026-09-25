@@ -32,7 +32,7 @@ export default async function NewReviewPage({
         </p>
       )}
 
-      <ShrinkImagesForm action={submitReview} className="grid gap-4 rounded-2xl border-2 border-choc bg-surface p-5">
+      <ShrinkImagesForm action={submitReview} className="grid gap-4 rounded-2xl card-soft bg-surface p-5">
         {order && <input type="hidden" name="order_id" value={order} />}
         {product && <input type="hidden" name="product_id" value={product} />}
 
@@ -41,7 +41,7 @@ export default async function NewReviewPage({
           <input
             name="name"
             required
-            className="rounded-xl border-2 border-choc bg-cream px-3 py-2 text-base font-normal text-choc"
+            className="rounded-xl border border-choc/30 bg-cream px-3 py-2 text-base font-normal text-choc"
           />
         </label>
 
@@ -53,7 +53,7 @@ export default async function NewReviewPage({
             required
             readOnly={locked}
             defaultValue={email}
-            className="rounded-xl border-2 border-choc bg-cream px-3 py-2 text-base font-normal text-choc read-only:opacity-70"
+            className="rounded-xl border border-choc/30 bg-cream px-3 py-2 text-base font-normal text-choc read-only:opacity-70"
           />
         </label>
 
@@ -78,7 +78,7 @@ export default async function NewReviewPage({
             maxLength={1000}
             rows={5}
             placeholder="How was the food quality, delivery, or service?"
-            className="rounded-xl border-2 border-choc bg-cream px-3 py-2 text-base font-normal text-choc"
+            className="rounded-xl border border-choc/30 bg-cream px-3 py-2 text-base font-normal text-choc"
           />
         </label>
 

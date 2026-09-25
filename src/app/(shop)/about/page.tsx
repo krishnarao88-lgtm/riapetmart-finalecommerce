@@ -129,7 +129,7 @@ export default function AboutPage() {
         </div>
       </div>
 
-      <div className="mt-10 grid gap-4 rounded-3xl border-2 border-choc bg-peach/40 p-6 sm:p-8">
+      <div className="mt-10 grid gap-4 rounded-3xl card-soft bg-peach/40 p-6 sm:p-8">
         <h2 className="font-bubble text-2xl font-extrabold text-choc">The fun part</h2>
         <p className="text-choc-2">
           From playful puppies and curious kittens to loyal seniors, every pet has its own personality — and we

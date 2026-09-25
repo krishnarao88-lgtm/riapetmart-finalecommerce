@@ -11,7 +11,7 @@ export async function PromoBanner() {
 
   return (
     <section className="mx-auto grid max-w-6xl gap-4 px-4 pt-8 sm:grid-cols-[1.3fr_1fr]">
-      <WelcomeOfferButton className="grid content-center gap-2 rounded-3xl border-2 border-choc bg-terracotta p-6 text-left text-cream transition-transform hover:-translate-y-0.5">
+      <WelcomeOfferButton className="grid content-center gap-2 rounded-3xl card-soft bg-terracotta p-6 text-left text-cream transition-transform hover:-translate-y-0.5">
         <span className="font-bubble text-2xl font-extrabold">New here? Get 10% off your first order</span>
         <span className="text-sm text-cream/90">
           Sign up with your email for your personal code. <span className="font-bold underline">Get my code</span>
@@ -20,7 +20,7 @@ export async function PromoBanner() {
 
       <div className="grid gap-3">
         {freeDeliveryMin !== null && (
-          <div className="flex items-center gap-3 rounded-2xl border-2 border-choc bg-cream px-4 py-3">
+          <div className="flex items-center gap-3 rounded-2xl card-soft bg-cream px-4 py-3">
             <Truck className="size-6 shrink-0 text-rust" aria-hidden />
             <span className="grid">
               <span className="text-sm font-bold text-choc">Free delivery</span>
@@ -28,7 +28,7 @@ export async function PromoBanner() {
             </span>
           </div>
         )}
-        <div className="flex items-center gap-3 rounded-2xl border-2 border-choc bg-cream px-4 py-3">
+        <div className="flex items-center gap-3 rounded-2xl card-soft bg-cream px-4 py-3">
           <RefreshCw className="size-6 shrink-0 text-rust" aria-hidden />
           <span className="grid">
             <span className="text-sm font-bold text-choc">Never run out</span>

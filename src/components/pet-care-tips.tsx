@@ -40,7 +40,7 @@ export function PetCareTips() {
       </div>
       <ul className="mt-4 grid gap-4 sm:grid-cols-2">
         {tips.map((tip) => (
-          <li key={tip.title} className="grid gap-2 rounded-2xl border-2 border-choc bg-cream p-5">
+          <li key={tip.title} className="grid gap-2 rounded-2xl card-soft bg-cream p-5">
             <span className="font-bold text-choc">{tip.title}</span>
             <span className="text-sm text-choc-2">{tip.body}</span>
             <Link href={tip.href} className="mt-1 flex w-fit items-center gap-1 text-sm font-bold text-rust">

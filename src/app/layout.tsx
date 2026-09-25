@@ -1,21 +1,14 @@
 import type { Metadata, Viewport } from "next";
-import { Baloo_2, Bricolage_Grotesque, Figtree, Fraunces } from "next/font/google";
+import { Baloo_2, Figtree } from "next/font/google";
 import { Analytics } from "@/components/analytics";
 import { ReferralCapture } from "@/components/referral-capture";
 import { siteKeywords } from "@/lib/seo";
 import { site } from "@/lib/site";
 import "./globals.css";
 
-const bricolage = Bricolage_Grotesque({ variable: "--font-bricolage", subsets: ["latin"] });
 const figtree = Figtree({ variable: "--font-figtree", subsets: ["latin"] });
-// Storefront-only faces: a bubbly wordmark face and a warm editorial serif for the homepage collage.
+// Two families only: Baloo for headings (the brand's friendly voice), Figtree for everything else.
 const baloo = Baloo_2({ variable: "--font-baloo", subsets: ["latin"], weight: ["600", "700", "800"] });
-const fraunces = Fraunces({
-  variable: "--font-fraunces",
-  subsets: ["latin"],
-  weight: ["500", "600"],
-  style: ["normal", "italic"],
-});
 
 export const metadata: Metadata = {
   metadataBase: new URL(site.url),
@@ -70,7 +63,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html
       lang="en-MY"
-      className={`${bricolage.variable} ${figtree.variable} ${baloo.variable} ${fraunces.variable} antialiased`}
+      className={`${figtree.variable} ${baloo.variable} antialiased`}
     >
       <body className="flex min-h-dvh flex-col font-sans">
         <script

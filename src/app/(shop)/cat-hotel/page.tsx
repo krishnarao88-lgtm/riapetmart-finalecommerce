@@ -55,13 +55,13 @@ export default async function CatHotelPage({
           </p>
         )}
 
-        <form action={submitCatHotelBooking} className="grid gap-4 rounded-2xl border-2 border-choc bg-surface p-5">
+        <form action={submitCatHotelBooking} className="grid gap-4 rounded-2xl card-soft bg-surface p-5">
           <label className="grid gap-1 text-sm font-semibold text-choc">
             Your name
             <input
               name="customer_name"
               required
-              className="rounded-xl border-2 border-choc bg-cream px-3 py-2 text-base font-normal text-choc"
+              className="rounded-xl border border-choc/30 bg-cream px-3 py-2 text-base font-normal text-choc"
             />
           </label>
 
@@ -72,7 +72,7 @@ export default async function CatHotelPage({
                 type="email"
                 name="customer_email"
                 required
-                className="w-full min-w-0 rounded-xl border-2 border-choc bg-cream px-3 py-2 text-base font-normal text-choc"
+                className="w-full min-w-0 rounded-xl border border-choc/30 bg-cream px-3 py-2 text-base font-normal text-choc"
               />
             </label>
             <label className="grid min-w-0 gap-1 text-sm font-semibold text-choc">
@@ -81,7 +81,7 @@ export default async function CatHotelPage({
                 type="tel"
                 name="customer_phone"
                 required
-                className="w-full min-w-0 rounded-xl border-2 border-choc bg-cream px-3 py-2 text-base font-normal text-choc"
+                className="w-full min-w-0 rounded-xl border border-choc/30 bg-cream px-3 py-2 text-base font-normal text-choc"
               />
             </label>
           </div>
@@ -92,7 +92,7 @@ export default async function CatHotelPage({
               <input
                 name="cat_name"
                 placeholder="e.g. Milo, Luna"
-                className="w-full min-w-0 rounded-xl border-2 border-choc bg-cream px-3 py-2 text-base font-normal text-choc"
+                className="w-full min-w-0 rounded-xl border border-choc/30 bg-cream px-3 py-2 text-base font-normal text-choc"
               />
             </label>
             <label className="grid gap-1 text-sm font-semibold text-choc">
@@ -104,7 +104,7 @@ export default async function CatHotelPage({
                 max={10}
                 defaultValue={1}
                 required
-                className="w-24 rounded-xl border-2 border-choc bg-cream px-3 py-2 text-base font-normal text-choc"
+                className="w-24 rounded-xl border border-choc/30 bg-cream px-3 py-2 text-base font-normal text-choc"
               />
             </label>
           </div>
@@ -117,7 +117,7 @@ export default async function CatHotelPage({
                 name="check_in"
                 required
                 min={today}
-                className="w-full min-w-0 rounded-xl border-2 border-choc bg-cream px-3 py-2 text-base font-normal text-choc"
+                className="w-full min-w-0 rounded-xl border border-choc/30 bg-cream px-3 py-2 text-base font-normal text-choc"
               />
             </label>
             <label className="grid min-w-0 gap-1 text-sm font-semibold text-choc">
@@ -127,7 +127,7 @@ export default async function CatHotelPage({
                 name="check_out"
                 required
                 min={today}
-                className="w-full min-w-0 rounded-xl border-2 border-choc bg-cream px-3 py-2 text-base font-normal text-choc"
+                className="w-full min-w-0 rounded-xl border border-choc/30 bg-cream px-3 py-2 text-base font-normal text-choc"
               />
             </label>
           </div>
@@ -138,7 +138,7 @@ export default async function CatHotelPage({
               name="notes"
               rows={3}
               placeholder="Feeding schedule, medication, temperament, etc."
-              className="rounded-xl border-2 border-choc bg-cream px-3 py-2 text-base font-normal text-choc"
+              className="rounded-xl border border-choc/30 bg-cream px-3 py-2 text-base font-normal text-choc"
             />
           </label>
 

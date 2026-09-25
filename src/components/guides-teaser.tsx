@@ -22,7 +22,7 @@ export function GuidesTeaser() {
           <li key={g.slug}>
             <Link
               href={`/guides/${g.slug}`}
-              className="grid h-full gap-1.5 rounded-2xl border-2 border-choc bg-cream p-5 transition-transform hover:-translate-y-0.5"
+              className="grid h-full gap-1.5 rounded-2xl card-soft bg-cream p-5 transition-transform hover:-translate-y-0.5"
             >
               <span className="font-bold text-choc">{g.title}</span>
               <span className="text-sm text-choc-2">{g.description}</span>

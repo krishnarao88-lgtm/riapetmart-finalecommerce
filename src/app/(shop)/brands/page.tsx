@@ -29,7 +29,7 @@ export default async function BrandsPage() {
           <li key={b.slug}>
             <Link
               href={`/brands/${b.slug}`}
-              className="flex h-full flex-col rounded-2xl border-2 border-choc bg-surface p-4 transition-transform hover:-translate-y-0.5"
+              className="flex h-full flex-col rounded-2xl card-soft bg-surface p-4 transition-transform hover:-translate-y-0.5"
             >
               <span className="font-bold text-choc">{b.name}</span>
               <span className="text-sm text-choc-2">

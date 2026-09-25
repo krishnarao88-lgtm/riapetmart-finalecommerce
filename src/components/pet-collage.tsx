@@ -24,7 +24,7 @@ export function PetCollage() {
 
       <div className="grid gap-4 md:grid-cols-2">
         <div className="group grid content-center gap-3 rounded-3xl bg-peach p-8">
-          <span className="font-editorial text-3xl italic text-choc sm:text-4xl">
+          <span className="font-bubble text-3xl font-extrabold leading-tight text-choc sm:text-4xl">
             Treats your dog actually deserves.
           </span>
           <p className="max-w-sm text-sm font-medium text-choc-2">
@@ -64,7 +64,7 @@ export function PetCollage() {
         </Link>
 
         <div className="group grid content-center gap-2 rounded-3xl bg-terracotta p-8 text-center transition-transform duration-300 hover:-translate-y-1">
-          <span className="font-editorial text-3xl italic text-cream sm:text-4xl">Free the good stuff.</span>
+          <span className="font-bubble text-3xl font-extrabold leading-tight text-cream sm:text-4xl">Free the good stuff.</span>
           <p className="text-sm font-medium text-cream/85">Short-dated stock, honestly discounted.</p>
           <Link
             href="/shop?deal=short-dated"

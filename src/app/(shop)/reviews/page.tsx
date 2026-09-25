@@ -56,7 +56,7 @@ export default async function ReviewsPage({
       </div>
 
       {ratings.length > 0 && (
-        <div className="flex flex-wrap items-center gap-3 rounded-2xl border-2 border-choc bg-peach/40 p-4">
+        <div className="flex flex-wrap items-center gap-3 rounded-2xl card-soft bg-peach/40 p-4">
           <span className="font-bubble text-4xl font-extrabold text-choc">{average.toFixed(1)}</span>
           <div className="grid gap-0.5">
             <Stars rating={Math.round(average)} className="text-terracotta" />
@@ -74,13 +74,13 @@ export default async function ReviewsPage({
       )}
 
       {reviews.length === 0 ? (
-        <p className="rounded-2xl border-2 border-choc bg-surface p-6 text-choc-2">
+        <p className="rounded-2xl card-soft bg-surface p-6 text-choc-2">
           No reviews yet — be the first to share your experience.
         </p>
       ) : (
         <ul className="grid gap-3">
           {reviews.map((r) => (
-            <li key={r.id} className="grid gap-2 rounded-2xl border-2 border-choc bg-surface p-4">
+            <li key={r.id} className="grid gap-2 rounded-2xl card-soft bg-surface p-4">
               <div className="flex flex-wrap items-center justify-between gap-2">
                 <Stars rating={r.rating} className="text-terracotta" />
                 <span className="text-xs text-choc-2">
@@ -96,7 +96,7 @@ export default async function ReviewsPage({
                       key={img.path}
                       src={reviewImageUrl(img.path)}
                       alt="Photo submitted with this review"
-                      className="size-20 rounded-xl border-2 border-choc object-cover"
+                      className="size-20 rounded-xl card-soft object-cover"
                     />
                   ))}
                 </div>

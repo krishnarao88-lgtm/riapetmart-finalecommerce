@@ -17,7 +17,7 @@ export async function TikTokFeed() {
               href={v.share_url}
               target="_blank"
               rel="noopener noreferrer"
-              className="group block overflow-hidden rounded-2xl border-2 border-choc shadow-[3px_3px_0_0_var(--color-choc)] transition-transform hover:-translate-y-0.5"
+              className="group block overflow-hidden rounded-2xl card-soft transition-transform hover:-translate-y-0.5"
             >
               <div className="aspect-[9/16] w-full bg-peach/40">
                 {/* eslint-disable-next-line @next/next/no-img-element */}

@@ -82,7 +82,7 @@ export function ProductCard({
   return (
     <Link
       href={`/shop/${p.slug}`}
-      className="reveal group flex h-full flex-col overflow-hidden rounded-2xl border-2 border-choc bg-surface shadow-[3px_3px_0_0_var(--color-choc)] transition-[transform,box-shadow] duration-300 hover:-translate-y-1 hover:shadow-[5px_5px_0_0_var(--color-choc)]"
+      className="reveal card-soft group flex h-full flex-col overflow-hidden rounded-2xl bg-surface transition-[transform,box-shadow] duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] hover:-translate-y-1 hover:shadow-[0_2px_4px_rgb(46_29_20/0.06),0_22px_40px_-20px_rgb(46_29_20/0.45)] active:scale-[0.98]"
     >
       <div className="relative flex aspect-square items-center justify-center overflow-hidden bg-peach/40">
         {image ? (

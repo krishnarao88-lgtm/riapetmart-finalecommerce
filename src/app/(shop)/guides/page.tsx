@@ -26,7 +26,7 @@ export default function GuidesIndexPage() {
           <li key={g.slug}>
             <Link
               href={`/guides/${g.slug}`}
-              className="group flex h-full flex-col gap-2 rounded-2xl border-2 border-choc bg-surface p-5 transition-transform hover:-translate-y-0.5"
+              className="group flex h-full flex-col gap-2 rounded-2xl card-soft bg-surface p-5 transition-transform hover:-translate-y-0.5"
             >
               <span className="font-bubble text-lg font-extrabold text-choc">{g.title}</span>
               <span className="text-sm text-choc-2">{g.description}</span>

@@ -55,7 +55,7 @@ export default async function OrderSuccessPage({
       )}
 
       {paid && items.length > 0 && (
-        <ul className="mt-4 grid gap-1.5 rounded-2xl border-2 border-choc bg-surface p-4 text-left">
+        <ul className="mt-4 grid gap-1.5 rounded-2xl card-soft bg-surface p-4 text-left">
           {items.map((it) => (
             <li key={`${it.name}-${it.title}`} className="flex justify-between gap-2 text-sm text-choc">
               <span>

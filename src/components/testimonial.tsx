@@ -39,7 +39,7 @@ export async function Testimonial() {
       </div>
       <ul className="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {reviews.map((r) => (
-          <li key={r.id} className="grid gap-2 rounded-2xl border-2 border-choc bg-peach/40 p-5">
+          <li key={r.id} className="grid gap-2 rounded-2xl card-soft bg-peach/40 p-5">
             <Stars rating={r.rating} className="text-terracotta" />
             <p className="line-clamp-4 text-sm text-choc">&ldquo;{r.body}&rdquo;</p>
             {r.review_images.length > 0 && (

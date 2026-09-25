@@ -27,7 +27,6 @@
   --color-choc-2: #6b5540;
 
   --font-bubble: var(--font-baloo), ui-rounded, "SF Pro Rounded", sans-serif;
-  --font-editorial: var(--font-fraunces), Georgia, "Times New Roman", serif;
 
   --color-ok-bg: #ddf5ef;
   --color-ok-fg: #05695f;
@@ -36,7 +35,7 @@
   --color-bad-bg: #fde1ea;
   --color-bad-fg: #a31f4e;
 
-  --font-display: var(--font-bricolage), "Avenir Next", system-ui, sans-serif;
+  --font-display: var(--font-figtree), "Segoe UI", system-ui, sans-serif; /* admin headings */
   --font-sans: var(--font-figtree), "Segoe UI", system-ui, sans-serif;
 
   --radius-chunk: 1.25rem;
@@ -60,7 +59,7 @@ h3 {
 }
 
 :focus-visible {
-  outline: 3px solid var(--color-grape);
+  outline: 3px solid var(--color-rust);
   outline-offset: 2px;
 }
 
@@ -252,4 +251,13 @@ h3 {
   .marquee-item[aria-hidden] {
     display: none;
   }
+}
+
+/* Calm surface for storefront panels and cards: hairline sand border, soft warm shadow. The bold
+   outlined look is kept for buttons, pills and the illustrated arches, so those stand out. */
+@utility card-soft {
+  border: 1px solid rgb(46 29 20 / 0.12);
+  box-shadow:
+    0 1px 2px rgb(46 29 20 / 0.05),
+    0 12px 28px -18px rgb(46 29 20 / 0.35);
 }

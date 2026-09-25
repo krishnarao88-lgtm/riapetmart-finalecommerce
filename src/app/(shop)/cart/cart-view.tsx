@@ -26,7 +26,7 @@ const MY_MOBILE = /^(?:\+?60|0)1\d{8,9}$/;
 const DETAILS_KEY = "riapetmart:checkout";
 const EMPTY_ADDRESS = { addressLine: "", city: "", postcode: "", state: "Selangor" };
 const optionClass =
-  "flex cursor-pointer items-center justify-between gap-2 rounded-xl border-2 border-choc/30 px-3 py-2 has-[:checked]:border-terracotta has-[:checked]:bg-peach/30";
+  "flex cursor-pointer items-center justify-between gap-2 rounded-xl border border-choc/30 px-3 py-2 has-[:checked]:border-terracotta has-[:checked]:bg-peach/30";
 
 export function CartView({ freeDeliveryMin, pickupEnabled }: { freeDeliveryMin: number | null; pickupEnabled: boolean }) {
   const { lines, subtotal: localSubtotal, setQty, remove } = useCart();
@@ -202,7 +202,7 @@ export function CartView({ freeDeliveryMin, pickupEnabled }: { freeDeliveryMin: 
         {lines.map((l) => (
           <li
             key={l.variantId}
-            className="flex items-center gap-3 rounded-2xl border-2 border-choc bg-surface p-3"
+            className="flex items-center gap-3 rounded-2xl card-soft bg-surface p-3"
           >
             <div className="flex size-16 shrink-0 items-center justify-center rounded-xl bg-peach/40">
               {l.image ? (
@@ -252,7 +252,7 @@ export function CartView({ freeDeliveryMin, pickupEnabled }: { freeDeliveryMin: 
 
       <CartSuggestions suggestions={priced?.suggestions ?? []} />
 
-      <div className="mt-6 grid gap-3 rounded-2xl border-2 border-choc bg-surface p-4">
+      <div className="mt-6 grid gap-3 rounded-2xl card-soft bg-surface p-4">
         <div className="flex items-center justify-between gap-2">
           <h2 className="font-bold text-choc">Your details</h2>
           {remembered && (
@@ -268,7 +268,7 @@ export function CartView({ freeDeliveryMin, pickupEnabled }: { freeDeliveryMin: 
             placeholder="Full name"
             autoComplete="name"
             required
-            className="min-w-0 rounded-xl border-2 border-choc/40 px-3 py-2"
+            className="min-w-0 rounded-xl border border-choc/40 px-3 py-2"
           />
           <input
             type="tel"
@@ -278,7 +278,7 @@ export function CartView({ freeDeliveryMin, pickupEnabled }: { freeDeliveryMin: 
             autoComplete="tel"
             required
             aria-invalid={phone !== "" && !phoneOk}
-            className="min-w-0 rounded-xl border-2 border-choc/40 px-3 py-2"
+            className="min-w-0 rounded-xl border border-choc/40 px-3 py-2"
           />
         </div>
         {phone !== "" && !phoneOk && (
@@ -290,7 +290,7 @@ export function CartView({ freeDeliveryMin, pickupEnabled }: { freeDeliveryMin: 
           onChange={(e) => setEmail(e.target.value)}
           onBlur={() => trackCart(email)}
           placeholder="you@example.com"
-          className="rounded-xl border-2 border-choc/40 px-3 py-2"
+          className="rounded-xl border border-choc/40 px-3 py-2"
         />
         <p className="text-xs text-choc-2">
           Your name and phone go straight onto the delivery label — no need to re-enter them for us. Email is for
@@ -298,7 +298,7 @@ export function CartView({ freeDeliveryMin, pickupEnabled }: { freeDeliveryMin: 
         </p>
       </div>
 
-      <div className="mt-4 grid gap-3 rounded-2xl border-2 border-choc bg-surface p-4">
+      <div className="mt-4 grid gap-3 rounded-2xl card-soft bg-surface p-4">
         <h2 className="flex items-center gap-2 font-bold text-choc">
           <MapPinned className="size-5 text-rust" aria-hidden />
           {pickupEnabled ? "Pickup or delivery" : "Delivery address"}
@@ -324,26 +324,26 @@ export function CartView({ freeDeliveryMin, pickupEnabled }: { freeDeliveryMin: 
           value={address.addressLine}
           onChange={(e) => setAddress((a) => ({ ...a, addressLine: e.target.value }))}
           placeholder="Address line"
-          className="rounded-xl border-2 border-choc/40 px-3 py-2"
+          className="rounded-xl border border-choc/40 px-3 py-2"
         />
         <div className="grid grid-cols-2 gap-3">
           <input
             value={address.city}
             onChange={(e) => setAddress((a) => ({ ...a, city: e.target.value }))}
             placeholder="City"
-            className="rounded-xl border-2 border-choc/40 px-3 py-2"
+            className="rounded-xl border border-choc/40 px-3 py-2"
           />
           <input
             value={address.postcode}
             onChange={(e) => setAddress((a) => ({ ...a, postcode: e.target.value }))}
             placeholder="Postcode"
-            className="rounded-xl border-2 border-choc/40 px-3 py-2"
+            className="rounded-xl border border-choc/40 px-3 py-2"
           />
         </div>
         <select
           value={address.state}
           onChange={(e) => setAddress((a) => ({ ...a, state: e.target.value }))}
-          className="rounded-xl border-2 border-choc/40 px-3 py-2"
+          className="rounded-xl border border-choc/40 px-3 py-2"
         >
           {MY_STATES.map((s) => (
             <option key={s} value={s}>
@@ -383,7 +383,7 @@ export function CartView({ freeDeliveryMin, pickupEnabled }: { freeDeliveryMin: 
         )}
       </div>
 
-      <div className="mt-4 grid gap-1 rounded-2xl border-2 border-choc bg-cream p-4">
+      <div className="mt-4 grid gap-1 rounded-2xl card-soft bg-cream p-4">
         <div className="flex items-center justify-between text-choc-2">
           <span>Subtotal</span>
           <span>{formatMyr(subtotal)}</span>

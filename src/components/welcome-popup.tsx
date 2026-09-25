@@ -126,7 +126,7 @@ export function WelcomePopup() {
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             placeholder="Enter your email address"
-            className="rounded-xl border-2 border-choc/40 px-3 py-2.5"
+            className="rounded-xl border border-choc/40 px-3 py-2.5"
           />
           {error && <p className="text-sm font-medium text-bad-fg">{error}</p>}
           <button

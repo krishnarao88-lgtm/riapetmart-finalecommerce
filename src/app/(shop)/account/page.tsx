@@ -104,7 +104,7 @@ export default async function AccountPage() {
       </div>
 
       {referralUrl && (
-        <div className="rounded-2xl border-2 border-choc bg-peach/40 p-4">
+        <div className="rounded-2xl card-soft bg-peach/40 p-4">
           <p className="font-bold text-choc">Give 10%, get 10%</p>
           <p className="mt-1 text-sm text-choc-2">
             Share your link — your friend can sign up on the site for a 10% welcome code on their first order. Once
@@ -117,13 +117,13 @@ export default async function AccountPage() {
       )}
 
       {orders.length === 0 ? (
-        <p className="rounded-2xl border-2 border-choc bg-surface p-6 text-choc-2">
+        <p className="rounded-2xl card-soft bg-surface p-6 text-choc-2">
           No orders found for this email yet.
         </p>
       ) : (
         <ul className="grid gap-3">
           {orders.map((order) => (
-            <li key={order.id} className="grid gap-2 rounded-2xl border-2 border-choc bg-surface p-4">
+            <li key={order.id} className="grid gap-2 rounded-2xl card-soft bg-surface p-4">
               <div className="flex flex-wrap items-center justify-between gap-2">
                 <span className="text-sm text-choc-2">
                   {order.order_number && <strong className="mr-2 text-choc">{order.order_number}</strong>}

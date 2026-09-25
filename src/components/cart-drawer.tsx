@@ -36,7 +36,7 @@ export function CartDrawer({ freeDeliveryMin }: { freeDeliveryMin: number | null
           ) : (
             <ul className="grid gap-3">
               {lines.map((l) => (
-                <li key={l.variantId} className="flex items-center gap-3 rounded-2xl border-2 border-choc/20 p-2">
+                <li key={l.variantId} className="flex items-center gap-3 rounded-2xl border border-choc/20 p-2">
                   <div className="flex size-14 shrink-0 items-center justify-center rounded-xl bg-peach/40">
                     {l.image ? (
                       // eslint-disable-next-line @next/next/no-img-element
@@ -50,7 +50,7 @@ export function CartDrawer({ freeDeliveryMin }: { freeDeliveryMin: number | null
                     <p className="text-xs text-choc-2">{l.variantTitle}</p>
                     <p className="text-sm font-bold text-choc">{formatMyr(l.price)}</p>
                   </div>
-                  <div className="flex items-center rounded-full border-2 border-choc/40">
+                  <div className="flex items-center rounded-full border border-choc/40">
                     <button
                       type="button"
                       onClick={() => setQty(l.variantId, l.qty - 1)}

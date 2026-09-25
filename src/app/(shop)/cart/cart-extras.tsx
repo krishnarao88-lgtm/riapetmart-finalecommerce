@@ -69,7 +69,7 @@ export function CartSuggestions({ suggestions }: { suggestions: CartSuggestion[]
   if (suggestions.length === 0) return null;
 
   return (
-    <section aria-labelledby="suggest-heading" className="mt-6 rounded-2xl border-2 border-choc bg-peach/30 p-4">
+    <section aria-labelledby="suggest-heading" className="mt-6 rounded-2xl card-soft bg-peach/30 p-4">
       <h2 id="suggest-heading" className="flex items-center gap-2 font-bold text-choc">
         <Sparkles className="size-4 text-rust" aria-hidden /> Complete the care
       </h2>

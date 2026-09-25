@@ -24,11 +24,11 @@ export default async function AccountLogin({ searchParams }: PageProps<"/account
       </div>
 
       {sent ? (
-        <p role="status" className="rounded-2xl border-2 border-choc bg-cream p-4 font-semibold text-choc">
+        <p role="status" className="rounded-2xl card-soft bg-cream p-4 font-semibold text-choc">
           Check your inbox. The link signs you in on this device and expires in 1 hour.
         </p>
       ) : (
-        <form action={sendAccountMagicLink} className="grid gap-4 rounded-2xl border-2 border-choc bg-surface p-5">
+        <form action={sendAccountMagicLink} className="grid gap-4 rounded-2xl card-soft bg-surface p-5">
           <label htmlFor="email" className="grid gap-2 font-semibold text-choc">
             Email
             <input
@@ -39,7 +39,7 @@ export default async function AccountLogin({ searchParams }: PageProps<"/account
               autoComplete="email"
               aria-invalid={error === "email"}
               aria-describedby={message ? "login-error" : undefined}
-              className="min-h-12 rounded-xl border-2 border-choc/40 bg-cream px-3 text-base font-normal text-choc"
+              className="min-h-12 rounded-xl border border-choc/40 bg-cream px-3 text-base font-normal text-choc"
             />
           </label>
           {message && (
