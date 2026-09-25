@@ -75,12 +75,12 @@ async function loadVariants(supabase: Supabase, productIds: string[]) {
   return rows;
 }
 
-/** Products that can't go live: no active variant, or an active variant priced at RM0. */
+/** Products that can't go live: no active size with a price. RM0 sizes are hidden from shoppers until priced. */
 function unpublishable(productIds: string[], variants: VariantRow[]) {
   return new Set(
     productIds.filter((id) => {
       const active = variants.filter((v) => v.product_id === id && v.is_active);
-      return active.length === 0 || active.some((v) => Number(v.price) <= 0);
+      return !active.some((v) => Number(v.price) > 0);
     }),
   );
 }
@@ -190,7 +190,7 @@ export async function bulkUpdateProducts(rawIds: string[], op: BulkOp): Promise<
         if (!STATUSES.includes(op.value)) return { error: "Unknown status." };
         const { changed, blocked } = await setStatus(supabase, ids, op.value);
         result = {
-          ok: `${changed} set to ${op.value}.${blocked ? ` ${blocked} not published: price is RM0 or no active variant.` : ""}`,
+          ok: `${changed} set to ${op.value}.${blocked ? ` ${blocked} not published: no size has a price yet.` : ""}`,
         };
         break;
       }
@@ -286,7 +286,7 @@ export async function saveGridEdits(edits: GridEdit[], statuses: StatusEdit[]): 
     revalidatePath("/admin/products");
     const saved = fields + stockItems.length + statuses.length - blocked;
     return {
-      ok: `Saved ${saved} changes.${blocked ? ` ${blocked} not published: price is RM0 or no active variant.` : ""}`,
+      ok: `Saved ${saved} changes.${blocked ? ` ${blocked} not published: no size has a price yet.` : ""}`,
     };
   } catch (err) {
     return { error: err instanceof Error ? err.message : "Something went wrong." };

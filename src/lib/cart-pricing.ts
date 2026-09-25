@@ -45,6 +45,8 @@ export async function priceCart(
     const product = v.products as unknown as { name: string; product_images: { path: string }[] } | null;
     const name = product?.name ?? v.title;
     const s = stock.get(v.id);
+    // Unpriced sizes are hidden by RLS; this guards any caller using a privileged client.
+    if (Number(v.price) <= 0) return { error: `${name} (${v.title}) is not available yet` };
     if (!s || s.available < line.qty) {
       const left = s?.available ?? 0;
       return {

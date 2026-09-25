@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { Cat, Dog, FlaskConical, Info, PawPrint, Pill, ShieldCheck, Target } from "lucide-react";
 import Link from "next/link";
-import { notFound } from "next/navigation";
+import { notFound, permanentRedirect } from "next/navigation";
 import { AddToCart } from "@/components/add-to-cart";
 import { ProductTags } from "@/components/product-tags";
 import { getVariantStock } from "@/components/product-card";
@@ -85,7 +85,18 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
     (await createClient()).from("settings").select("value").eq("key", "expiry_badges").single(),
   ]);
 
-  if (!product) notFound();
+  if (!product) {
+    // Products merged into another (e.g. separate sizes combined) keep their old address working.
+    const supabase = await createClient();
+    const { data: moved } = await supabase
+      .from("product_redirects")
+      .select("products(slug, status)")
+      .eq("old_slug", slug)
+      .maybeSingle();
+    const target = moved?.products as unknown as { slug: string; status: string } | null;
+    if (target?.status === "published") permanentRedirect(`/shop/${target.slug}`);
+    notFound();
+  }
 
   const supabase = await createClient();
   const rawVariants = [...(product.variants ?? [])].sort((a, b) => a.sort - b.sort);
