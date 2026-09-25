@@ -257,7 +257,7 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
       </nav>
       {cheapest && <TrackViewItem id={cheapest.id} name={name} price={cheapest.price} />}
       <div className="grid gap-8 md:grid-cols-2">
-        <div className="relative flex aspect-square max-h-[45vh] items-center justify-center overflow-hidden rounded-3xl card-soft bg-peach/40 sm:max-h-none">
+        <div className="relative mx-auto flex aspect-square w-full max-h-[45vh] items-center justify-center overflow-hidden rounded-3xl card-soft bg-peach/40 sm:max-h-none">
           {image ? (
             // eslint-disable-next-line @next/next/no-img-element
             <img src={image.path} alt={titleCase(image.alt || product.name)} className="absolute inset-0 size-full object-contain" />

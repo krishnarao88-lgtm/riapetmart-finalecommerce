@@ -28,6 +28,7 @@ export function ActivityToast() {
   const [index, setIndex] = useState(-1);
   const [visible, setVisible] = useState(false);
   const [dismissed, setDismissed] = useState(false);
+  const [tick, setTick] = useState(0);
 
   useEffect(() => {
     try {
@@ -49,6 +50,11 @@ export function ActivityToast() {
     if (!items.length || dismissed) return;
     if (!visible) {
       const t = setTimeout(() => {
+        // One pop-up at a time: skip this turn while a dialog (e.g. the welcome offer) is open.
+        if (document.querySelector("dialog[open]")) {
+          setTick((n) => n + 1); // try again after another gap
+          return;
+        }
         setIndex((i) => (i + 1) % items.length);
         setVisible(true);
       }, index === -1 ? 0 : GAP);
@@ -56,7 +62,7 @@ export function ActivityToast() {
     }
     const t = setTimeout(() => setVisible(false), SHOW_FOR);
     return () => clearTimeout(t);
-  }, [items, visible, index, dismissed]);
+  }, [items, visible, index, dismissed, tick]);
 
   // Keep it off checkout-focused pages.
   if (dismissed || index < 0 || !items.length || pathname.startsWith("/cart") || pathname.startsWith("/order")) return null;
@@ -75,7 +81,7 @@ export function ActivityToast() {
     <div
       role="status"
       aria-live="polite"
-      className={`fixed bottom-4 left-4 z-40 w-[min(22rem,calc(100vw-6.5rem))] transition-all duration-500 motion-reduce:transition-none ${
+      className={`fixed bottom-[calc(1rem+var(--sticky-bar,0px))] left-4 z-40 w-[min(22rem,calc(100vw-6.5rem))] transition-all duration-500 motion-reduce:transition-none ${
         visible ? "translate-y-0 opacity-100" : "pointer-events-none translate-y-4 opacity-0"
       }`}
     >

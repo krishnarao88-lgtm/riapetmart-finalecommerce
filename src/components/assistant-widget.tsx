@@ -55,7 +55,7 @@ export function AssistantWidget() {
         onClick={() => setOpen((o) => !o)}
         aria-expanded={open}
         aria-label={open ? "Close shopping assistant" : "Ask our shopping assistant"}
-        className="fixed bottom-[calc(5.5rem+env(safe-area-inset-bottom))] right-[calc(1rem+env(safe-area-inset-right))] z-30 grid size-14 place-items-center rounded-full border-2 border-choc bg-cream text-rust shadow-[3px_3px_0_0_var(--color-choc)] transition-transform hover:-translate-y-0.5 print:hidden"
+        className="fixed bottom-[calc(5.5rem+var(--sticky-bar,0px)+env(safe-area-inset-bottom))] transition-[bottom] duration-300 right-[calc(1rem+env(safe-area-inset-right))] z-30 grid size-14 place-items-center rounded-full border-2 border-choc bg-cream text-rust shadow-[3px_3px_0_0_var(--color-choc)] transition-transform hover:-translate-y-0.5 print:hidden"
       >
         {open ? <X className="size-6" aria-hidden /> : <Bot className="size-7" aria-hidden />}
       </button>
@@ -63,7 +63,7 @@ export function AssistantWidget() {
       {open && (
         <section
           aria-label="Shopping assistant"
-          className="fixed bottom-[calc(10rem+env(safe-area-inset-bottom))] right-4 z-40 flex max-h-[70dvh] w-[min(24rem,calc(100vw-2rem))] flex-col overflow-hidden rounded-3xl card-soft bg-cream"
+          className="fixed bottom-[calc(10rem+var(--sticky-bar,0px)+env(safe-area-inset-bottom))] right-4 z-40 flex max-h-[70dvh] w-[min(24rem,calc(100vw-2rem))] flex-col overflow-hidden rounded-3xl card-soft bg-cream"
         >
           <header className="border-b-2 border-choc/15 bg-terracotta px-4 py-3 text-cream">
             <p className="font-bubble text-lg font-extrabold">Ask Ria</p>
