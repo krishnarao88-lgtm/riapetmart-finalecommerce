@@ -1,6 +1,5 @@
 import { ShieldOff } from "lucide-react";
 import type { Metadata } from "next";
-import { AdminNav } from "@/components/admin/admin-nav";
 import { CodeField } from "@/components/admin/code-field";
 import { MfaSetup } from "@/components/admin/mfa-setup";
 import { requireStaff } from "@/lib/auth";
@@ -19,7 +18,7 @@ const errors: Record<string, string> = {
 };
 
 export default async function SecurityPage({ searchParams }: PageProps<"/admin/security">) {
-  const { user, role } = await requireStaff();
+  const { user } = await requireStaff();
   const { status, error } = await searchParams;
   const notice = typeof status === "string" ? notices[status] : undefined;
   const message = typeof error === "string" ? errors[error] : undefined;
@@ -27,7 +26,6 @@ export default async function SecurityPage({ searchParams }: PageProps<"/admin/s
 
   return (
     <div className="mx-auto grid max-w-2xl gap-6 px-4 py-8">
-      <AdminNav current="/admin/security" role={role} />
       <div className="grid gap-1">
         <h1 className="font-display text-3xl font-extrabold tracking-tight">Sign-in security</h1>
         <p className="text-ink-2">

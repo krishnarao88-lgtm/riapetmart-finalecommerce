@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { AdminNav } from "@/components/admin/admin-nav";
 import { BatchEditor, type Batch } from "@/components/admin/batch-editor";
 import { ProductForm, type ProductFields } from "@/components/admin/product-form";
 import { ProductImages } from "@/components/admin/product-images";
@@ -42,7 +41,6 @@ export default async function EditProduct({ params }: PageProps<"/admin/products
 
   return (
     <div className="mx-auto grid max-w-5xl gap-6 px-4 py-8">
-      <AdminNav current="/admin/products" />
 
       <div className="grid gap-1">
         <Link href="/admin/products" className="text-sm text-ink-2 underline">

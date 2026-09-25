@@ -1,16 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Baloo_2, Bricolage_Grotesque, Figtree, Fraunces } from "next/font/google";
 import { Analytics } from "@/components/analytics";
-import { CartDrawer } from "@/components/cart-drawer";
-import { FloatingWhatsApp } from "@/components/floating-whatsapp";
 import { ReferralCapture } from "@/components/referral-capture";
-import { SiteFooter } from "@/components/site-footer";
-import { AssistantWidget } from "@/components/assistant-widget";
-import { SaleBanner } from "@/components/sale-banner";
-import { SiteHeader } from "@/components/site-header";
-import { WelcomePopup } from "@/components/welcome-popup";
-import { CartProvider } from "@/lib/cart-context";
-import { freeDeliveryMin, getDeliverySettings } from "@/lib/delivery-settings";
 import { siteKeywords } from "@/lib/seo";
 import { site } from "@/lib/site";
 import "./globals.css";
@@ -75,8 +66,7 @@ const storeJsonLd = {
   },
 };
 
-export default async function RootLayout({ children }: LayoutProps<"/">) {
-  const delivery = await getDeliverySettings();
+export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html
       lang="en-MY"
@@ -95,18 +85,7 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
         >
           Skip to content
         </a>
-        <CartProvider>
-          <SaleBanner />
-          <SiteHeader />
-          <main id="main" className="flex-1">
-            {children}
-          </main>
-          <SiteFooter />
-          <WelcomePopup />
-          <FloatingWhatsApp />
-          {process.env.ANTHROPIC_API_KEY && <AssistantWidget />}
-          <CartDrawer freeDeliveryMin={freeDeliveryMin(delivery)} />
-        </CartProvider>
+        {children}
       </body>
     </html>
   );

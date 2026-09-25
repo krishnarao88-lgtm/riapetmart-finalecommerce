@@ -164,3 +164,58 @@ h3 {
     animation-duration: 0.01ms !important;
   }
 }
+
+/* Admin runs in the storefront's warm palette with a calmer, flatter look (clean cards, hairline
+   borders, soft shadows) instead of the chunky storefront outlines. Remapping the tokens here
+   re-themes every admin screen at once. */
+.admin-theme {
+  --color-ground: #faf4ea;
+  --color-surface: #ffffff;
+  --color-sunk: #f5ead9;
+  --color-line: #ecdcc6;
+  --color-ink: #2e1d14;
+  --color-ink-2: #6b5540;
+  --color-ink-3: #8f7a64;
+  --color-grape: #c06a37;
+  --color-tangerine: #d9814a;
+  --color-berry: #a8452b;
+  --color-sunshine: #f0c9a0;
+  --radius-chunk: 1rem;
+  --shadow-chunk: 0 1px 2px rgb(46 29 20 / 0.05), 0 10px 30px -18px rgb(46 29 20 / 0.25);
+  --shadow-chunk-sm: 0 1px 2px rgb(46 29 20 / 0.06);
+  background: var(--color-ground);
+  color: var(--color-ink);
+}
+.admin-theme :focus-visible {
+  outline-color: var(--color-terracotta);
+}
+/* Card and panel outlines: hairline sand instead of heavy dark borders. */
+.admin-theme .border-ink,
+.admin-theme .border-line {
+  border-color: var(--color-line);
+}
+.admin-theme .border-2 {
+  border-width: 1px;
+}
+.admin-theme .btn-chunk {
+  border: 1px solid transparent;
+  border-radius: 0.75rem;
+  box-shadow: var(--shadow-chunk-sm);
+  font-weight: 600;
+  &:hover {
+    transform: none;
+    filter: brightness(0.96);
+    box-shadow: var(--shadow-chunk-sm);
+  }
+  &:active {
+    transform: scale(0.98);
+  }
+  &.bg-surface {
+    border-color: var(--color-line);
+  }
+  &.bg-grape,
+  &.bg-tangerine,
+  &.bg-terracotta {
+    color: #fff;
+  }
+}

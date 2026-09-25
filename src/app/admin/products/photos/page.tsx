@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { AdminNav } from "@/components/admin/admin-nav";
 import { BulkPhotoUpload, type PhotoTarget } from "@/components/admin/bulk-photo-upload";
 import { requireAdmin } from "@/lib/auth";
 
@@ -35,7 +34,6 @@ export default async function BulkPhotosPage() {
 
   return (
     <div className="mx-auto grid max-w-6xl gap-6 px-4 py-8">
-      <AdminNav current="/admin/products" />
       <div>
         <Link href="/admin/products" className="text-sm font-semibold underline">
           ← Products &amp; stock

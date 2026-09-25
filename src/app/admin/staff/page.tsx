@@ -1,6 +1,5 @@
 import { UserMinus } from "lucide-react";
 import type { Metadata } from "next";
-import { AdminNav } from "@/components/admin/admin-nav";
 import { requireAdmin } from "@/lib/auth";
 import { inviteStaff, removeStaff } from "../actions";
 
@@ -18,7 +17,6 @@ export default async function StaffPage({
 
   return (
     <div className="mx-auto grid max-w-2xl gap-6 px-4 py-8">
-      <AdminNav current="/admin/staff" />
       <div className="grid gap-1">
         <h1 className="font-display text-3xl font-extrabold tracking-tight">Staff</h1>
         <p className="text-ink-2">

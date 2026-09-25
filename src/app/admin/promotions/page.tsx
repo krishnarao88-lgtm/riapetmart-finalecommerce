@@ -1,5 +1,4 @@
 import type { Metadata } from "next";
-import { AdminNav } from "@/components/admin/admin-nav";
 import { BundleOfferRow, type BundleOfferRowData } from "@/components/admin/bundle-offer-row";
 import { PromotionForm, type PromotionRow } from "@/components/admin/promotion-form";
 import { requireAdmin } from "@/lib/auth";
@@ -57,7 +56,6 @@ export default async function PromotionsPage() {
 
   return (
     <div className="mx-auto grid max-w-5xl gap-6 px-4 py-8">
-      <AdminNav current="/admin/promotions" />
       <div>
         <h1 className="font-display text-3xl font-extrabold tracking-tight">Offers &amp; sales</h1>
         <p className="text-sm text-ink-2">

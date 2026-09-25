@@ -1,6 +1,5 @@
 import { FileDown, FileSpreadsheet, FileText } from "lucide-react";
 import type { Metadata } from "next";
-import { AdminNav } from "@/components/admin/admin-nav";
 import { ImportForm } from "@/components/admin/import-form";
 import { requireAdmin } from "@/lib/auth";
 import { TEMPLATE_COLUMNS } from "@/lib/catalogue-import";
@@ -23,7 +22,6 @@ export default async function ImportPage() {
 
   return (
     <div className="mx-auto grid max-w-5xl gap-6 px-4 py-8">
-      <AdminNav current="/admin/import" />
 
       <div className="grid gap-1">
         <h1 className="font-display text-3xl font-extrabold tracking-tight">Import &amp; export</h1>

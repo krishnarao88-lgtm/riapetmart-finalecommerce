@@ -1,5 +1,4 @@
 import type { Metadata } from "next";
-import { AdminNav } from "@/components/admin/admin-nav";
 import { requireStaff } from "@/lib/auth";
 import { updateCatHotelBookingStatus } from "../actions";
 
@@ -27,7 +26,7 @@ const statusStyle: Record<Booking["status"], string> = {
 };
 
 export default async function AdminCatHotelPage() {
-  const { supabase, role } = await requireStaff();
+  const { supabase } = await requireStaff();
   const { data } = await supabase
     .from("cat_hotel_bookings")
     .select("id, customer_name, customer_email, customer_phone, cat_name, pet_count, check_in, check_out, notes, status, created_at")
@@ -36,7 +35,6 @@ export default async function AdminCatHotelPage() {
 
   return (
     <div className="mx-auto grid max-w-4xl gap-6 px-4 py-8">
-      <AdminNav current="/admin/cat-hotel" role={role} />
       <div className="grid gap-1">
         <h1 className="font-display text-3xl font-extrabold tracking-tight">Cat Hotel bookings</h1>
         <p className="text-ink-2">Confirm or decline requests after checking real availability.</p>

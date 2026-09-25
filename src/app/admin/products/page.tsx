@@ -1,7 +1,6 @@
 import { ImagePlus, Search } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
-import { AdminNav } from "@/components/admin/admin-nav";
 import { type AdminProductRow, LOW_STOCK, ProductTable } from "@/components/admin/product-table";
 import { requireAdmin } from "@/lib/auth";
 import { formatMyr, marginFromPrice } from "@/lib/pricing";
@@ -150,7 +149,6 @@ export default async function AdminProducts({ searchParams }: PageProps<"/admin/
 
   return (
     <div className="mx-auto grid max-w-6xl gap-6 px-4 py-8">
-      <AdminNav current="/admin/products" />
 
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div>

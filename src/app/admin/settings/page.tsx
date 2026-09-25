@@ -1,6 +1,5 @@
 import { CheckCircle2, XCircle } from "lucide-react";
 import type { Metadata } from "next";
-import { AdminNav } from "@/components/admin/admin-nav";
 import { SettingsForm, type SettingsValues } from "@/components/admin/settings-form";
 import { requireAdmin } from "@/lib/auth";
 import { isEasyParcelConnected } from "@/lib/shipping/easyparcel";
@@ -49,7 +48,6 @@ export default async function SettingsPage({
 
   return (
     <div className="mx-auto grid max-w-4xl gap-6 px-4 py-8">
-      <AdminNav current="/admin/settings" />
       <div className="grid gap-1">
         <h1 className="font-display text-3xl font-extrabold tracking-tight">Settings</h1>
         <p className="text-ink-2">These take effect immediately, with no new deployment needed.</p>

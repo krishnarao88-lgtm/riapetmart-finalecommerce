@@ -1,6 +1,5 @@
 import { Trash2 } from "lucide-react";
 import type { Metadata } from "next";
-import { AdminNav } from "@/components/admin/admin-nav";
 import { ImportReviews } from "@/components/admin/import-reviews";
 import { requireAdmin } from "@/lib/auth";
 import { Stars } from "@/components/stars";
@@ -46,7 +45,6 @@ export default async function AdminReviewsPage() {
 
   return (
     <div className="mx-auto grid max-w-4xl gap-6 px-4 py-8">
-      <AdminNav current="/admin/reviews" />
       <div className="grid gap-1">
         <h1 className="font-display text-3xl font-extrabold tracking-tight">Reviews</h1>
         <p className="text-ink-2">Approve reviews to publish them on the storefront. Never edit or invent review text.</p>
