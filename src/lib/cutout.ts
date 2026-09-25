@@ -78,20 +78,37 @@ export function removeWhiteBackground({ data, width, height }: Pixels): boolean 
   return true;
 }
 
-/** Bounding box of the visible (non-transparent) pixels, or null for an empty image. */
+/**
+ * Bounding box of the visible (non-transparent) pixels, or null for an empty image. Near-empty rows and
+ * columns at the edges (a stray speck or hairline left by the cutout) are ignored so they can't widen the frame.
+ */
 export function visibleBounds({ data, width, height }: Pixels) {
-  let minX = width, minY = height, maxX = -1, maxY = -1;
-  for (let y = 0; y < height; y++) {
-    for (let x = 0; x < width; x++) {
-      if (data[(y * width + x) * 4 + 3] > 16) {
-        if (x < minX) minX = x;
-        if (x > maxX) maxX = x;
-        if (y < minY) minY = y;
-        if (y > maxY) maxY = y;
-      }
+  const visible = (x: number, y: number) => data[(y * width + x) * 4 + 3] > 16;
+  const rows = new Array<number>(height).fill(0);
+  for (let y = 0; y < height; y++) for (let x = 0; x < width; x++) if (visible(x, y)) rows[y]++;
+  const trim = (counts: number[], min: number) => {
+    const thin = Math.max(2, Math.round(counts.length * 0.01)); // a detached band this thin is a hairline, not product
+    let lo = 0;
+    let hi = counts.length - 1;
+    for (let pass = 0; pass < 3; pass++) {
+      while (lo <= hi && counts[lo] < min) lo++;
+      while (hi >= lo && counts[hi] < min) hi--;
+      let end = lo;
+      while (end <= hi && counts[end] >= min) end++;
+      if (end - lo <= thin && end <= hi && counts[end] === 0) lo = end;
+      let start = hi;
+      while (start >= lo && counts[start] >= min) start--;
+      if (hi - start <= thin && start >= lo && counts[start] === 0) hi = start;
     }
-  }
-  return maxX < 0 ? null : { x: minX, y: minY, w: maxX - minX + 1, h: maxY - minY + 1 };
+    return lo > hi ? null : [lo, hi];
+  };
+  const r = trim(rows, Math.max(1, Math.round(width * 0.02)));
+  if (!r) return null;
+  // Columns are counted only over the rows kept, so a trimmed hairline can't widen the frame sideways.
+  const cols = new Array<number>(width).fill(0);
+  for (let y = r[0]; y <= r[1]; y++) for (let x = 0; x < width; x++) if (visible(x, y)) cols[x]++;
+  const c = trim(cols, Math.max(1, Math.round((r[1] - r[0] + 1) * 0.02)));
+  return c ? { x: c[0], y: r[0], w: c[1] - c[0] + 1, h: r[1] - r[0] + 1 } : null;
 }
 
 /** Per row, the [left, right] span of the convex hull around clearly non-background pixels. */

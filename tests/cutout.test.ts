@@ -34,3 +34,12 @@ test("already-transparent cutouts are left alone", () => {
   const px = image(10, 10, (x) => (x > 3 && x < 6 ? [200, 30, 30, 255] : [0, 0, 0, 0]));
   assert.equal(removeWhiteBackground(px), false);
 });
+
+test("a hairline detached from the product doesn't widen the frame", () => {
+  const px = image(40, 40, (x, y) => {
+    if (y === 2 && x >= 5 && x <= 34) return [120, 120, 120, 255]; // stray line
+    if (y >= 8 && y <= 35 && x >= 10 && x <= 29) return [200, 30, 30, 255]; // product
+    return [0, 0, 0, 0];
+  });
+  assert.deepEqual(visibleBounds(px), { x: 10, y: 8, w: 20, h: 28 });
+});
