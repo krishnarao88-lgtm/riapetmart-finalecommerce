@@ -3,6 +3,10 @@
 import { revalidatePath } from "next/cache";
 import { requireAdmin } from "@/lib/auth";
 import { submitEasyParcelOrder } from "@/lib/shipping/easyparcel";
+import { bookLalamoveOrder } from "@/lib/shipping/lalamove";
+import { LALAMOVE_REBOOKABLE, toE164MY } from "@/lib/shipping/lalamove-rules";
+import { FROM, getResend } from "@/lib/resend";
+import { site } from "@/lib/site";
 
 export type ActionState = { ok?: string; error?: string } | null;
 
@@ -75,6 +79,65 @@ export async function bookEasyParcelShipment(_prev: ActionState, formData: FormD
     });
     revalidatePath("/admin/orders");
     return { ok: `Booked with ${result.courierName}. Refresh to see the waybill link.` };
+  } catch (err) {
+    return { error: err instanceof Error ? err.message : "Booking failed." };
+  }
+}
+
+export async function bookLalamoveRider(_prev: ActionState, formData: FormData): Promise<ActionState> {
+  const { supabase } = await requireAdmin();
+  const orderId = String(formData.get("order_id"));
+  const receiverName = String(formData.get("receiver_name") ?? "").trim();
+  const receiverPhone = toE164MY(String(formData.get("receiver_phone") ?? ""));
+  if (!receiverName) return { error: "Receiver name is required." };
+  if (!receiverPhone) return { error: "Enter a Malaysian mobile number (e.g. 012-345 6789)." };
+
+  const { data: order } = await supabase
+    .from("orders")
+    .select("status, shipping_method, shipping_address, items, customer_email, lalamove_order_id, lalamove_status")
+    .eq("id", orderId)
+    .single();
+  if (!order) return { error: "Order not found." };
+  if (order.status !== "paid" || order.shipping_method !== "lalamove") return { error: "This order isn't a paid Lalamove order." };
+  if (order.lalamove_order_id && !LALAMOVE_REBOOKABLE.includes(order.lalamove_status ?? "")) {
+    return { error: "A rider is already booked for this order." };
+  }
+  const address = order.shipping_address as ShippingAddress;
+  if (!address) return { error: "No delivery address on file for this order." };
+
+  const items = order.items as unknown as OrderItem[];
+  const { data: variants } = await supabase.from("variants").select("id, weight_grams").in("id", items.map((i) => i.variant_id));
+  const weightByVariant = new Map((variants ?? []).map((v) => [v.id, v.weight_grams ?? 500]));
+  const weightKg = items.reduce((sum, i) => sum + (weightByVariant.get(i.variant_id) ?? 500) * i.qty, 0) / 1000;
+  const ref = orderId.slice(0, 8);
+
+  try {
+    const booked = await bookLalamoveOrder({
+      dropoffAddress: `${address.addressLine}, ${address.city}, ${address.postcode} ${address.state}, Malaysia`,
+      weightKg,
+      recipientName: receiverName,
+      recipientPhone: receiverPhone,
+      remarks: `${site.name} order #${ref}`,
+      orderRef: ref,
+    });
+    const { error } = await supabase
+      .from("orders")
+      .update({ lalamove_order_id: booked.orderId, lalamove_status: booked.status, lalamove_share_link: booked.shareLink })
+      .eq("id", orderId);
+    if (error) return { error: `Rider booked (Lalamove ${booked.orderId}) but saving failed: ${error.message}. Don't book again.` };
+
+    if (order.customer_email && booked.shareLink) {
+      await getResend()
+        .emails.send({
+          from: FROM,
+          to: order.customer_email,
+          subject: `Your ${site.name} order #${ref} is on its way`,
+          text: `A Lalamove rider has been booked for your order #${ref}.\n\nTrack your delivery live: ${booked.shareLink}\n\n${site.name}`,
+        })
+        .catch(() => undefined); // the booking stands even if the email fails
+    }
+    revalidatePath("/admin/orders");
+    return { ok: `Rider booked (RM${booked.price}). Lalamove is finding a driver.` };
   } catch (err) {
     return { error: err instanceof Error ? err.message : "Booking failed." };
   }

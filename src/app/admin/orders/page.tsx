@@ -4,6 +4,7 @@ import { AdminNav } from "@/components/admin/admin-nav";
 import { BookEasyParcel } from "@/components/admin/book-easyparcel";
 import { formatMyr } from "@/lib/pricing";
 import { requireStaff } from "@/lib/auth";
+import { LALAMOVE_REBOOKABLE } from "@/lib/shipping/lalamove-rules";
 import { setFulfilmentStatus, type FulfilmentStatus } from "./actions";
 
 export const metadata: Metadata = { title: "Orders", robots: { index: false } };
@@ -25,6 +26,9 @@ type Order = {
   easyparcel_order_number: string | null;
   easyparcel_awb_url: string | null;
   easyparcel_tracking_url: string | null;
+  lalamove_order_id: string | null;
+  lalamove_status: string | null;
+  lalamove_share_link: string | null;
 };
 
 const statusStyle: Record<Order["status"], string> = {
@@ -42,6 +46,16 @@ const fulfilmentStyle: Record<FulfilmentStatus, string> = {
   refunded: "bg-bad-bg text-bad-fg",
 };
 
+const LALAMOVE_LABEL: Record<string, string> = {
+  ASSIGNING_DRIVER: "finding a rider",
+  ON_GOING: "rider on the way to the shop",
+  PICKED_UP: "picked up, out for delivery",
+  COMPLETED: "delivered",
+  CANCELED: "cancelled — book again",
+  REJECTED: "rejected — book again",
+  EXPIRED: "no rider found — book again",
+};
+
 const nextStep: Partial<Record<FulfilmentStatus, FulfilmentStatus>> = {
   new: "packed",
   packed: "shipped",
@@ -53,7 +67,7 @@ export default async function OrdersPage() {
   const { data } = await supabase
     .from("orders")
     .select(
-      "id, created_at, status, customer_email, customer_name, customer_phone, total, fulfilment_status, items, shipping_method, shipping_address, easyparcel_order_number, easyparcel_awb_url, easyparcel_tracking_url",
+      "id, created_at, status, customer_email, customer_name, customer_phone, total, fulfilment_status, items, shipping_method, shipping_address, easyparcel_order_number, easyparcel_awb_url, easyparcel_tracking_url, lalamove_order_id, lalamove_status, lalamove_share_link",
     )
     .order("created_at", { ascending: false })
     .limit(200);
@@ -160,6 +174,28 @@ export default async function OrdersPage() {
                     defaultPhone={order.customer_phone ?? ""}
                   />
                 ) : null
+              )}
+              {order.status === "paid" && order.shipping_method === "lalamove" && (
+                <div className="grid gap-2">
+                  {order.lalamove_order_id && (
+                    <p className="flex flex-wrap gap-3 text-sm font-semibold">
+                      <span>Lalamove: {LALAMOVE_LABEL[order.lalamove_status ?? ""] ?? order.lalamove_status}</span>
+                      {order.lalamove_share_link && (
+                        <a href={order.lalamove_share_link} target="_blank" rel="noopener noreferrer" className="text-grape underline">
+                          Track rider
+                        </a>
+                      )}
+                    </p>
+                  )}
+                  {role === "admin" && (!order.lalamove_order_id || LALAMOVE_REBOOKABLE.includes(order.lalamove_status ?? "")) && (
+                    <BookEasyParcel
+                      carrier="lalamove"
+                      orderId={order.id}
+                      defaultName={order.customer_name ?? ""}
+                      defaultPhone={order.customer_phone ?? ""}
+                    />
+                  )}
+                </div>
               )}
             </li>
           ))}

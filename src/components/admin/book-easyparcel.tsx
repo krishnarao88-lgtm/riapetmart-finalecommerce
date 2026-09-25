@@ -1,35 +1,40 @@
 "use client";
 
 import { useActionState, useState } from "react";
-import { bookEasyParcelShipment } from "@/app/admin/orders/actions";
+import { bookEasyParcelShipment, bookLalamoveRider } from "@/app/admin/orders/actions";
 
 export function BookEasyParcel({
   orderId,
   defaultName = "",
   defaultPhone = "",
+  carrier = "easyparcel",
 }: {
   orderId: string;
   defaultName?: string;
   defaultPhone?: string;
+  carrier?: "easyparcel" | "lalamove";
 }) {
-  const [state, action, pending] = useActionState(bookEasyParcelShipment, null);
+  const lalamove = carrier === "lalamove";
+  const [state, action, pending] = useActionState(lalamove ? bookLalamoveRider : bookEasyParcelShipment, null);
   const [open, setOpen] = useState(false);
 
   if (!open) {
     return (
       <button type="button" onClick={() => setOpen(true)} className="w-fit text-sm font-semibold text-grape underline">
-        Book & print waybill (EasyParcel)
+        {lalamove ? "Book Lalamove rider" : "Book & print waybill (EasyParcel)"}
       </button>
     );
   }
 
-  const generating = state?.error?.toLowerCase().includes("being generated");
+  const generating = !lalamove && state?.error?.toLowerCase().includes("being generated");
 
   return (
     <form action={action} className="grid gap-2 rounded-xl border-2 border-line bg-ground p-3">
       <input type="hidden" name="order_id" value={orderId} />
       <p className="text-xs text-ink-2">
-        This books the real courier and deducts from your EasyParcel balance — cannot be undone from here. Prefilled
+        {lalamove
+          ? "This books a Lalamove rider to collect from the shop now and charges your Lalamove wallet. The customer is emailed a live tracking link."
+          : "This books the real courier and deducts from your EasyParcel balance — cannot be undone from here."} Prefilled
         from what the customer entered at checkout; edit if it&apos;s missing or wrong.
       </p>
       <div className="grid gap-2 sm:grid-cols-[1fr_1fr_auto]">
