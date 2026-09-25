@@ -11,7 +11,7 @@ import { whatsappLink } from "@/lib/site";
 import { withPromos } from "@/lib/promotions-server";
 import { createClient } from "@/lib/supabase/server";
 
-type ShopSearchParams = Promise<{ pet?: string; category?: string; deal?: string; q?: string; sort?: string; need?: string }>;
+type ShopSearchParams = Promise<{ pet?: string; category?: string; deal?: string; q?: string; sort?: string; need?: string; stock?: string }>;
 
 const shopAllMetadata: Metadata = {
   title: "Shop all",
@@ -72,7 +72,8 @@ type ProductRow = {
 };
 
 export default async function ShopPage({ searchParams }: { searchParams: ShopSearchParams }) {
-  const { pet, category, deal, q, sort, need } = await searchParams;
+  const { pet, category, deal, q, sort, need, stock: stockParam } = await searchParams;
+  const showSoldOut = stockParam === "all";
   const needLabel = need ? NEED_LABELS[need] : undefined;
   const seo = q || deal || need ? null : landingSeo(category, pet);
   const supabase = await createClient();
@@ -129,11 +130,16 @@ export default async function ShopPage({ searchParams }: { searchParams: ShopSea
 
   if (deal === "sale") rows = rows.filter((p) => p.promo);
   if (needLabel) rows = rows.filter((p) => careNeeds({ name: p.name, highlights: p.highlights ?? null }).has(need!));
+  // Sold-out products stay reachable (and indexed) on their own pages, but the grid shows what can
+  // be bought now unless the shopper asks for everything.
+  const inStock = (p: (typeof rows)[number]) => productStock(p.variants, stock, expirySettings).available !== 0;
+  const soldOutCount = stock ? rows.filter((p) => !inStock(p)).length : 0;
+  if (!showSoldOut && stock) rows = rows.filter(inStock);
   if (deal === "short-dated") {
     rows = rows.filter((p) => productStock(p.variants, stock, expirySettings).badge?.kind === "short-dated");
   }
 
-  const current = { pet, category, deal, q, sort, need };
+  const current = { pet, category, deal, q, sort, need, stock: stockParam };
   const filterHref = (overrides: Partial<typeof current>) => {
     const next = { ...current, ...overrides };
     const params = new URLSearchParams();
@@ -168,7 +174,17 @@ export default async function ShopPage({ searchParams }: { searchParams: ShopSea
         <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(faqJsonLd(seo.faqs)) }} />
       )}
       <h1 className="font-bubble text-3xl font-extrabold text-choc">{seo?.h1 ?? (needLabel ? `Shop for ${needLabel.toLowerCase()}` : "Shop all")}</h1>
-      <p className="mt-1 text-choc-2">{rows.length} product{rows.length === 1 ? "" : "s"}</p>
+      <p className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-choc-2">
+        <span>
+          {rows.length} product{rows.length === 1 ? "" : "s"}
+          {!showSoldOut && soldOutCount > 0 ? " in stock" : ""}
+        </span>
+        {soldOutCount > 0 && (
+          <Link href={filterHref({ stock: showSoldOut ? undefined : "all" })} className="text-sm font-semibold text-rust underline">
+            {showSoldOut ? "Hide sold-out items" : `Show ${soldOutCount} sold-out`}
+          </Link>
+        )}
+      </p>
       {seo && (
         <div className="mt-3 grid max-w-3xl gap-1.5">
           <p className="text-choc">{seo.intro}</p>
@@ -254,8 +270,8 @@ export default async function ShopPage({ searchParams }: { searchParams: ShopSea
         </div>
       ) : (
         <ul className="mt-8 grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
-          {rows.map((p) => (
-            <li key={p.id}>
+          {rows.map((p, i) => (
+            <li key={p.id} style={{ "--i": i % 4 } as React.CSSProperties}>
               <ProductCard
                 product={{ ...p, categoryLabel: p.categories?.name ?? p.pet_type }}
                 stock={stock}

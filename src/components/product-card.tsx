@@ -96,7 +96,12 @@ export function ProductCard({
           // eslint-disable-next-line @next/next/no-img-element
           <img src={image.path} alt={titleCase(image.alt || p.name)} className={`absolute inset-0 size-full object-contain transition-transform duration-500 ease-out motion-safe:group-hover:scale-105 ${soldOut ? "opacity-60" : ""}`} />
         ) : (
-          <PawPrint className="size-10 text-rust/50" aria-hidden />
+          <span className="grid justify-items-center gap-2 text-rust/70">
+            <span className="grid size-14 place-items-center rounded-full bg-cream/80 ring-1 ring-rust/15">
+              <PawPrint className="size-7" aria-hidden />
+            </span>
+            <span className="text-xs font-semibold uppercase tracking-widest">Photo coming soon</span>
+          </span>
         )}
         {p.is_dvs_approved && (
           <span className="absolute right-2 top-2 inline-flex items-center gap-1 rounded-full bg-surface/90 px-2 py-0.5 text-[11px] font-bold text-ok-fg shadow-sm">

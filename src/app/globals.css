@@ -261,3 +261,31 @@ h3 {
     0 1px 2px rgb(46 29 20 / 0.05),
     0 12px 28px -18px rgb(46 29 20 / 0.35);
 }
+
+/* Grid cascade: --i (column index) staggers when each card's scroll-reveal starts. */
+@media (prefers-reduced-motion: no-preference) {
+  @supports (animation-timeline: view()) {
+    [style*="--i"] > .reveal {
+      animation-range: entry calc(var(--i, 0) * 6%) entry calc(40% + var(--i, 0) * 6%);
+    }
+  }
+}
+
+/* Loading placeholders: warm sand blocks with a slow light sweep. */
+@keyframes skeleton-sweep {
+  from {
+    background-position: 150% 0;
+  }
+  to {
+    background-position: -50% 0;
+  }
+}
+@utility skeleton {
+  border-radius: 0.75rem;
+  background: linear-gradient(90deg, rgb(240 201 160 / 0.35) 25%, rgb(251 241 226 / 0.9) 50%, rgb(240 201 160 / 0.35) 75%);
+  background-size: 200% 100%;
+  animation: skeleton-sweep 1.6s ease-in-out infinite;
+  @media (prefers-reduced-motion: reduce) {
+    animation: none;
+  }
+}
