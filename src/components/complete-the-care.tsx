@@ -3,7 +3,7 @@ import { ProductCard } from "@/components/product-card";
 import { type CareProduct, suggestHouse } from "@/lib/care-needs";
 import type { ExpirySettings } from "@/lib/expiry";
 import { getHouseProducts } from "@/lib/house-products";
-import { createClient } from "@/lib/supabase/server";
+import { createPublicClient } from "@/lib/supabase/public";
 
 /** Own-brand products that serve the same need as this product; hidden when nothing matches. */
 export async function CompleteTheCare({
@@ -13,7 +13,7 @@ export async function CompleteTheCare({
   product: CareProduct;
   expirySettings: Partial<ExpirySettings>;
 }) {
-  const supabase = await createClient();
+  const supabase = createPublicClient();
   const { products, stock } = await getHouseProducts(supabase);
   const picks = suggestHouse([product], products, 3);
   if (picks.length === 0) return null;

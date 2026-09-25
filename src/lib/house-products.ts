@@ -2,13 +2,13 @@ import "server-only";
 import { getVariantStock, type ProductCardData, type VariantStock } from "@/components/product-card";
 import type { CareProduct } from "@/lib/care-needs";
 import { withPromos } from "@/lib/promotions-server";
-import type { createClient } from "@/lib/supabase/server";
+import type { SupabaseClient } from "@supabase/supabase-js";
 
 export type HouseProduct = ProductCardData & CareProduct;
 
 /** Published own-brand products that have something in stock, ready for suggestion rows. */
 export async function getHouseProducts(
-  supabase: Awaited<ReturnType<typeof createClient>>,
+  supabase: SupabaseClient,
 ): Promise<{ products: HouseProduct[]; stock: VariantStock | null }> {
   const { data } = await supabase
     .from("products")
