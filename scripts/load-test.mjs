@@ -14,7 +14,17 @@ if (!/^https?:\/\//.test(base)) {
 }
 const stages = (process.argv[3] ?? "10,25,50,100").split(",").map(Number).filter((n) => n > 0);
 const STAGE_MS = 30_000;
-const headers = process.env.VERCEL_BYPASS ? { "x-vercel-protection-bypass": process.env.VERCEL_BYPASS } : {};
+// Vercel previews are password-protected. If no real bypass key was given, ask for it.
+let bypass = process.env.VERCEL_BYPASS ?? "";
+if (/\.vercel\.app$/.test(new URL(base).hostname) && (!bypass || /PASTE|your-|KEY_HERE/i.test(bypass))) {
+  const { createInterface } = await import("node:readline/promises");
+  const rl = createInterface({ input: process.stdin, output: process.stdout });
+  console.log("This preview is protected. In Vercel: project → Settings → Deployment Protection →");
+  console.log("Protection Bypass for Automation. Copy that secret and paste it below.");
+  bypass = (await rl.question("Bypass secret: ")).trim();
+  rl.close();
+}
+const headers = bypass ? { "x-vercel-protection-bypass": bypass } : {};
 
 const SEARCHES = ["royal canin", "cat food", "kitten", "treats", "litter", "aniamor", "shampoo", "dog food"];
 const pick = (a) => a[Math.floor(Math.random() * a.length)];
@@ -30,7 +40,7 @@ async function discover() {
   }
   products = products.slice(0, 60);
   if (!products.length) {
-    console.error("Found no product pages. Is the URL right, and is VERCEL_BYPASS set for a protected preview?");
+    console.error("Found no product pages. The bypass secret was probably wrong: copy it again from Vercel and retry.");
     process.exit(1);
   }
   const variants = new Set();
