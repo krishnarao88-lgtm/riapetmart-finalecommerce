@@ -68,7 +68,9 @@ export function SiteHeader() {
 
       {/* Below lg: search on its own row, plus (phones) the category pills. Not pinned. */}
       <div className="border-b-2 border-rust/10 bg-cream lg:hidden">
-        <SearchForm className="mx-auto max-w-6xl px-4 pt-3 md:pb-3" />
+        <div className="mx-auto max-w-6xl px-4 pt-3 md:pb-3">
+          <SearchForm className="w-full" />
+        </div>
         <nav aria-label="Main" className="relative md:hidden">
           <ul className="flex gap-2 overflow-x-auto px-4 py-3 [scrollbar-width:none]">
             {nav.map((item) => (

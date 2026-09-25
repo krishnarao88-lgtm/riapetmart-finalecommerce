@@ -1,19 +1,27 @@
-import { ArrowRight, Bone, MessageCircle, PawPrint } from "lucide-react";
+import { ArrowRight, Bone, MessageCircle, PawPrint, Search } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { whatsappLink } from "@/lib/site";
 
 const words = ["Happy", "pets,", "delivered", "today."];
 
+// One tap from the hero to the four things most shoppers come for.
+const quickLinks = [
+  { href: "/shop?pet=dog", label: "Dog food" },
+  { href: "/shop?pet=cat", label: "Cat food" },
+  { href: "/shop?category=supplements", label: "Supplements" },
+  { href: "/shop?deal=short-dated", label: "Clearance" },
+];
+
 export function Hero() {
   return (
     <section className="relative overflow-hidden bg-terracotta">
-      <div className="mx-auto grid max-w-6xl gap-10 px-4 py-14 md:grid-cols-[1.15fr_1fr] md:items-center md:py-20">
-        <div className="grid gap-6">
+      <div className="mx-auto grid max-w-6xl gap-8 px-4 py-10 md:grid-cols-[1.15fr_1fr] md:items-center md:gap-10 md:py-16">
+        <div className="grid gap-5">
           <p className="w-fit rounded-full bg-cream px-3 py-1 text-xs font-bold uppercase tracking-widest text-choc">
             Rawang · Klang Valley · Nationwide
           </p>
-          <h1 className="font-bubble text-5xl font-extrabold leading-[0.95] tracking-tight text-cream sm:text-6xl lg:text-7xl">
+          <h1 className="font-bubble text-[2.75rem] font-extrabold leading-[0.95] tracking-tight text-cream sm:text-6xl lg:text-[4.25rem]">
             {words.map((word, i) => (
               <span
                 key={word}
@@ -28,18 +36,53 @@ export function Hero() {
             Food, treats and care essentials from our neighbourhood shop, with same-day delivery across
             Selangor and KL.
           </p>
-          <div className="flex flex-wrap gap-3">
-            <Link href="/shop" className="btn-bubble bg-cream text-choc">
-              Shop all products <ArrowRight className="size-5" aria-hidden />
-            </Link>
-            <a href={whatsappLink()} target="_blank" rel="noopener noreferrer" className="btn-bubble bg-rust text-cream">
-              <MessageCircle className="size-5" aria-hidden /> Ask on WhatsApp
-            </a>
-          </div>
+          {/* Desktop search lives here; below lg the header already shows a search row. */}
+          <form action="/shop" role="search" className="hidden max-w-md items-center gap-2 rounded-full border-2 border-choc bg-cream p-1.5 pl-4 shadow-[3px_3px_0_0_var(--color-choc)] lg:flex">
+            <Search className="size-5 shrink-0 text-choc-2" aria-hidden />
+            <input
+              type="search"
+              name="q"
+              placeholder="Search food, treats, brands…"
+              aria-label="Search products"
+              enterKeyHint="search"
+              className="min-w-0 flex-1 bg-transparent py-2 text-choc placeholder:text-choc-2/70 focus:outline-none"
+            />
+            <button type="submit" className="btn-bubble min-h-10 bg-terracotta px-4 text-sm text-cream">
+              Search
+            </button>
+          </form>
+          <ul className="flex flex-wrap gap-2" aria-label="Popular">
+            {quickLinks.map((l) => (
+              <li key={l.href}>
+                <Link
+                  href={l.href}
+                  className="inline-flex min-h-10 items-center gap-1 rounded-full bg-cream/95 px-4 text-sm font-bold text-choc transition hover:bg-cream active:scale-95"
+                >
+                  {l.label}
+                </Link>
+              </li>
+            ))}
+            <li>
+              <Link
+                href="/shop"
+                className="inline-flex min-h-10 items-center gap-1 rounded-full px-3 text-sm font-bold text-cream underline-offset-4 hover:underline"
+              >
+                Shop all <ArrowRight className="size-4" aria-hidden />
+              </Link>
+            </li>
+          </ul>
+          <a
+            href={whatsappLink()}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex w-fit items-center gap-2 text-sm font-semibold text-cream/90 hover:text-cream"
+          >
+            <MessageCircle className="size-4" aria-hidden /> Not sure what to pick? Ask us on WhatsApp
+          </a>
         </div>
 
         {/* Warm photo-card composition, topped by the generated hero portrait. */}
-        <div className="relative mx-auto aspect-square w-full max-w-sm">
+        <div className="relative mx-auto hidden aspect-square w-full max-w-sm sm:block">
           <div className="absolute right-0 top-4 h-4/5 w-4/5 rounded-3xl bg-peach" aria-hidden />
           <div className="absolute left-0 top-0 h-[88%] w-[78%] overflow-hidden rounded-t-full rounded-b-3xl border-2 border-choc bg-rust shadow-[6px_6px_0_0_var(--color-choc)]">
             <Image
