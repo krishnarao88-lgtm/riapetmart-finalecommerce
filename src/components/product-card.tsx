@@ -78,10 +78,10 @@ export function ProductCard({
       href={`/shop/${p.slug}`}
       className="group flex h-full flex-col overflow-hidden rounded-2xl border-2 border-choc bg-surface shadow-[3px_3px_0_0_var(--color-choc)] transition-transform hover:-translate-y-0.5"
     >
-      <div className="relative flex aspect-square items-center justify-center bg-peach/40">
+      <div className="relative flex aspect-square items-center justify-center overflow-hidden bg-peach/40">
         {image ? (
           // eslint-disable-next-line @next/next/no-img-element
-          <img src={image.path} alt={titleCase(image.alt || p.name)} className={`size-full object-cover ${soldOut ? "opacity-60" : ""}`} />
+          <img src={image.path} alt={titleCase(image.alt || p.name)} className={`absolute inset-0 size-full object-contain ${soldOut ? "opacity-60" : ""}`} />
         ) : (
           <PawPrint className="size-10 text-rust/50" aria-hidden />
         )}

@@ -200,10 +200,10 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
       </nav>
       {cheapest && <TrackViewItem id={cheapest.id} name={name} price={cheapest.price} />}
       <div className="grid gap-8 md:grid-cols-2">
-        <div className="flex aspect-square max-h-[45vh] items-center justify-center rounded-3xl border-2 border-choc bg-peach/40 sm:max-h-none">
+        <div className="relative flex aspect-square max-h-[45vh] items-center justify-center overflow-hidden rounded-3xl border-2 border-choc bg-peach/40 sm:max-h-none">
           {image ? (
             // eslint-disable-next-line @next/next/no-img-element
-            <img src={image.path} alt={titleCase(image.alt || product.name)} className="size-full rounded-3xl object-cover" />
+            <img src={image.path} alt={titleCase(image.alt || product.name)} className="absolute inset-0 size-full object-contain" />
           ) : (
             <PawPrint className="size-16 text-rust/50" aria-hidden />
           )}
@@ -289,10 +289,10 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
                     href={`/shop/${p.slug}`}
                     className="flex h-full flex-col overflow-hidden rounded-2xl border-2 border-choc bg-surface transition-transform hover:-translate-y-0.5"
                   >
-                    <div className="flex aspect-square items-center justify-center bg-peach/40">
+                    <div className="relative flex aspect-square items-center justify-center overflow-hidden bg-peach/40">
                       {relImage ? (
                         // eslint-disable-next-line @next/next/no-img-element
-                        <img src={relImage.path} alt={titleCase(relImage.alt || p.name)} className="size-full object-cover" />
+                        <img src={relImage.path} alt={titleCase(relImage.alt || p.name)} className="absolute inset-0 size-full object-contain" />
                       ) : (
                         <PawPrint className="size-10 text-rust/50" aria-hidden />
                       )}
