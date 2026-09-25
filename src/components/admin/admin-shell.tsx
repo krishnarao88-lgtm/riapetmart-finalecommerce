@@ -3,6 +3,7 @@
 import {
   BadgePercent,
   BedDouble,
+  BadgeCheck,
   Boxes,
   FileSpreadsheet,
   LayoutDashboard,
@@ -31,6 +32,7 @@ const GROUPS: { title: string; links: NavLink[] }[] = [
       { href: "/admin/orders", label: "Orders", Icon: Receipt, adminOnly: false },
       { href: "/admin/products", label: "Products", Icon: Boxes, adminOnly: true },
       { href: "/admin/promotions", label: "Offers & sales", Icon: BadgePercent, adminOnly: true },
+      { href: "/admin/info-check", label: "Info check", Icon: BadgeCheck, adminOnly: true },
       { href: "/admin/reviews", label: "Reviews", Icon: MessageSquareQuote, adminOnly: false },
       { href: "/admin/cat-hotel", label: "Cat Hotel", Icon: BedDouble, adminOnly: false },
     ],

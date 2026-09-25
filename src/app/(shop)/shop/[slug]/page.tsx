@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { cleanProductText, textBlocks } from "@/lib/product-text";
-import { Cat, Dog, FlaskConical, Info, PawPrint, Pill, ShieldCheck, Target } from "lucide-react";
+import { BadgeCheck, Cat, Dog, FlaskConical, Info, PawPrint, Pill, ShieldCheck, Target } from "lucide-react";
 import Link from "next/link";
 import { notFound, permanentRedirect } from "next/navigation";
 import { AddToCart } from "@/components/add-to-cart";
@@ -23,7 +23,7 @@ async function getProduct(slug: string) {
   const { data: product } = await supabase
     .from("products")
     .select(
-      "id, name, description, ingredients, usage, highlights, is_dvs_approved, size_display, pet_type, brand_id, category_id, is_regulated, seo_title, seo_description, brands(name, slug, is_house_brand), categories(name, slug), product_images(path, alt, sort), variants(id, title, price, sort)",
+      "id, name, description, ingredients, usage, highlights, info_verified_at, info_source, is_dvs_approved, size_display, pet_type, brand_id, category_id, is_regulated, seo_title, seo_description, brands(name, slug, is_house_brand), categories(name, slug), product_images(path, alt, sort), variants(id, title, price, sort)",
     )
     .eq("slug", slug)
     .eq("status", "published")
@@ -354,6 +354,18 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
                   })}
               </ul>
             </section>
+          )}
+          {product.info_verified_at && (
+            <p className="flex items-center gap-1.5 text-xs text-choc-2">
+              <BadgeCheck className="size-4 shrink-0 text-rust" aria-hidden />
+              Checked against the manufacturer&apos;s information,{" "}
+              {new Date(product.info_verified_at as string).toLocaleDateString("en-MY", { month: "short", year: "numeric" })}
+              {product.info_source && (
+                <a href={product.info_source as string} target="_blank" rel="noopener noreferrer nofollow" className="underline">
+                  (source)
+                </a>
+              )}
+            </p>
           )}
         </div>
       </div>
