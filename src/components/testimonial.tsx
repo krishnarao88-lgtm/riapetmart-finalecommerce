@@ -2,7 +2,7 @@ import { BadgeCheck } from "lucide-react";
 import Link from "next/link";
 import { Stars } from "@/components/stars";
 import { reviewImageUrl, verifiedLabel } from "@/lib/reviews";
-import { createClient } from "@/lib/supabase/server";
+import { createPublicClient } from "@/lib/supabase/public";
 
 type Review = {
   id: string;
@@ -16,7 +16,7 @@ type Review = {
 
 /** Real approved reviews only, up to 6 latest — renders nothing until at least one exists. */
 export async function Testimonial() {
-  const supabase = await createClient();
+  const supabase = createPublicClient();
   const { data } = await supabase
     .from("reviews")
     .select("id, customer_name, rating, body, order_id, source, review_images(path)")

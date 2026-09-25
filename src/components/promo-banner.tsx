@@ -1,12 +1,12 @@
 import { RefreshCw, Truck } from "lucide-react";
 import { WelcomeOfferButton } from "@/components/welcome-popup";
 import { formatMyr } from "@/lib/pricing";
-import { createClient } from "@/lib/supabase/server";
+import { createPublicClient } from "@/lib/supabase/public";
 import { getWelcomeOffer } from "@/lib/welcome-offer";
 
 /** Real, live offers only — the welcome code is issued per signup, and free delivery shows only when configured. */
 export async function PromoBanner() {
-  const supabase = await createClient();
+  const supabase = createPublicClient();
   const [{ data }, offer] = await Promise.all([
     supabase.from("settings").select("value").eq("key", "delivery").single(),
     getWelcomeOffer(),

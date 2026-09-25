@@ -6,7 +6,7 @@ import { discountedPrice, getExpiryBadge, type ExpirySettings } from "@/lib/expi
 import { formatMyr } from "@/lib/pricing";
 import type { CardPromo } from "@/lib/promotions";
 import { titleCase } from "@/lib/seo";
-import type { createClient } from "@/lib/supabase/server";
+import type { SupabaseClient } from "@supabase/supabase-js";
 
 export type ProductCardData = {
   id: string;
@@ -26,7 +26,7 @@ export type VariantStock = Map<string, { available: number; nearest_expiry: stri
 
 /** stock_batches is admin-only under RLS, so shoppers read stock through the variant_stock RPC. Null if it fails. */
 export async function getVariantStock(
-  supabase: Awaited<ReturnType<typeof createClient>>,
+  supabase: SupabaseClient,
   variantIds: string[],
 ): Promise<VariantStock | null> {
   if (variantIds.length === 0) return new Map();

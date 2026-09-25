@@ -2,12 +2,12 @@ import "server-only";
 import { cache } from "react";
 import { todayInKL } from "@/lib/kl-time";
 import { type CardPromo, type Promotion, promoFor, promoLabel } from "@/lib/promotions";
-import { createClient } from "@/lib/supabase/server";
+import { createPublicClient } from "@/lib/supabase/public";
 
 /** Sales running today in Malaysia. Cached per request, so every card on a page shares one query. */
 export const getRunningPromotions = cache(async (): Promise<{ today: string; promos: Promotion[] }> => {
   const today = todayInKL();
-  const supabase = await createClient();
+  const supabase = createPublicClient();
   const { data } = await supabase
     .from("promotions")
     .select("id, name, starts_on, ends_on, discount, scope, brand_id, category_id, banner, excluded_product_ids")
@@ -44,7 +44,7 @@ export async function withPromos<T extends object>(products: T[]): Promise<(T & 
 export const getUpcomingPromotion = cache(async (days = 7): Promise<Promotion | null> => {
   const today = todayInKL();
   const horizon = new Date(Date.parse(`${today}T00:00:00Z`) + days * 86_400_000).toISOString().slice(0, 10);
-  const supabase = await createClient();
+  const supabase = createPublicClient();
   const { data } = await supabase
     .from("promotions")
     .select("id, name, starts_on, ends_on, discount, scope, brand_id, category_id, banner, excluded_product_ids")

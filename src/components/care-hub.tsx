@@ -15,7 +15,7 @@ import {
 import Link from "next/link";
 import { careNeeds, NEED_LABELS } from "@/lib/care-needs";
 import { guides } from "@/lib/guides";
-import { createClient } from "@/lib/supabase/server";
+import { createPublicClient } from "@/lib/supabase/public";
 
 const NEED_ICONS: Record<string, LucideIcon> = {
   skin: Sparkles,
@@ -53,7 +53,7 @@ const TIPS = [
  * right (real product counts, matched the same way as the bundle pairing). Replaces two text-only rows.
  */
 export async function CareHub() {
-  const supabase = await createClient();
+  const supabase = createPublicClient();
   const { data } = await supabase.from("products").select("name, highlights").eq("status", "published");
   const counts = new Map<string, number>();
   for (const p of data ?? []) for (const need of careNeeds(p)) counts.set(need, (counts.get(need) ?? 0) + 1);

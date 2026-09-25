@@ -4,11 +4,11 @@ import { getVariantStock, isShowcaseReady, ProductCard, type ProductCardData } f
 import { ProductRail } from "@/components/product-rail";
 import { type ExpirySettings } from "@/lib/expiry";
 import { withPromos } from "@/lib/promotions-server";
-import { createClient } from "@/lib/supabase/server";
+import { createPublicClient } from "@/lib/supabase/public";
 
 /** Up to eight real published products (with a photo and stock) — same stock/expiry badges as /shop, no fabricated bestseller/rating badges. */
 export async function FeaturedProducts() {
-  const supabase = await createClient();
+  const supabase = createPublicClient();
   const [{ data }, { data: settingsRow }] = await Promise.all([
     supabase
       .from("products")

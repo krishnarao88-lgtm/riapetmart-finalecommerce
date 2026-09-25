@@ -2,7 +2,7 @@ import { getVariantStock, isShowcaseReady, ProductCard, type ProductCardData } f
 import { ProductRail } from "@/components/product-rail";
 import { type ExpirySettings } from "@/lib/expiry";
 import { withPromos } from "@/lib/promotions-server";
-import { createClient } from "@/lib/supabase/server";
+import { createPublicClient } from "@/lib/supabase/public";
 import { createServiceClient } from "@/lib/supabase/service";
 
 /** Units sold per variant across paid orders. Only ids and counts leave this function, never customer data. */
@@ -28,7 +28,7 @@ export async function BestSellers() {
   });
   if (sold.size === 0) return null;
 
-  const supabase = await createClient();
+  const supabase = createPublicClient();
   // RLS only returns active variants of published products, so retired items drop out here.
   const { data: variants } = await supabase.from("variants").select("id, product_id").in("id", [...sold.keys()]);
   const byProduct = new Map<string, number>();

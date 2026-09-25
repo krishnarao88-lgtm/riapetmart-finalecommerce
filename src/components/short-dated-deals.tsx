@@ -4,11 +4,11 @@ import { getVariantStock, ProductCard, type ProductCardData, productStock } from
 import { ProductRail } from "@/components/product-rail";
 import { type ExpirySettings } from "@/lib/expiry";
 import { withPromos } from "@/lib/promotions-server";
-import { createClient } from "@/lib/supabase/server";
+import { createPublicClient } from "@/lib/supabase/public";
 
 /** Homepage clearance row: in-stock short-dated products, soonest best-before first. Hidden when there are none. */
 export async function ShortDatedDeals() {
-  const supabase = await createClient();
+  const supabase = createPublicClient();
   const [{ data }, { data: settingsRow }] = await Promise.all([
     supabase
       .from("products")

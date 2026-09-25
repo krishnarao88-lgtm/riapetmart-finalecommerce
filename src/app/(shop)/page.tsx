@@ -12,7 +12,10 @@ import { ShortDatedDeals } from "@/components/short-dated-deals";
 import { Testimonial } from "@/components/testimonial";
 import { TikTokFeed } from "@/components/tiktok-feed";
 import { TrustStats } from "@/components/trust-stats";
-import { createClient } from "@/lib/supabase/server";
+import { createPublicClient } from "@/lib/supabase/public";
+
+// Served from a cached copy rebuilt at most once a minute; product pages, cart and checkout stay live.
+export const revalidate = 60;
 
 const promises = [
   { Icon: Bike, title: "Same-day delivery", body: "Selangor, KL and Putrajaya by Lalamove." },
@@ -22,7 +25,7 @@ const promises = [
 ];
 
 export default async function Home() {
-  const supabase = await createClient();
+  const supabase = createPublicClient();
   const { count } = await supabase
     .from("products")
     .select("id", { count: "exact", head: true })
