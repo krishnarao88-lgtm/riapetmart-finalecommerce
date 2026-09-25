@@ -1,4 +1,5 @@
-import { getVariantStock, ProductCard, type ProductCardData } from "@/components/product-card";
+import { getVariantStock, isShowcaseReady, ProductCard, type ProductCardData } from "@/components/product-card";
+import { ProductRail } from "@/components/product-rail";
 import { type ExpirySettings } from "@/lib/expiry";
 import { withPromos } from "@/lib/promotions-server";
 import { createClient } from "@/lib/supabase/server";
@@ -19,7 +20,7 @@ async function soldByVariant() {
   return sold;
 }
 
-/** Up to four published products ranked by real units sold; nothing until at least two have sales. */
+/** Up to eight published products ranked by real units sold, skipping any without a photo or stock. */
 export async function BestSellers() {
   const sold = await soldByVariant().catch((err) => {
     console.error("best sellers failed", err?.message ?? err);
@@ -32,7 +33,7 @@ export async function BestSellers() {
   const { data: variants } = await supabase.from("variants").select("id, product_id").in("id", [...sold.keys()]);
   const byProduct = new Map<string, number>();
   for (const v of variants ?? []) byProduct.set(v.product_id, (byProduct.get(v.product_id) ?? 0) + sold.get(v.id)!);
-  const top = [...byProduct].filter(([, n]) => n > 0).sort((a, b) => b[1] - a[1]).slice(0, 4).map(([id]) => id);
+  const top = [...byProduct].filter(([, n]) => n > 0).sort((a, b) => b[1] - a[1]).slice(0, 20).map(([id]) => id);
   if (top.length < 2) return null;
 
   const [{ data }, { data: settingsRow }] = await Promise.all([
@@ -43,23 +44,24 @@ export async function BestSellers() {
       .in("id", top),
     supabase.from("settings").select("value").eq("key", "expiry_badges").single(),
   ]);
-  const products = (await withPromos((data ?? []) as unknown as ProductCardData[])).sort((a, b) => top.indexOf(a.id) - top.indexOf(b.id));
-  if (products.length < 2) return null;
+  const ranked = (await withPromos((data ?? []) as unknown as ProductCardData[])).sort((a, b) => top.indexOf(a.id) - top.indexOf(b.id));
   const expirySettings = (settingsRow?.value ?? {}) as Partial<ExpirySettings>;
-  const stock = await getVariantStock(supabase, products.flatMap((p) => p.variants.map((v) => v.id)));
+  const stock = await getVariantStock(supabase, ranked.flatMap((p) => p.variants.map((v) => v.id)));
+  const products = ranked.filter((p) => isShowcaseReady(p, stock)).slice(0, 8);
+  if (products.length < 2) return null;
 
   return (
     <section aria-labelledby="best-sellers-heading" className="mx-auto max-w-6xl px-4 pt-10">
       <h2 id="best-sellers-heading" className="font-bubble text-2xl font-extrabold text-choc">
         Best sellers
       </h2>
-      <ul className="mt-4 grid grid-cols-2 gap-4 sm:grid-cols-4">
+      <ProductRail label="Best sellers">
         {products.map((p) => (
-          <li key={p.id}>
+          <li key={p.id} className="snap-start">
             <ProductCard product={p} stock={stock} expirySettings={expirySettings} />
           </li>
         ))}
-      </ul>
+      </ProductRail>
     </section>
   );
 }

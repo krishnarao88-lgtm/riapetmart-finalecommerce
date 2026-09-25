@@ -52,6 +52,13 @@ export function productStock(
   return { available, nearest, badge: getExpiryBadge(nearest, expirySettings) };
 }
 
+/** Worth putting on the homepage: has a photo and at least one unit in stock (or stock unknown). */
+export function isShowcaseReady(p: ProductCardData, stock: VariantStock | null): boolean {
+  if (p.product_images.length === 0) return false;
+  if (!stock) return true;
+  return p.variants.some((v) => (stock.get(v.id)?.available ?? 0) > 0);
+}
+
 /** Shared card used by /shop and the homepage's featured products — same stock and expiry badges everywhere. */
 export function ProductCard({
   product,

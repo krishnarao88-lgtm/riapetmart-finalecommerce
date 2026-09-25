@@ -1,11 +1,12 @@
 import { ArrowRight } from "lucide-react";
 import Link from "next/link";
-import { getVariantStock, ProductCard, type ProductCardData } from "@/components/product-card";
+import { getVariantStock, isShowcaseReady, ProductCard, type ProductCardData } from "@/components/product-card";
+import { ProductRail } from "@/components/product-rail";
 import { type ExpirySettings } from "@/lib/expiry";
 import { withPromos } from "@/lib/promotions-server";
 import { createClient } from "@/lib/supabase/server";
 
-/** Four real published products — same stock/expiry badges as /shop, no fabricated bestseller/rating badges. */
+/** Up to eight real published products (with a photo and stock) — same stock/expiry badges as /shop, no fabricated bestseller/rating badges. */
 export async function FeaturedProducts() {
   const supabase = await createClient();
   const [{ data }, { data: settingsRow }] = await Promise.all([
@@ -14,13 +15,14 @@ export async function FeaturedProducts() {
       .select("id, slug, name, pet_type, highlights, is_dvs_approved, size_display, brand_id, category_id, brands(is_house_brand), product_images(path, alt), variants(id, title, price)")
       .eq("status", "published")
       .order("created_at", { ascending: false })
-      .limit(4),
+      .limit(40),
     supabase.from("settings").select("value").eq("key", "expiry_badges").single(),
   ]);
-  const products = await withPromos((data ?? []) as unknown as ProductCardData[]);
+  const candidates = await withPromos((data ?? []) as unknown as ProductCardData[]);
   const expirySettings = (settingsRow?.value ?? {}) as Partial<ExpirySettings>;
+  const stock = await getVariantStock(supabase, candidates.flatMap((p) => p.variants.map((v) => v.id)));
+  const products = candidates.filter((p) => isShowcaseReady(p, stock)).slice(0, 8);
   if (products.length === 0) return null;
-  const stock = await getVariantStock(supabase, products.flatMap((p) => p.variants.map((v) => v.id)));
 
   return (
     <section aria-labelledby="featured-heading" className="mx-auto max-w-6xl px-4 pt-10">
@@ -32,13 +34,13 @@ export async function FeaturedProducts() {
           View all <ArrowRight className="size-4" aria-hidden />
         </Link>
       </div>
-      <ul className="mt-4 grid grid-cols-2 gap-4 sm:grid-cols-4">
+      <ProductRail label="Featured products">
         {products.map((p) => (
-          <li key={p.id}>
+          <li key={p.id} className="snap-start">
             <ProductCard product={p} stock={stock} expirySettings={expirySettings} />
           </li>
         ))}
-      </ul>
+      </ProductRail>
     </section>
   );
 }

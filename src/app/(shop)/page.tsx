@@ -3,10 +3,9 @@ import { BestSellers } from "@/components/best-sellers";
 import { CategoryQuickLinks } from "@/components/category-quick-links";
 import { FeaturedProducts } from "@/components/featured-products";
 import { BrandMarquee } from "@/components/brand-marquee";
-import { GuidesTeaser } from "@/components/guides-teaser";
+import { CareHub } from "@/components/care-hub";
 import { Hero } from "@/components/hero";
 import { LocalSeo } from "@/components/local-seo";
-import { PetCareTips } from "@/components/pet-care-tips";
 import { PetCollage } from "@/components/pet-collage";
 import { PromoBanner } from "@/components/promo-banner";
 import { ShortDatedDeals } from "@/components/short-dated-deals";
@@ -40,8 +39,7 @@ export default async function Home() {
       <TrustStats publishedProductCount={count ?? 0} />
       <PetCollage />
       <BrandMarquee />
-      <PetCareTips />
-      <GuidesTeaser />
+      <CareHub />
       <Testimonial />
       <TikTokFeed />
 

@@ -1,3 +1,4 @@
+import { careNeeds, NEED_LABELS } from "@/lib/care-needs";
 import { MessageCircle, Search } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
@@ -10,7 +11,7 @@ import { whatsappLink } from "@/lib/site";
 import { withPromos } from "@/lib/promotions-server";
 import { createClient } from "@/lib/supabase/server";
 
-type ShopSearchParams = Promise<{ pet?: string; category?: string; deal?: string; q?: string; sort?: string }>;
+type ShopSearchParams = Promise<{ pet?: string; category?: string; deal?: string; q?: string; sort?: string; need?: string }>;
 
 const shopAllMetadata: Metadata = {
   title: "Shop all",
@@ -24,8 +25,8 @@ const shopAllMetadata: Metadata = {
 // so each gets its own title and canonical. Searches and deals stay out of the index, and a
 // landing page with no live products is noindexed until products are published.
 export async function generateMetadata({ searchParams }: { searchParams: ShopSearchParams }): Promise<Metadata> {
-  const { pet, category, deal, q } = await searchParams;
-  if (q || deal) return { ...shopAllMetadata, robots: { index: false, follow: true } };
+  const { pet, category, deal, q, need } = await searchParams;
+  if (q || deal || need) return { ...shopAllMetadata, robots: { index: false, follow: true } };
 
   const seo = landingSeo(category, pet);
   if (!seo) return shopAllMetadata;
@@ -63,6 +64,7 @@ type ProductRow = {
   slug: string;
   name: string;
   pet_type: string;
+  highlights: string[] | null;
   size_display: string | null;
   categories: { name: string } | null;
   product_images: { path: string; alt: string | null }[];
@@ -70,8 +72,9 @@ type ProductRow = {
 };
 
 export default async function ShopPage({ searchParams }: { searchParams: ShopSearchParams }) {
-  const { pet, category, deal, q, sort } = await searchParams;
-  const seo = q || deal ? null : landingSeo(category, pet);
+  const { pet, category, deal, q, sort, need } = await searchParams;
+  const needLabel = need ? NEED_LABELS[need] : undefined;
+  const seo = q || deal || need ? null : landingSeo(category, pet);
   const supabase = await createClient();
   const term = searchTerm(q);
 
@@ -125,11 +128,12 @@ export default async function ShopPage({ searchParams }: { searchParams: ShopSea
   const stock = await getVariantStock(supabase, rows.flatMap((p) => p.variants.map((v) => v.id)));
 
   if (deal === "sale") rows = rows.filter((p) => p.promo);
+  if (needLabel) rows = rows.filter((p) => careNeeds({ name: p.name, highlights: p.highlights ?? null }).has(need!));
   if (deal === "short-dated") {
     rows = rows.filter((p) => productStock(p.variants, stock, expirySettings).badge?.kind === "short-dated");
   }
 
-  const current = { pet, category, deal, q, sort };
+  const current = { pet, category, deal, q, sort, need };
   const filterHref = (overrides: Partial<typeof current>) => {
     const next = { ...current, ...overrides };
     const params = new URLSearchParams();
@@ -163,7 +167,7 @@ export default async function ShopPage({ searchParams }: { searchParams: ShopSea
       {seo && seo.faqs.length > 0 && (
         <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(faqJsonLd(seo.faqs)) }} />
       )}
-      <h1 className="font-bubble text-3xl font-extrabold text-choc">{seo?.h1 ?? "Shop all"}</h1>
+      <h1 className="font-bubble text-3xl font-extrabold text-choc">{seo?.h1 ?? (needLabel ? `Shop for ${needLabel.toLowerCase()}` : "Shop all")}</h1>
       <p className="mt-1 text-choc-2">{rows.length} product{rows.length === 1 ? "" : "s"}</p>
       {seo && (
         <div className="mt-3 grid max-w-3xl gap-1.5">

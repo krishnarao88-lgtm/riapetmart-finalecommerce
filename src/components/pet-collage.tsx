@@ -37,13 +37,15 @@ export function PetCollage() {
           </Link>
         </div>
 
-        <Link href="/shop?pet=dog" className={`${arch} bg-rust text-cream`}>
+        {/* The collie sits in the middle of a tall photo: frame on its head and body, and give this
+            wide arch more height on larger screens so the dog isn't cut down to its ears. */}
+        <Link href="/shop?pet=dog" className={`${arch} bg-rust text-cream md:h-96`}>
           <Image
             src="/images/pets/card-dog.png"
             alt="A cheerful border collie with perked ears"
             fill
             sizes={cardSizes}
-            className={`${archImage} object-top`}
+            className={`${archImage} object-[50%_42%]`}
           />
           <PawPrint aria-hidden className={`${archSticker} right-5 top-5 size-7 rotate-[16deg] text-cream/85`} />
           <span className={archBadge}>For dogs</span>
@@ -57,7 +59,7 @@ export function PetCollage() {
             alt="A curious tabby cat sitting upright"
             fill
             sizes={cardSizes}
-            className={`${archImage} object-bottom`}
+            className={`${archImage} object-[50%_60%]`}
           />
           <PawPrint aria-hidden className={`${archSticker} left-5 top-5 size-6 rotate-[-12deg] text-cream/85`} />
           <span className={archBadge}>For cats</span>

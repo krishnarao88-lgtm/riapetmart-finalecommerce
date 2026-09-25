@@ -1,6 +1,7 @@
 import { ArrowRight, Timer } from "lucide-react";
 import Link from "next/link";
 import { getVariantStock, ProductCard, type ProductCardData, productStock } from "@/components/product-card";
+import { ProductRail } from "@/components/product-rail";
 import { type ExpirySettings } from "@/lib/expiry";
 import { withPromos } from "@/lib/promotions-server";
 import { createClient } from "@/lib/supabase/server";
@@ -22,7 +23,7 @@ export async function ShortDatedDeals() {
 
   const deals = products
     .map((p) => ({ p, s: productStock(p.variants, stock, expirySettings) }))
-    .filter(({ s }) => s.badge?.kind === "short-dated" && (s.available ?? 0) > 0)
+    .filter(({ p, s }) => s.badge?.kind === "short-dated" && (s.available ?? 0) > 0 && p.product_images.length > 0)
     .sort((a, b) => (a.s.nearest ?? "").localeCompare(b.s.nearest ?? ""))
     .slice(0, 8);
   if (deals.length === 0) return null;
@@ -43,13 +44,13 @@ export async function ShortDatedDeals() {
           See all clearance <ArrowRight className="size-4" aria-hidden />
         </Link>
       </div>
-      <ul className="mt-4 grid grid-cols-2 gap-4 sm:grid-cols-4">
+      <ProductRail label="Clearance deals">
         {deals.map(({ p }) => (
-          <li key={p.id}>
+          <li key={p.id} className="snap-start">
             <ProductCard product={p} stock={stock} expirySettings={expirySettings} />
           </li>
         ))}
-      </ul>
+      </ProductRail>
     </section>
   );
 }

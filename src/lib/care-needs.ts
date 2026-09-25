@@ -69,3 +69,16 @@ export function suggestHouse<T extends CareProduct>(forProducts: CareProduct[], 
     .slice(0, limit)
     .map((x) => x.h);
 }
+
+/** Shopper-facing names for the needs the homepage "Shop by need" tiles link to (/shop?need=…). */
+export const NEED_LABELS: Record<string, string> = {
+  skin: "Skin & coat",
+  joint: "Joints & mobility",
+  urinary: "Urinary care",
+  kidney: "Kidney care",
+  digestion: "Digestion & gut",
+  liver: "Liver care",
+  immunity: "Immunity",
+  dental: "Teeth & gums",
+  hydration: "Hydration",
+};
