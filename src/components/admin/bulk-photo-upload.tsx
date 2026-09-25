@@ -50,7 +50,7 @@ export function BulkPhotoUpload({ products }: { products: PhotoTarget[] }) {
           const form = new FormData();
           form.set("product_id", product.id);
           form.set("product_name", product.name);
-          form.set("file", await shrinkImage(item.file));
+          form.set("file", await shrinkImage(item.file, { product: true }));
           const result = await uploadProductImage(null, form);
           next = result?.error ? { state: "error", message: result.error } : { state: "done" };
         } catch (err) {

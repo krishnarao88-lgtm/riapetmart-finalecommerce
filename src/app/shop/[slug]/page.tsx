@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { cleanProductText, textBlocks } from "@/lib/product-text";
 import { Cat, Dog, FlaskConical, Info, PawPrint, Pill, ShieldCheck, Target } from "lucide-react";
 import Link from "next/link";
 import { notFound, permanentRedirect } from "next/navigation";
@@ -72,13 +73,34 @@ function usageIcon(line: string) {
 }
 
 function InfoSection({ icon: Icon, title, text }: { icon: typeof Info; title: string; text: string | null }) {
-  if (!text) return null;
+  const blocks = textBlocks(text);
+  if (!blocks.length) return null;
   return (
-    <section className="reveal grid gap-1.5 rounded-2xl bg-peach/30 p-4">
+    <section className="reveal grid gap-2.5 rounded-2xl bg-peach/30 p-4">
       <h2 className="flex items-center gap-2 font-bold text-choc">
         <Icon className="size-5 text-rust" aria-hidden /> {title}
       </h2>
-      <p className="whitespace-pre-line text-sm text-choc-2">{text}</p>
+      {blocks.map((b, i) =>
+        b.kind === "list" ? (
+          <ul key={i} className="grid gap-x-4 gap-y-1 text-sm text-choc-2 sm:grid-cols-2">
+            {b.items.map((item) => (
+              <li key={item} className="flex gap-2">
+                <span className="mt-2 size-1.5 shrink-0 rounded-full bg-rust/60" aria-hidden />
+                {item}
+              </li>
+            ))}
+          </ul>
+        ) : b.kind === "item" ? (
+          <div key={i} className="grid gap-0.5 text-sm">
+            <h3 className="font-semibold text-choc">{b.title}</h3>
+            <p className="whitespace-pre-line leading-relaxed text-choc-2">{b.text}</p>
+          </div>
+        ) : (
+          <p key={i} className="whitespace-pre-line text-sm leading-relaxed text-choc-2">
+            {b.text}
+          </p>
+        ),
+      )}
     </section>
   );
 }
@@ -307,7 +329,7 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
                 <Pill className="size-5 text-rust" aria-hidden /> How to use
               </h2>
               <ul className="grid gap-1.5">
-                {(product.usage as string)
+                {cleanProductText(product.usage as string)
                   .split("\n")
                   .map((line) => line.trim())
                   .filter(Boolean)
@@ -316,7 +338,16 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
                     return (
                       <li key={line} className="flex gap-2 text-sm text-choc-2">
                         <Icon className="mt-0.5 size-4 shrink-0 text-rust" aria-hidden />
-                        <span>{line}</span>
+                        <span className="leading-relaxed">
+                          {/^[^:]{2,40}:\s/.test(line) ? (
+                            <>
+                              <strong className="font-semibold text-choc">{line.slice(0, line.indexOf(":") + 1)}</strong>
+                              {line.slice(line.indexOf(":") + 1)}
+                            </>
+                          ) : (
+                            line
+                          )}
+                        </span>
                       </li>
                     );
                   })}

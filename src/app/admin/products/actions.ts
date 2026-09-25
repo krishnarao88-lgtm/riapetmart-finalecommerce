@@ -1,6 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { cleanProductText } from "@/lib/product-text";
 import { requireAdmin } from "@/lib/auth";
 import { MAX_MARGIN, priceFromMargin } from "@/lib/pricing";
 
@@ -29,9 +30,10 @@ export async function saveProduct(_prev: ActionState, formData: FormData) {
       status: String(formData.get("status") ?? "draft"),
       pet_type: String(formData.get("pet_type") ?? "dog_cat"),
       size_display: text(formData, "size_display"),
-      description: text(formData, "description"),
-      ingredients: text(formData, "ingredients"),
-      usage: text(formData, "usage"),
+      // Tidied on save so the shop page always gets clean line breaks, whatever was pasted in.
+      description: cleanProductText(text(formData, "description")) || null,
+      ingredients: cleanProductText(text(formData, "ingredients")) || null,
+      usage: cleanProductText(text(formData, "usage")) || null,
       highlights: String(formData.get("highlights") ?? "")
         .split(",")
         .map((h) => h.trim())

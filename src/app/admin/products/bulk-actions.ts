@@ -20,6 +20,7 @@ export type BulkOp =
 
 export type GridEdit = {
   variantId: string;
+  title?: string;
   price?: number;
   stock?: number;
   sku?: string;
@@ -247,6 +248,9 @@ export async function saveGridEdits(edits: GridEdit[], statuses: StatusEdit[]): 
       return { error: "Stock must be a whole number, 0 or more." };
     }
     if (e.sku !== undefined && !String(e.sku).trim()) return { error: "SKU can't be empty." };
+    if (e.title !== undefined && (!String(e.title).trim() || String(e.title).length > 80)) {
+      return { error: "Variant names can't be empty or longer than 80 characters." };
+    }
     if (e.weightGrams != null && (!Number.isInteger(e.weightGrams) || e.weightGrams <= 0)) {
       return { error: "Weight must be whole grams, more than 0." };
     }
@@ -259,6 +263,7 @@ export async function saveGridEdits(edits: GridEdit[], statuses: StatusEdit[]): 
     let fields = 0;
     for (const e of edits) {
       const patch: Record<string, unknown> = {};
+      if (e.title !== undefined) patch.title = String(e.title).trim();
       if (e.price !== undefined) patch.price = round2(e.price);
       if (e.sku !== undefined) patch.sku = String(e.sku).trim();
       if (e.barcode !== undefined) patch.barcode = e.barcode ? String(e.barcode).trim() : null;

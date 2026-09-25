@@ -5,7 +5,7 @@ import { useEffect, useState, useTransition } from "react";
 import { type BulkResult, type GridEdit, saveGridEdits } from "@/app/admin/products/bulk-actions";
 import type { AdminProductRow, AdminVariant } from "@/components/admin/product-table";
 
-type Field = "price" | "stock" | "sku" | "barcode" | "weightGrams";
+type Field = "title" | "price" | "stock" | "sku" | "barcode" | "weightGrams";
 
 function original(v: AdminVariant, field: Field): string {
   const value = v[field];
@@ -24,7 +24,10 @@ function toEdits(rows: AdminProductRow[], cells: Record<string, Partial<Record<F
     for (const [field, raw] of Object.entries(changed) as [Field, string][]) {
       if (raw === original(v, field)) continue;
       const value = raw.trim();
-      if (field === "price") {
+      if (field === "title") {
+        if (!value) return `${product}: variant name can't be empty.`;
+        edit.title = value;
+      } else if (field === "price") {
         const n = Number(value);
         if (!value || !Number.isFinite(n) || n < 0) return `${product}: price must be 0 or more.`;
         edit.price = n;
@@ -49,6 +52,7 @@ function toEdits(rows: AdminProductRow[], cells: Record<string, Partial<Record<F
 }
 
 const COLUMNS = [
+  ["title", "text", "Variant name"],
   ["price", "decimal", "Price"],
   ["stock", "numeric", "Stock"],
   ["sku", "text", "SKU"],
@@ -112,17 +116,17 @@ export function QuickEdit({ rows }: { rows: AdminProductRow[] }) {
     });
   }
 
-  const input = "min-h-9 w-full rounded-lg border-2 px-2 text-sm tabular-nums";
+  const input = "min-h-9 w-full rounded-lg border-2 px-2 text-sm";
   const tone = (changed: boolean) => (changed ? "border-tangerine bg-sunshine/30" : "border-line bg-ground");
 
   return (
     <div className="grid gap-3">
       <div className="overflow-x-auto rounded-[var(--radius-chunk)] border-2 border-ink bg-surface">
-        <table className="w-full min-w-[960px] text-sm">
+        <table className="w-full min-w-[1100px] text-sm">
           <thead>
             <tr className="border-b-2 border-line text-left text-xs uppercase tracking-widest text-ink-3">
               <th className="p-2">Product</th>
-              <th className="p-2">Variant</th>
+              <th className="w-44 p-2">Variant name</th>
               <th className="w-28 p-2">Price (RM)</th>
               <th className="w-24 p-2">Stock</th>
               <th className="w-44 p-2">SKU</th>
@@ -140,7 +144,6 @@ export function QuickEdit({ rows }: { rows: AdminProductRow[] }) {
                       {row.name}
                     </td>
                   )}
-                  <td className="p-2 text-ink-2">{v.title}</td>
                   {COLUMNS.map(([field, mode, label]) => (
                     <td key={field} className="p-1.5">
                       <input
@@ -148,7 +151,7 @@ export function QuickEdit({ rows }: { rows: AdminProductRow[] }) {
                         onChange={(event) => setCell(v.id, field, event.target.value)}
                         inputMode={mode}
                         aria-label={`${label} for ${row.name} ${v.title}`}
-                        className={`${input} ${tone(cell(v, field) !== original(v, field))}`}
+                        className={`${input} ${field === "title" ? "" : "tabular-nums"} ${tone(cell(v, field) !== original(v, field))}`}
                       />
                     </td>
                   ))}

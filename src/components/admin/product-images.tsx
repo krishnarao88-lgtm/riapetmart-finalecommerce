@@ -74,7 +74,7 @@ export function ProductImages({
             return;
           }
           try {
-            await shrinkFormImages(formData);
+            await shrinkFormImages(formData, { product: true });
           } catch (err) {
             setPrepareError(err instanceof Error ? err.message : "Couldn't prepare that photo. Try another one.");
             return;
