@@ -1,3 +1,4 @@
+import { ActivityToast } from "@/components/activity-toast";
 import { AssistantWidget } from "@/components/assistant-widget";
 import { CartDrawer } from "@/components/cart-drawer";
 import { FloatingWhatsApp } from "@/components/floating-whatsapp";
@@ -21,6 +22,7 @@ export async function ShopChrome({ children }: { children: React.ReactNode }) {
       <SiteFooter />
       <WelcomePopup />
       <FloatingWhatsApp />
+      <ActivityToast />
       {process.env.ANTHROPIC_API_KEY && <AssistantWidget />}
       <CartDrawer freeDeliveryMin={freeDeliveryMin(delivery)} />
     </CartProvider>

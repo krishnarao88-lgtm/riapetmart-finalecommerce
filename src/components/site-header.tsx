@@ -1,5 +1,6 @@
 import { PawPrint, Search } from "lucide-react";
 import Link from "next/link";
+import { AccountLink } from "@/components/account-link";
 import { CartBadge } from "@/components/cart-badge";
 
 const nav = [
@@ -51,6 +52,7 @@ export function SiteHeader() {
           />
         </form>
 
+        <AccountLink />
         <CartBadge />
       </div>
 

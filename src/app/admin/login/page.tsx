@@ -1,4 +1,4 @@
-import { Lock, Mail } from "lucide-react";
+import { Mail, PawPrint } from "lucide-react";
 import type { Metadata } from "next";
 import { sendMagicLink, signInWithPassword } from "../actions";
 
@@ -15,74 +15,79 @@ export default async function AdminLogin({ searchParams }: PageProps<"/admin/log
   const { sent, error } = await searchParams;
   const message = typeof error === "string" ? errors[error] : undefined;
 
-  return (
-    <div className="mx-auto grid max-w-md gap-6 px-4 py-16">
-      <div className="grid gap-2">
-        <h1 className="font-display text-4xl font-extrabold tracking-tight">Staff sign in</h1>
-        <p className="text-ink-2">Sign in with your password, or request a one-time email link.</p>
-      </div>
+  const input =
+    "min-h-12 w-full rounded-xl border border-line bg-surface px-4 text-base placeholder:text-ink-3 focus:border-terracotta focus:outline-none";
 
-      <form action={signInWithPassword} className="grid gap-4 rounded-[var(--radius-chunk)] border-2 border-ink bg-surface p-5 shadow-[var(--shadow-chunk)]">
-        <label htmlFor="password-email" className="grid gap-2 font-semibold">
-          Work email
-          <input
-            id="password-email"
-            name="email"
-            type="email"
-            required
-            autoComplete="email"
-            className="min-h-12 rounded-xl border-2 border-line bg-ground px-3 text-base font-normal focus:border-grape"
-          />
-        </label>
-        <label htmlFor="password" className="grid gap-2 font-semibold">
-          Password
+  return (
+    <div className="grid min-h-dvh place-items-center px-4 py-12">
+      <div className="grid w-full max-w-md gap-6 rounded-3xl border border-line bg-surface p-8 shadow-[var(--shadow-chunk)] sm:p-10">
+        <div className="grid justify-items-center gap-1 border-b border-line pb-6 text-center">
+          <span className="grid size-12 place-items-center rounded-full bg-terracotta text-white">
+            <PawPrint className="size-6" aria-hidden />
+          </span>
+          <h1 className="mt-2 font-display text-3xl font-extrabold tracking-tight">Ria Pet Mart Staff Portal</h1>
+          <p className="text-sm text-ink-2">Sign in to manage orders, products and the shop.</p>
+        </div>
+
+        <form action={signInWithPassword} className="grid gap-3">
+          <label htmlFor="password-email" className="sr-only">
+            Work email
+          </label>
+          <input id="password-email" name="email" type="email" required autoComplete="email" placeholder="Work email address" className={input} />
+          <label htmlFor="password" className="sr-only">
+            Password
+          </label>
           <input
             id="password"
             name="password"
             type="password"
             required
             autoComplete="current-password"
+            placeholder="Password"
             aria-invalid={error === "password"}
             aria-describedby={message ? "login-error" : undefined}
-            className="min-h-12 rounded-xl border-2 border-line bg-ground px-3 text-base font-normal focus:border-grape"
+            className={input}
           />
-        </label>
-        {message && (
-          <p id="login-error" role="alert" className="text-sm font-medium text-bad-fg">
-            {message}
-          </p>
-        )}
-        <button type="submit" className="btn-chunk bg-tangerine">
-          <Lock className="size-5" aria-hidden /> Sign in
-        </button>
-      </form>
-
-      <p className="text-center text-sm text-ink-2">or</p>
-
-      {sent ? (
-        <p role="status" className="rounded-[var(--radius-chunk)] border-2 border-ink bg-ok-bg p-4 font-medium text-ok-fg">
-          Check your inbox. The link signs you in on this device and expires in 1 hour.
-        </p>
-      ) : (
-        <form action={sendMagicLink} className="grid gap-4 rounded-[var(--radius-chunk)] border-2 border-ink bg-surface p-5 shadow-[var(--shadow-chunk)]">
-          <label htmlFor="email" className="grid gap-2 font-semibold">
-            Work email
-            <input
-              id="email"
-              name="email"
-              type="email"
-              required
-              autoComplete="email"
-              aria-invalid={error === "email"}
-              aria-describedby={message ? "login-error" : undefined}
-              className="min-h-12 rounded-xl border-2 border-line bg-ground px-3 text-base font-normal focus:border-grape"
-            />
-          </label>
-          <button type="submit" className="btn-chunk bg-surface">
-            <Mail className="size-5" aria-hidden /> Email me a sign-in link
+          {message && (
+            <p id="login-error" role="alert" className="text-sm font-medium text-bad-fg">
+              {message}
+            </p>
+          )}
+          <button type="submit" className="mt-2 min-h-12 rounded-xl bg-terracotta-deep font-semibold text-white hover:brightness-95 active:scale-[0.99]">
+            Sign in
           </button>
         </form>
-      )}
+
+        {sent ? (
+          <p role="status" className="rounded-xl bg-ok-bg p-3 text-sm font-medium text-ok-fg">
+            Check your inbox. The link signs you in on this device and expires in 1 hour.
+          </p>
+        ) : (
+          <details className="group text-sm" open={error === "email" || error === "send" || error === "link"}>
+            <summary className="flex cursor-pointer list-none items-center justify-center gap-1.5 text-ink-2 hover:text-ink">
+              <Mail className="size-4" aria-hidden /> Forgot your password? Email me a sign-in link
+            </summary>
+            <form action={sendMagicLink} className="mt-3 grid gap-2">
+              <label htmlFor="email" className="sr-only">
+                Work email
+              </label>
+              <input
+                id="email"
+                name="email"
+                type="email"
+                required
+                autoComplete="email"
+                placeholder="Work email address"
+                aria-invalid={error === "email"}
+                className={input}
+              />
+              <button type="submit" className="min-h-11 rounded-xl border border-line font-semibold hover:bg-sunk">
+                Send sign-in link
+              </button>
+            </form>
+          </details>
+        )}
+      </div>
     </div>
   );
 }

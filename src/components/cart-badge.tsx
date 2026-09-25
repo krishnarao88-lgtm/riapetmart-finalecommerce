@@ -9,7 +9,7 @@ export function CartBadge() {
   return (
     <Link
       href="/cart"
-      className="btn-bubble ml-auto bg-terracotta px-4 text-sm text-cream md:ml-2"
+      className="btn-bubble bg-terracotta px-4 text-sm text-cream"
       aria-label={`Cart, ${count} items`}
     >
       <ShoppingBag className="size-5" aria-hidden />
