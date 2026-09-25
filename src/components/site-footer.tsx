@@ -1,5 +1,4 @@
 import { MessageCircle } from "lucide-react";
-import Image from "next/image";
 import Link from "next/link";
 import { site, whatsappLink } from "@/lib/site";
 
@@ -59,18 +58,6 @@ export function SiteFooter() {
             <MessageCircle className="size-5" aria-hidden />
             WhatsApp us now
           </a>
-        </div>
-      </div>
-      <div className="border-t border-cream/15 py-6">
-        <p className="mb-3 text-center text-xs font-bold uppercase tracking-widest text-cream/50">Brands we carry</p>
-        <div className="relative mx-auto h-16 max-w-4xl px-4">
-          <Image
-            src="/images/brands/partner-logos.png"
-            alt="Brands stocked at Ria Pet Mart: Royal Canin, Reflex, IQ Dog, belif, Happy Dog, Happy Cat, VitalPlus, Alps Natural, Cindy's Recipe, Oxyfresh, Iskhan, Felicia, PowerCat, Me-O, NexGard, Himalaya, advantage, advocate, Virbac, wanpy, Monge, ProBest, SmartHeart, Vitaday, Molly"
-            fill
-            sizes="(max-width: 768px) 100vw, 900px"
-            className="object-contain"
-          />
         </div>
       </div>
       <p className="border-t border-cream/15 px-4 py-4 text-center text-xs text-cream/60">

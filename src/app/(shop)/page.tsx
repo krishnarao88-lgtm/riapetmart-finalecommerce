@@ -2,6 +2,7 @@ import { Bike, PackageCheck, ShieldCheck, Store } from "lucide-react";
 import { BestSellers } from "@/components/best-sellers";
 import { CategoryQuickLinks } from "@/components/category-quick-links";
 import { FeaturedProducts } from "@/components/featured-products";
+import { BrandMarquee } from "@/components/brand-marquee";
 import { GuidesTeaser } from "@/components/guides-teaser";
 import { Hero } from "@/components/hero";
 import { LocalSeo } from "@/components/local-seo";
@@ -38,6 +39,7 @@ export default async function Home() {
       <BestSellers />
       <TrustStats publishedProductCount={count ?? 0} />
       <PetCollage />
+      <BrandMarquee />
       <PetCareTips />
       <GuidesTeaser />
       <Testimonial />

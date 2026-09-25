@@ -219,3 +219,37 @@ h3 {
     color: #fff;
   }
 }
+
+/* Brands we carry: slides left to right forever, pauses on hover, fades at the edges. */
+@keyframes marquee-ltr {
+  from {
+    transform: translateX(-50%);
+  }
+  to {
+    transform: translateX(0);
+  }
+}
+.marquee {
+  mask-image: linear-gradient(to right, transparent, #000 6%, #000 94%, transparent);
+}
+.marquee-track {
+  animation: marquee-ltr 50s linear infinite;
+}
+.marquee:hover .marquee-track,
+.marquee:focus-within .marquee-track {
+  animation-play-state: paused;
+}
+@media (prefers-reduced-motion: reduce) {
+  .marquee {
+    mask-image: none;
+  }
+  .marquee-track {
+    animation: none;
+    width: auto;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+  .marquee-item[aria-hidden] {
+    display: none;
+  }
+}
