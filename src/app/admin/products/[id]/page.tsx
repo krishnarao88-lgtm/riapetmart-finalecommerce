@@ -31,7 +31,7 @@ export default async function EditProduct({ params }: PageProps<"/admin/products
   const { data } = await supabase
     .from("products")
     .select(
-      "id, name, status, pet_type, size_display, description, ingredients, usage, is_regulated, needs_review, review_notes, seo_title, seo_description, brands(name), product_images(id, path, alt), variants(id, sku, title, price, sort, variant_costs(cost_price, margin), stock_batches(id, quantity, expiry_date, batch_no, received_at))",
+      "id, name, status, pet_type, size_display, description, ingredients, usage, highlights, is_regulated, needs_review, review_notes, seo_title, seo_description, brands(name), product_images(id, path, alt), variants(id, sku, title, price, sort, variant_costs(cost_price, margin), stock_batches(id, quantity, expiry_date, batch_no, received_at))",
     )
     .eq("id", id)
     .single();

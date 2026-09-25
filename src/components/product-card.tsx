@@ -1,5 +1,6 @@
 import { PawPrint } from "lucide-react";
 import Link from "next/link";
+import { ProductTags } from "@/components/product-tags";
 import { QuickAddButton } from "@/components/quick-add-button";
 import { discountedPrice, getExpiryBadge, type ExpirySettings } from "@/lib/expiry";
 import { formatMyr } from "@/lib/pricing";
@@ -12,6 +13,8 @@ export type ProductCardData = {
   name: string;
   size_display: string | null;
   categoryLabel?: string | null;
+  pet_type?: string | null;
+  highlights?: string[] | null;
   product_images: { path: string; alt: string | null }[];
   variants: { id: string; title: string; price: number }[];
 };
@@ -111,6 +114,9 @@ export function ProductCard({
         )}
         <span className="line-clamp-2 text-sm font-bold text-choc">{name}</span>
         {p.size_display && <span className="text-xs text-choc-2">{p.size_display}</span>}
+        <div className="mt-1">
+          <ProductTags petType={p.pet_type} highlights={p.highlights} max={2} compact />
+        </div>
         {available !== null && available > 0 && available <= 5 && (
           <span className="text-xs font-bold text-warn-fg">Only {available} left</span>
         )}

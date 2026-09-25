@@ -32,6 +32,11 @@ export async function saveProduct(_prev: ActionState, formData: FormData) {
       description: text(formData, "description"),
       ingredients: text(formData, "ingredients"),
       usage: text(formData, "usage"),
+      highlights: String(formData.get("highlights") ?? "")
+        .split(",")
+        .map((h) => h.trim())
+        .filter(Boolean)
+        .slice(0, 8),
       is_regulated: formData.get("is_regulated") === "on",
       needs_review: formData.get("needs_review") === "on",
       seo_title: text(formData, "seo_title"),

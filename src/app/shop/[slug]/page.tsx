@@ -1,8 +1,9 @@
 import type { Metadata } from "next";
-import { PawPrint } from "lucide-react";
+import { Cat, Dog, FlaskConical, Info, PawPrint, Pill, Target } from "lucide-react";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { AddToCart } from "@/components/add-to-cart";
+import { ProductTags } from "@/components/product-tags";
 import { getVariantStock } from "@/components/product-card";
 import { discountedPrice, getExpiryBadge, type ExpirySettings } from "@/lib/expiry";
 import { formatMyr } from "@/lib/pricing";
@@ -16,7 +17,7 @@ async function getProduct(slug: string) {
   const { data: product } = await supabase
     .from("products")
     .select(
-      "id, name, description, ingredients, usage, size_display, pet_type, category_id, is_regulated, seo_title, seo_description, brands(name, slug), categories(name, slug), product_images(path, alt, sort), variants(id, title, price, sort)",
+      "id, name, description, ingredients, usage, highlights, size_display, pet_type, category_id, is_regulated, seo_title, seo_description, brands(name, slug), categories(name, slug), product_images(path, alt, sort), variants(id, title, price, sort)",
     )
     .eq("slug", slug)
     .eq("status", "published")
@@ -55,6 +56,26 @@ export async function generateMetadata({
       images: image ? [{ url: image.path, alt: name }] : ["/opengraph-image"],
     },
   };
+}
+
+/** Dosage lines that start with a pet get that pet's icon, so dog and cat doses are easy to tell apart. */
+function usageIcon(line: string) {
+  if (/^dogs? (and|&) cats?\b/i.test(line)) return PawPrint;
+  if (/^(dogs?|puppy|puppies|adult dogs?)\b/i.test(line)) return Dog;
+  if (/^(cats?|kittens?)\b/i.test(line)) return Cat;
+  return Info;
+}
+
+function InfoSection({ icon: Icon, title, text }: { icon: typeof Info; title: string; text: string | null }) {
+  if (!text) return null;
+  return (
+    <section className="grid gap-1.5 rounded-2xl bg-peach/30 p-4">
+      <h2 className="flex items-center gap-2 font-bold text-choc">
+        <Icon className="size-5 text-rust" aria-hidden /> {title}
+      </h2>
+      <p className="whitespace-pre-line text-sm text-choc-2">{text}</p>
+    </section>
+  );
 }
 
 export default async function ProductPage({ params }: { params: Promise<{ slug: string }> }) {
@@ -98,7 +119,7 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
   const brand = brandRow?.name;
   const categoryRow = product.categories as unknown as { name: string; slug: string } | null;
   const category = categoryRow?.name;
-  const petLabels: Record<string, string> = { dog: "Dogs", cat: "Cats", small_pet: "Small pets" };
+  const petLabels: Record<string, string> = { dog: "Dogs", cat: "Cats", dog_cat: "Dogs & cats", small_pet: "Small pets" };
   const petLabel = petLabels[product.pet_type] ?? product.pet_type;
   // Variant id, matching the feed's g:id and the cart's add_to_cart/purchase events.
   const cheapest = [...variants].sort((a, b) => a.price - b.price)[0];
@@ -199,6 +220,7 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
           </div>
           <h1 className="font-bubble text-2xl font-extrabold text-choc">{name}</h1>
           {product.size_display && <p className="text-choc-2">{product.size_display}</p>}
+          <ProductTags petType={product.pet_type} highlights={product.highlights} />
 
           {variants.some((v) => v.badge?.kind === "short-dated") && (
             <span className="w-fit rounded-full bg-rust px-3 py-1 text-xs font-bold text-cream">
@@ -221,22 +243,28 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
             </p>
           )}
 
-          {product.description && (
-            <section className="grid gap-1">
-              <h2 className="font-bold text-choc">Description</h2>
-              <p className="text-sm text-choc-2">{product.description}</p>
-            </section>
-          )}
-          {product.ingredients && (
-            <section className="grid gap-1">
-              <h2 className="font-bold text-choc">Ingredients</h2>
-              <p className="text-sm text-choc-2">{product.ingredients}</p>
-            </section>
-          )}
+          <InfoSection icon={Target} title="What it's for" text={product.description} />
+          <InfoSection icon={FlaskConical} title="Ingredients" text={product.ingredients} />
           {product.usage && (
-            <section className="grid gap-1">
-              <h2 className="font-bold text-choc">Usage</h2>
-              <p className="text-sm text-choc-2">{product.usage}</p>
+            <section className="grid gap-2 rounded-2xl bg-peach/30 p-4">
+              <h2 className="flex items-center gap-2 font-bold text-choc">
+                <Pill className="size-5 text-rust" aria-hidden /> How to use
+              </h2>
+              <ul className="grid gap-1.5">
+                {(product.usage as string)
+                  .split("\n")
+                  .map((line) => line.trim())
+                  .filter(Boolean)
+                  .map((line) => {
+                    const Icon = usageIcon(line);
+                    return (
+                      <li key={line} className="flex gap-2 text-sm text-choc-2">
+                        <Icon className="mt-0.5 size-4 shrink-0 text-rust" aria-hidden />
+                        <span>{line}</span>
+                      </li>
+                    );
+                  })}
+              </ul>
             </section>
           )}
         </div>

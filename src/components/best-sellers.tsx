@@ -37,7 +37,7 @@ export async function BestSellers() {
   const [{ data }, { data: settingsRow }] = await Promise.all([
     supabase
       .from("products")
-      .select("id, slug, name, size_display, product_images(path, alt), variants(id, title, price)")
+      .select("id, slug, name, pet_type, highlights, size_display, product_images(path, alt), variants(id, title, price)")
       .eq("status", "published")
       .in("id", top),
     supabase.from("settings").select("value").eq("key", "expiry_badges").single(),

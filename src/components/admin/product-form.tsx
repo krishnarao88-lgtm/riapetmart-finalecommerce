@@ -12,6 +12,7 @@ export type ProductFields = {
   description: string | null;
   ingredients: string | null;
   usage: string | null;
+  highlights: string[] | null;
   is_regulated: boolean;
   needs_review: boolean;
   review_notes: string | null;
@@ -68,14 +69,26 @@ export function ProductForm({ product }: { product: ProductFields }) {
         <textarea id="description" name="description" rows={4} defaultValue={product.description ?? ""} className={`${field} py-2`} />
       </label>
 
+      <label className="grid gap-1 text-sm font-semibold" htmlFor="highlights">
+        Highlights
+        <input
+          id="highlights"
+          name="highlights"
+          defaultValue={(product.highlights ?? []).join(", ")}
+          placeholder="Liver support, Detox, Hepatic care"
+          className={field}
+        />
+        <span className="font-normal text-ink-3">Short benefits, separated by commas. Shown as chips on the shop.</span>
+      </label>
+
       <div className="grid gap-4 sm:grid-cols-2">
         <label className="grid gap-1 text-sm font-semibold" htmlFor="ingredients">
           Ingredients
           <textarea id="ingredients" name="ingredients" rows={3} defaultValue={product.ingredients ?? ""} className={`${field} py-2`} />
         </label>
         <label className="grid gap-1 text-sm font-semibold" htmlFor="usage">
-          Feeding / usage
-          <textarea id="usage" name="usage" rows={3} defaultValue={product.usage ?? ""} className={`${field} py-2`} />
+          Feeding / usage (one line each; start with Dogs: or Cats: for an icon)
+          <textarea id="usage" name="usage" rows={4} defaultValue={product.usage ?? ""} className={`${field} py-2`} />
         </label>
       </div>
 
