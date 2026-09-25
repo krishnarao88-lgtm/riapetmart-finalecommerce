@@ -143,8 +143,9 @@ export default async function CatHotelPage({
           </label>
 
           <button type="submit" className="btn-bubble bg-terracotta text-cream">
-            Request booking
+            Request booking on WhatsApp
           </button>
+          <p className="text-xs text-choc-2">WhatsApp opens with your booking summary ready. Just tap send.</p>
         </form>
       </div>
     </div>

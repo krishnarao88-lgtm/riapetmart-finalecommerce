@@ -2,7 +2,7 @@
 
 import { redirect } from "next/navigation";
 import { FROM, getResend } from "@/lib/resend";
-import { site } from "@/lib/site";
+import { site, whatsappLink } from "@/lib/site";
 import { createClient } from "@/lib/supabase/server";
 
 export async function submitCatHotelBooking(formData: FormData) {
@@ -51,5 +51,20 @@ export async function submitCatHotelBooking(formData: FormData) {
     console.error("Cat Hotel booking email failed:", err);
   }
 
-  redirect("/cat-hotel?submitted=1");
+  // Saved and emailed above; now hand the customer to WhatsApp with the summary typed out for our number.
+  redirect(
+    whatsappLink(
+      [
+        `Hi ${site.name}, I'd like to book the Cat Hotel:`,
+        `Name: ${customerName}`,
+        `Phone: ${customerPhone}`,
+        `Cats: ${petLabel}`,
+        `Check-in: ${checkIn}`,
+        `Check-out: ${checkOut}`,
+        notes && `Notes: ${notes}`,
+      ]
+        .filter(Boolean)
+        .join("\n"),
+    ),
+  );
 }
