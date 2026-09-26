@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
-import { escapeXml, productDescription, productFeedXml, productTitle, type FeedItem } from "../src/lib/seo.ts";
+import { escapeXml, feedDescription, productDescription, productFeedXml, productTitle, type FeedItem } from "../src/lib/seo.ts";
 
 const item: FeedItem = {
   id: "v1",
@@ -51,4 +51,11 @@ test("productDescription mentions the price and delivery options", () => {
   assert.match(text, /Rawang/);
   assert.ok(text.length <= 160);
   assert.doesNotMatch(productDescription("ALPS CHUNKY SALMON 415GM", null), /from/);
+});
+
+test("feedDescription drops sodium nitrite (Google policy) and keeps the rest of the list tidy", () => {
+  assert.equal(feedDescription("Vitamins (A, B, D, E), Calcium Carbonate, Sodium Nitrite. For dogs."), "Vitamins (A, B, D, E), Calcium Carbonate. For dogs.");
+  assert.equal(feedDescription("calcium carbonate, and sodium nitrite."), "calcium carbonate.");
+  assert.equal(feedDescription("Gels, Salt and Sodium Nitrite, Oligosaccharide"), "Gels, Oligosaccharide");
+  assert.equal(feedDescription("Chicken & liver"), "Chicken & liver");
 });

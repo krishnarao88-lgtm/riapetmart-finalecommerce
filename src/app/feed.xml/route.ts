@@ -1,8 +1,12 @@
 import { createClient } from "@supabase/supabase-js";
 import { getVariantStock } from "@/components/product-card";
 import { discountedPrice, getExpiryBadge, type ExpirySettings } from "@/lib/expiry";
-import { productDescription, productFeedXml, titleCase, type FeedItem } from "@/lib/seo";
+import { feedDescription, productDescription, productFeedXml, titleCase, type FeedItem } from "@/lib/seo";
 import { site, supabasePublishableKey, supabaseUrl } from "@/lib/site";
+
+// Google Shopping won't list prescription-type pet medicines in Malaysia ("Pet Pharmaceuticals" policy).
+// They stay on sale on the website; they're just left out of the Google feed.
+const GOOGLE_EXCLUDED = new Set(["nexgard-combo-small", "nexgard-combo-large"]);
 
 export const revalidate = 3600;
 
@@ -35,7 +39,7 @@ export async function GET() {
   if (!stock) throw new Error("feed stock lookup failed");
   const expirySettings = (settingsRow?.value ?? {}) as Partial<ExpirySettings>;
 
-  const items: FeedItem[] = products.flatMap((p) => {
+  const items: FeedItem[] = products.filter((p) => !GOOGLE_EXCLUDED.has(p.slug)).flatMap((p) => {
     const image = [...p.product_images].sort((a, b) => a.sort - b.sort)[0].path;
     const minPrice = p.variants.length ? Math.min(...p.variants.map((v) => v.price)) : null;
     return p.variants.map((v) => {
@@ -45,7 +49,7 @@ export async function GET() {
         id: v.id,
         groupId: p.variants.length > 1 ? p.id : null,
         title: `${titleCase(p.name)} – ${v.title}`,
-        description: p.description || productDescription(p.name, minPrice),
+        description: feedDescription(p.description || productDescription(p.name, minPrice)),
         link: `${site.url}/shop/${p.slug}`,
         image,
         price: v.price,

@@ -373,6 +373,14 @@ export const escapeXml = (value: string) => value.replace(/[&<>"']/g, (c) => XML
 const money = (value: number) => `${value.toFixed(2)} MYR`;
 
 /** Google Merchant Center product feed: RSS 2.0 with the g: namespace. */
+/**
+ * Google Shopping rejects listings that mention sodium nitrite (it polices sales of the chemical), even when it's
+ * only the preservative in a can of dog food. Leave it out of the feed text; product pages keep the full list.
+ */
+export function feedDescription(text: string): string {
+  return text.replace(/(,\s*)?(and\s+)?(salt and\s+)?sodium nitrite/gi, "").replace(/\s{2,}/g, " ").trim();
+}
+
 export function productFeedXml(channel: { title: string; link: string; description: string }, items: FeedItem[]): string {
   const tag = (name: string, value: string | null) => (value ? `<${name}>${escapeXml(value)}</${name}>` : "");
   const entries = items.map((i) =>
