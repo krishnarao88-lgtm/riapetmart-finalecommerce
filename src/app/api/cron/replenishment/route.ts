@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { sendTemplate } from "@/lib/resend";
 import { site } from "@/lib/site";
 import { createServiceClient } from "@/lib/supabase/service";
+import { notifyTelegram, tg } from "@/lib/telegram";
 import { restockReminder, reviewRequest } from "@/lib/emails";
 
 type OrderItem = { name: string; title: string; qty: number; price: number };
@@ -40,5 +41,22 @@ export async function GET(req: Request) {
     }
   }
 
-  return NextResponse.json({ sent, reviewsRequested });
+  // WhatsApp refill reminders due today (Malaysia date): the owner gets a one-tap link with the message written.
+  const today = new Date(Date.now() + 8 * 3_600_000).toISOString().slice(0, 10);
+  const { data: due } = await supabase
+    .from("refill_reminders")
+    .select("id, name, phone, product_name, product_slug")
+    .is("sent_at", null)
+    .lte("remind_on", today)
+    .limit(30);
+  for (const r of due ?? []) {
+    const text = `Hi ${r.name}, Ria Pet Mart here 🐾 You asked us to remind you about ${r.product_name}. Running low? Reply YES and we'll deliver today, or order here: ${site.url}/shop/${r.product_slug}`;
+    const link = `https://wa.me/${r.phone}?text=${encodeURIComponent(text)}`;
+    await notifyTelegram(
+      `🔔 <b>Refill reminder due</b> — ${tg(r.name)} · +${tg(r.phone)}\n${tg(r.product_name)}\n<a href="${tg(link)}">Tap to send the WhatsApp message</a>`,
+    );
+    await supabase.from("refill_reminders").update({ sent_at: new Date().toISOString() }).eq("id", r.id);
+  }
+
+  return NextResponse.json({ sent, reviewsRequested, refillReminders: (due ?? []).length });
 }

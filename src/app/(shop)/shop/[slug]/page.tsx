@@ -15,6 +15,7 @@ import { discountedPrice, getExpiryBadge, type ExpirySettings } from "@/lib/expi
 import { formatMyr } from "@/lib/pricing";
 import { TrackViewItem } from "@/components/track-view-item";
 import { productDescription, productTitle, titleCase } from "@/lib/seo";
+import { RefillReminder } from "@/components/refill-reminder";
 import { TrustLine } from "@/components/trust-line";
 import { site, whatsappLink } from "@/lib/site";
 import { createPublicClient } from "@/lib/supabase/public";
@@ -335,6 +336,7 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
               <strong>Not sure which food?</strong> WhatsApp us, Mon–Sat 10:00–19:00.
             </span>
           </a>
+          <RefillReminder productId={product.id} />
 
           {product.is_regulated && (
             <p className="rounded-xl bg-warn-bg px-3 py-2 text-sm text-warn-fg">
