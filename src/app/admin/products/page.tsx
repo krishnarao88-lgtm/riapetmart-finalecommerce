@@ -159,11 +159,14 @@ export default async function AdminProducts({ searchParams }: PageProps<"/admin/
           </p>
         </div>
         <div className="flex flex-wrap gap-2">
+          <Link href="/admin/products/new" className="btn-chunk bg-lagoon text-sm">
+            + Add product
+          </Link>
           <Link href="/admin/products/photos" className="btn-chunk bg-tangerine text-sm">
             <ImagePlus className="size-4" aria-hidden /> Bulk photo upload
           </Link>
           <Link href="/admin/import" className="btn-chunk bg-sunshine text-sm">
-            Import / export Excel
+            Bulk import / export (Excel)
           </Link>
         </div>
       </div>
