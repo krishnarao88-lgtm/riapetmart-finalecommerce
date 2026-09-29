@@ -60,6 +60,13 @@ export function CartProvider({ children }: { children: ReactNode }) {
       track("add_to_cart", [
         { item_id: line.variantId, item_name: line.productName, item_variant: line.variantTitle, price: line.price, quantity: qty },
       ]);
+      // Anonymous count for the owner's daily summary; never blocks adding to the cart.
+      fetch("/api/product-view", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ cartVariantId: line.variantId }),
+        keepalive: true,
+      }).catch(() => undefined);
       setLines((prev) => {
         const existing = prev.find((l) => l.variantId === line.variantId);
         if (existing) {

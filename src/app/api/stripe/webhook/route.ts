@@ -4,6 +4,7 @@ import { formatMyr } from "@/lib/pricing";
 import { sendTemplate } from "@/lib/resend";
 import { createServiceClient } from "@/lib/supabase/service";
 import { orderConfirmed, referralReward } from "@/lib/emails";
+import { notifyTelegram, tg } from "@/lib/telegram";
 
 type OrderItem = { name: string; title: string; qty: number; price: number };
 type OrderForEmail = {
@@ -77,6 +78,22 @@ export async function POST(req: Request) {
       .from("orders")
       .update({ code_discount: codeDiscount / 100 })
       .eq("stripe_session_id", session.id);
+
+    // Owner alert on Telegram: who bought what, and how it's going out.
+    const { data: paid } = await supabase
+      .from("orders")
+      .select("order_number, customer_name, customer_phone, items, total, shipping_method, shipping_address")
+      .eq("stripe_session_id", session.id)
+      .single();
+    if (paid) {
+      const items = (paid.items as OrderItem[]).map((it) => `• ${tg(it.name)} (${tg(it.title)}) × ${it.qty}`).join("\n");
+      const town = (paid.shipping_address as { city?: string } | null)?.city;
+      await notifyTelegram(
+        `🛒 <b>New order ${tg(paid.order_number)}</b> — ${tg(formatMyr(Number(paid.total)))}\n` +
+          `${tg(paid.customer_name)} · ${tg(paid.customer_phone)}${customerEmail ? ` · ${tg(customerEmail)}` : ""}\n` +
+          `${paid.shipping_method === "pickup" ? "Store pickup" : `${tg(paid.shipping_method)}${town ? ` to ${tg(town)}` : ""}`}\n${items}`,
+      );
+    }
 
     if (customerEmail) await supabase.rpc("mark_cart_recovered", { p_email: customerEmail });
 

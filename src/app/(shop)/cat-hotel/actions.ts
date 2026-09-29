@@ -5,6 +5,7 @@ import { FROM, getResend, sendTemplate } from "@/lib/resend";
 import { site, whatsappLink } from "@/lib/site";
 import { createClient } from "@/lib/supabase/server";
 import { catHotelRequest } from "@/lib/emails";
+import { notifyTelegram, tg } from "@/lib/telegram";
 
 export async function submitCatHotelBooking(formData: FormData) {
   const customerName = String(formData.get("customer_name") ?? "").trim();
@@ -46,6 +47,10 @@ export async function submitCatHotelBooking(formData: FormData) {
   } catch (err) {
     console.error("Cat Hotel booking email failed:", err);
   }
+
+  await notifyTelegram(
+    `🐱 <b>Cat Hotel request</b>: ${tg(customerName)} · ${tg(customerPhone)}\n${tg(petLabel)}, ${tg(checkIn)} → ${tg(checkOut)}${notes ? `\nNotes: ${tg(notes)}` : ""}`,
+  );
 
   // Saved and emailed above; now hand the customer to WhatsApp with the summary typed out for our number.
   redirect(

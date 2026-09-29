@@ -3,9 +3,15 @@ import { createClient } from "@/lib/supabase/server";
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
-/** Records a real page view (record=true) and returns the last-24h count. */
+/** Records a real page view (record=true) and returns the last-24h count. { cartVariantId } counts an add-to-cart instead. */
 export async function POST(request: Request) {
   const body = await request.json().catch(() => null);
+  if (body?.cartVariantId !== undefined) {
+    const variant = String(body.cartVariantId);
+    if (!UUID.test(variant)) return NextResponse.json({ error: "bad id" }, { status: 400 });
+    await (await createClient()).rpc("record_cart_add", { p_variant_id: variant });
+    return NextResponse.json({ ok: true });
+  }
   const id = String(body?.productId ?? "");
   if (!UUID.test(id)) return NextResponse.json({ error: "bad id" }, { status: 400 });
   const supabase = await createClient();

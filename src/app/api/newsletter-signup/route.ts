@@ -5,6 +5,7 @@ import { getStripe } from "@/lib/stripe";
 import { createServiceClient } from "@/lib/supabase/service";
 import { readWelcomeOffer } from "@/lib/welcome-offer";
 import { welcomeCode } from "@/lib/emails";
+import { notifyTelegram, tg } from "@/lib/telegram";
 
 /** One Stripe coupon per percentage (welcome10, welcome15…), created the first time it's needed. */
 async function welcomeCoupon(percent: number): Promise<string> {
@@ -49,5 +50,6 @@ export async function POST(req: Request) {
     console.error("Welcome code email failed:", err);
   }
 
+  await notifyTelegram(`🎁 <b>New newsletter sign-up</b>: ${tg(email)} (got code ${tg(code)})`);
   return NextResponse.json({ code });
 }

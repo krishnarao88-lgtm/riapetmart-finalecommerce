@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { sendTemplate } from "@/lib/resend";
 import { createServiceClient } from "@/lib/supabase/service";
 import { abandonedCart } from "@/lib/emails";
+import { notifyTelegram } from "@/lib/telegram";
 
 type CartItem = { name: string; title: string; qty: number; price: number };
 
@@ -26,5 +27,6 @@ export async function GET(req: Request) {
     }
   }
 
+  if (sent) await notifyTelegram(`🧺 <b>Cart reminders sent</b> to ${sent} shopper${sent === 1 ? "" : "s"} who left items in their cart.`);
   return NextResponse.json({ sent });
 }

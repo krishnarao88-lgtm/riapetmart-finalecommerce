@@ -3,6 +3,7 @@
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import { notifyTelegram, tg } from "@/lib/telegram";
 
 const EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const LOGIN = "/account/login";
@@ -44,6 +45,7 @@ export async function signUp(formData: FormData) {
     },
   });
   if (error) redirect(`${LOGIN}?mode=signup&error=${error.code === "weak_password" ? "short" : "signup"}`);
+  await notifyTelegram(`👤 <b>New customer account</b>: ${tg(name || "(no name)")} · ${tg(email)}`);
   // With email confirmation on there's no session yet: the customer confirms from their inbox first.
   redirect(data.session ? "/account" : `${LOGIN}?sent=confirm`);
 }
