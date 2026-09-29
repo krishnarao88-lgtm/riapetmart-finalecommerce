@@ -8,7 +8,7 @@ export const site = {
     "Pet shop in Rawang & Bukit Beruntung. Cat food, dog food and treats with same-day delivery in Selangor & KL, free store pickup and WhatsApp orders.",
   phone: "+60 19-611 2848",
   whatsapp: "60196112848",
-  email: "riapetmart@gmail.com",
+  email: "riapetmart23@gmail.com",
   address: {
     street: "57, Jalan Jenjarum 3B, Bandar Bukit Beruntung",
     city: "Rawang",
