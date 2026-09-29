@@ -8,6 +8,7 @@ import type { CartLine } from "@/lib/cart-context";
 import { discountedPrice, getExpiryBadge, type ExpirySettings } from "@/lib/expiry";
 import { formatMyr } from "@/lib/pricing";
 import { createClient } from "@/lib/supabase/server";
+import { site } from "@/lib/site";
 import { signOutAccount } from "./actions";
 
 export const metadata: Metadata = { title: "My orders", robots: { index: false } };
@@ -88,7 +89,7 @@ export default async function AccountPage() {
     }
     return { lines, skipped };
   }
-  const referralUrl = referralCode ? `https://riapetmart.com/shop?ref=${referralCode}` : null;
+  const referralUrl = referralCode ? `${site.url}/shop?ref=${referralCode}` : null;
 
   return (
     <div className="mx-auto grid max-w-3xl gap-6 px-4 py-10">

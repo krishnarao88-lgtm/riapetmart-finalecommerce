@@ -1,7 +1,8 @@
 // Store facts confirmed by the owner (17 Sep 2026). Reused by the footer, JSON-LD and, later, the AI assistant.
 export const site = {
   name: "Ria Pet Mart",
-  url: process.env.NEXT_PUBLIC_SITE_URL ?? "https://riapetmart.com",
+  // The live site answers on www (riapetmart.com redirects there), so canonicals, sitemap and feed links use www too.
+  url: (process.env.NEXT_PUBLIC_SITE_URL ?? "https://www.riapetmart.com").replace("://riapetmart.com", "://www.riapetmart.com"),
   tagline: "Happy pets, delivered today.",
   description:
     "Pet shop in Rawang & Bukit Beruntung. Cat food, dog food and treats with same-day delivery in Selangor & KL, free store pickup and WhatsApp orders.",
