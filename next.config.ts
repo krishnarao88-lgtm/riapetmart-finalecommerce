@@ -10,10 +10,12 @@ const csp = [
   "img-src 'self' data: blob: https:",
   "font-src 'self'",
   `connect-src 'self' ${supabase} https://*.google-analytics.com https://*.analytics.google.com https://*.googletagmanager.com https://*.google.com https://www.googleadservices.com https://*.doubleclick.net https://www.merchant-center-analytics.goog https://www.facebook.com https://connect.facebook.net`,
-  "frame-src https://js.stripe.com https://www.google.com https://td.doubleclick.net",
+  // The Meta Pixel posts events that carry product data (ViewContent, AddToCart, Purchase) through a hidden
+  // form + iframe to facebook.com/tr; without these two it only gets bare PageViews.
+  "frame-src https://js.stripe.com https://www.google.com https://td.doubleclick.net https://www.facebook.com",
   "object-src 'none'",
   "base-uri 'self'",
-  "form-action 'self'",
+  "form-action 'self' https://www.facebook.com",
   "frame-ancestors 'none'",
 ].join("; ");
 
