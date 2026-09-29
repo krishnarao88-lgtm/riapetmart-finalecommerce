@@ -1,4 +1,6 @@
 import { NextResponse } from "next/server";
+import { type Attribution, sourceLabel } from "@/lib/attribution";
+import { sendMetaPurchase } from "@/lib/meta-capi";
 import { getStripe } from "@/lib/stripe";
 import { formatMyr } from "@/lib/pricing";
 import { sendTemplate } from "@/lib/resend";
@@ -6,7 +8,7 @@ import { createServiceClient } from "@/lib/supabase/service";
 import { orderConfirmed, referralReward } from "@/lib/emails";
 import { notifyTelegram, tg } from "@/lib/telegram";
 
-type OrderItem = { name: string; title: string; qty: number; price: number };
+type OrderItem = { variant_id: string; name: string; title: string; qty: number; price: number };
 type OrderForEmail = {
   id: string;
   order_number: string | null;
@@ -87,17 +89,28 @@ export async function POST(req: Request) {
     // Owner alert on Telegram: who bought what, and how it's going out.
     const { data: paid } = await supabase
       .from("orders")
-      .select("order_number, customer_name, customer_phone, items, total, shipping_method, shipping_address")
+      .select("id, order_number, customer_name, customer_phone, items, total, shipping_method, shipping_address, attribution")
       .eq("stripe_session_id", session.id)
       .single();
     if (paid) {
+      const attribution = paid.attribution as Attribution | null;
       const items = (paid.items as OrderItem[]).map((it) => `• ${tg(it.name)} (${tg(it.title)}) × ${it.qty}`).join("\n");
       const town = (paid.shipping_address as { city?: string } | null)?.city;
       await notifyTelegram(
         `🛒 <b>New order ${tg(paid.order_number)}</b> — ${tg(formatMyr(Number(paid.total)))}\n` +
           `${tg(paid.customer_name)} · ${tg(paid.customer_phone)}${customerEmail ? ` · ${tg(customerEmail)}` : ""}\n` +
-          `${paid.shipping_method === "pickup" ? "Store pickup" : `${tg(paid.shipping_method)}${town ? ` to ${tg(town)}` : ""}`}\n${items}`,
+          `${paid.shipping_method === "pickup" ? "Store pickup" : `${tg(paid.shipping_method)}${town ? ` to ${tg(town)}` : ""}`}\n${items}\n` +
+          `Source: ${tg(sourceLabel(attribution))}`,
       );
+      // Same value and event id as the browser pixel on /order/success, so Meta de-duplicates the pair.
+      await sendMetaPurchase({
+        orderId: paid.id,
+        value: (session.amount_total ?? 0) / 100,
+        items: paid.items as OrderItem[],
+        email: customerEmail,
+        phone: paid.customer_phone,
+        attribution,
+      });
     }
 
     if (customerEmail) await supabase.rpc("mark_cart_recovered", { p_email: customerEmail });

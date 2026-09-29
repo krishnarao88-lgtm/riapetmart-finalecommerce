@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { headers } from "next/headers";
 import type Stripe from "stripe";
+import { cleanAttribution, sourceLabel } from "@/lib/attribution";
 import { parseLines, priceCart } from "@/lib/cart-pricing";
 import type { DeliverySettings } from "@/lib/delivery-settings";
 import { quoteSecret, verifyQuote } from "@/lib/quote-signature";
@@ -35,6 +36,7 @@ export async function POST(req: Request) {
     customerName?: string;
     customerPhone?: string;
     email?: string;
+    attribution?: unknown;
   };
   const lines = parseLines(body.lines);
   if (!lines) return NextResponse.json({ error: "Cart is empty" }, { status: 400 });
@@ -149,10 +151,20 @@ export async function POST(req: Request) {
   });
   if (rpcError) return NextResponse.json({ error: "Could not start checkout" }, { status: 500 });
 
+  // Which ad/channel brought this shopper; also the Meta match fields for the server-side Purchase report.
+  const attribution = cleanAttribution(body.attribution, {
+    ip: h.get("x-forwarded-for")?.split(",")[0]?.trim() ?? h.get("x-real-ip"),
+    ua: h.get("user-agent"),
+  });
+  if (attribution) {
+    await createServiceClient().from("orders").update({ attribution }).eq("stripe_session_id", session.id);
+  }
+
   await notifyTelegram(
     `💳 <b>Checkout started</b> — ${tg(customerName)} · ${tg(customerPhone)}\n` +
       `${cart.items.map((it) => `• ${tg(it.name)} (${tg(it.title)}) × ${it.qty}`).join("\n")}\n` +
-      `Total ${tg(formatMyr(cart.subtotal + shippingPrice))} · ${isPickup ? "store pickup" : tg(method)} (not paid yet)`,
+      `Total ${tg(formatMyr(cart.subtotal + shippingPrice))} · ${isPickup ? "store pickup" : tg(method)} (not paid yet)\n` +
+      `Source: ${tg(sourceLabel(attribution))}`,
   );
   return NextResponse.json({ url: session.url });
 }

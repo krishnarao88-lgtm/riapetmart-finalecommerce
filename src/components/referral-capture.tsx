@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
+import { captureAttribution } from "@/lib/attribution";
 
 const STORAGE_KEY = "riapetmart:ref";
 
@@ -9,6 +10,7 @@ export function ReferralCapture() {
     try {
       const ref = new URLSearchParams(window.location.search).get("ref");
       if (ref) localStorage.setItem(STORAGE_KEY, ref);
+      captureAttribution();
     } catch {
       // storage blocked — referral just won't be tracked this visit
     }

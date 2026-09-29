@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { BookEasyParcel } from "@/components/admin/book-easyparcel";
+import { type Attribution, sourceLabel } from "@/lib/attribution";
 import { formatMyr } from "@/lib/pricing";
 import { requireStaff } from "@/lib/auth";
 import { LALAMOVE_REBOOKABLE } from "@/lib/shipping/lalamove-rules";
@@ -29,6 +30,7 @@ type Order = {
   lalamove_order_id: string | null;
   lalamove_status: string | null;
   lalamove_share_link: string | null;
+  attribution: Attribution | null;
 };
 
 const statusStyle: Record<Order["status"], string> = {
@@ -67,7 +69,7 @@ export default async function OrdersPage() {
   const { data } = await supabase
     .from("orders")
     .select(
-      "id, order_number, created_at, status, customer_email, customer_name, customer_phone, total, fulfilment_status, items, shipping_method, shipping_address, easyparcel_order_number, easyparcel_awb_url, easyparcel_tracking_url, lalamove_order_id, lalamove_status, lalamove_share_link",
+      "id, order_number, created_at, status, customer_email, customer_name, customer_phone, total, fulfilment_status, items, shipping_method, shipping_address, easyparcel_order_number, easyparcel_awb_url, easyparcel_tracking_url, lalamove_order_id, lalamove_status, lalamove_share_link, attribution",
     )
     .order("created_at", { ascending: false })
     .limit(200);
@@ -127,6 +129,9 @@ export default async function OrdersPage() {
                   {order.customer_name ?? "No name on file"}
                   {order.customer_phone ? ` · ${order.customer_phone}` : ""}
                   {order.customer_email ? ` · ${order.customer_email}` : ""}
+                  <span className="ml-2 rounded-full border border-line px-2 py-0.5 text-xs">
+                    Source: {sourceLabel(order.attribution)}
+                  </span>
                 </span>
                 <span className="font-display text-lg font-extrabold">{formatMyr(order.total)}</span>
               </div>

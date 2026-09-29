@@ -6,6 +6,7 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import { FreeShippingProgress } from "@/components/free-shipping-progress";
 import { TrustLine } from "@/components/trust-line";
+import { readAttribution } from "@/lib/attribution";
 import { useCart } from "@/lib/cart-context";
 import { MY_STATES } from "@/lib/my-states";
 import { formatMyr } from "@/lib/pricing";
@@ -159,6 +160,7 @@ export function CartView({
           customerName: name,
           customerPhone: phone,
           email,
+          attribution: readAttribution(),
           referralCode: (() => {
             try {
               return localStorage.getItem("riapetmart:ref") ?? undefined;
