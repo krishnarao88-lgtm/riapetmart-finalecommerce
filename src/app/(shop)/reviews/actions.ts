@@ -2,6 +2,7 @@
 
 import { randomUUID } from "node:crypto";
 import { redirect } from "next/navigation";
+import { notifyTelegram, tg } from "@/lib/telegram";
 import { createClient } from "@/lib/supabase/server";
 import { createServiceClient } from "@/lib/supabase/service";
 
@@ -47,5 +48,6 @@ export async function submitReview(formData: FormData) {
   });
   if (error) redirect("/reviews/new?error=1");
 
+  await notifyTelegram(`⭐ <b>New review</b> (${rating}/5) from ${tg(name)}: ${tg(body.slice(0, 300))}\nApprove it in Admin → Reviews.`);
   redirect("/reviews?submitted=1");
 }

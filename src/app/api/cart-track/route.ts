@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { createServiceClient } from "@/lib/supabase/service";
+import { notifyTelegram, tg } from "@/lib/telegram";
 
 export async function POST(req: Request) {
   const { email, items, subtotal } = (await req.json()) as {
@@ -19,5 +20,6 @@ export async function POST(req: Request) {
   });
   if (error) return NextResponse.json({ error: "Could not save cart" }, { status: 500 });
 
+  await notifyTelegram(`🧺 <b>Cart saved</b> by ${tg(email)} · ${items.length} item${items.length === 1 ? "" : "s"} · RM ${tg(subtotal.toFixed(2))} (not checked out yet)`);
   return NextResponse.json({ ok: true });
 }

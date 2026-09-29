@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { getLalamoveOrder } from "@/lib/shipping/lalamove";
 import { fulfilmentForLalamove } from "@/lib/shipping/lalamove-rules";
 import { createServiceClient } from "@/lib/supabase/service";
+import { notifyTelegram, tg } from "@/lib/telegram";
 
 const STEP_ORDER = ["new", "packed", "shipped", "delivered"];
 
@@ -16,7 +17,7 @@ export async function POST(req: Request) {
   const supabase = createServiceClient();
   const { data: order } = await supabase
     .from("orders")
-    .select("id, fulfilment_status")
+    .select("id, fulfilment_status, order_number, lalamove_status")
     .eq("lalamove_order_id", lalamoveId)
     .maybeSingle();
   if (!order) return NextResponse.json({ ok: true });
@@ -36,5 +37,8 @@ export async function POST(req: Request) {
 
   const { error } = await supabase.from("orders").update(update).eq("id", order.id);
   if (error) return NextResponse.json({ error: "Could not update order" }, { status: 500 });
+  if (live.status !== order.lalamove_status) {
+    await notifyTelegram(`🛵 <b>Lalamove</b> ${tg(order.order_number)}: ${tg(live.status.replaceAll("_", " ").toLowerCase())}`);
+  }
   return NextResponse.json({ ok: true });
 }

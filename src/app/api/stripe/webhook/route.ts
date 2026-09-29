@@ -40,6 +40,10 @@ export async function POST(req: Request) {
       .eq("stripe_session_id", event.data.object.id)
       .eq("status", "pending");
     if (error) return NextResponse.json({ error: "Could not update order" }, { status: 500 });
+    const s = event.data.object;
+    await notifyTelegram(
+      `⌛ <b>Checkout abandoned</b> (payment page closed or timed out)${s.customer_details?.email ? ` · ${tg(s.customer_details.email)}` : ""} · ${tg(formatMyr((s.amount_total ?? 0) / 100))}`,
+    );
   }
 
   if (event.type === "charge.refunded") {
@@ -53,6 +57,7 @@ export async function POST(req: Request) {
         .eq("stripe_payment_intent", paymentIntent);
       if (error) return NextResponse.json({ error: "Could not update order" }, { status: 500 });
     }
+    await notifyTelegram(`↩️ <b>Refund</b> ${tg(formatMyr(charge.amount_refunded / 100))}${charge.refunded ? " (full)" : " (partial)"} · ${tg(charge.billing_details?.email ?? "")}`);
   }
 
   if (

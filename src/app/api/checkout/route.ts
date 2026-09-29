@@ -7,6 +7,8 @@ import { quoteSecret, verifyQuote } from "@/lib/quote-signature";
 import { getStripe } from "@/lib/stripe";
 import { createClient } from "@/lib/supabase/server";
 import { createServiceClient } from "@/lib/supabase/service";
+import { notifyTelegram, tg } from "@/lib/telegram";
+import { formatMyr } from "@/lib/pricing";
 import { readWelcomeOffer } from "@/lib/welcome-offer";
 
 type ShippingInput = {
@@ -147,5 +149,10 @@ export async function POST(req: Request) {
   });
   if (rpcError) return NextResponse.json({ error: "Could not start checkout" }, { status: 500 });
 
+  await notifyTelegram(
+    `💳 <b>Checkout started</b> — ${tg(customerName)} · ${tg(customerPhone)}\n` +
+      `${cart.items.map((it) => `• ${tg(it.name)} (${tg(it.title)}) × ${it.qty}`).join("\n")}\n` +
+      `Total ${tg(formatMyr(cart.subtotal + shippingPrice))} · ${isPickup ? "store pickup" : tg(method)} (not paid yet)`,
+  );
   return NextResponse.json({ url: session.url });
 }
