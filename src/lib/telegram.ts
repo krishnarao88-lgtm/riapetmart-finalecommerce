@@ -8,13 +8,26 @@ export async function notifyTelegram(html: string) {
   const token = process.env.TELEGRAM_BOT_TOKEN;
   const chatId = process.env.TELEGRAM_CHAT_ID;
   if (!token || !chatId) return;
-  try {
-    await fetch(`https://api.telegram.org/bot${token}/sendMessage`, {
+  const send = (text: string, html: boolean) =>
+    fetch(`https://api.telegram.org/bot${token}/sendMessage`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ chat_id: chatId, text: html.slice(0, 4000), parse_mode: "HTML", disable_web_page_preview: true }),
-      signal: AbortSignal.timeout(5000),
+      body: JSON.stringify({
+        chat_id: chatId,
+        text: text.slice(0, 4000),
+        ...(html ? { parse_mode: "HTML" } : {}),
+        disable_web_page_preview: true,
+      }),
+      signal: AbortSignal.timeout(8000),
     });
+  try {
+    const res = await send(html, true);
+    if (res.ok) return;
+    // Telegram rejected it (usually formatting): log why, then send it again as plain text so the alert still arrives.
+    console.error("Telegram alert rejected:", res.status, await res.text());
+    const plain = html.replace(/<[^>]+>/g, "").replace(/&lt;/g, "<").replace(/&gt;/g, ">").replace(/&amp;/g, "&");
+    const retry = await send(plain, false);
+    if (!retry.ok) console.error("Telegram plain-text retry rejected:", retry.status, await retry.text());
   } catch (err) {
     console.error("Telegram alert failed:", err);
   }
