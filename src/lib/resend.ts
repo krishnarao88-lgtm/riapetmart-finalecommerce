@@ -2,6 +2,7 @@ import "server-only";
 import { Resend } from "resend";
 import { site } from "@/lib/site";
 import { renderEmail, type EmailContent } from "@/lib/email-template";
+import type { Email } from "@/lib/emails";
 
 // Fixed verified domain: deriving it from site.url breaks sending on preview deployments.
 export const FROM = `${site.name} <orders@riapetmart.com>`;
@@ -33,4 +34,9 @@ export async function sendEmail(to: string, subject: string, content: EmailConte
     headers: opts.marketing ? { "List-Unsubscribe": `<mailto:${site.email}?subject=Unsubscribe%20${encodeURIComponent(to)}>` } : undefined,
   });
   if (error) throw new Error(`Email to ${to} failed: ${error.message}`);
+}
+
+/** Sends one of the ready-made emails from lib/emails. `subjectPrefix` marks Admin test sends. */
+export function sendTemplate(to: string, email: Email, subjectPrefix = "") {
+  return sendEmail(to, subjectPrefix + email.subject, email.content, { marketing: email.marketing });
 }

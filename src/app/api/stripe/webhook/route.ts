@@ -1,9 +1,9 @@
 import { NextResponse } from "next/server";
 import { getStripe } from "@/lib/stripe";
-import { sendEmail } from "@/lib/resend";
 import { formatMyr } from "@/lib/pricing";
-import { site } from "@/lib/site";
+import { sendTemplate } from "@/lib/resend";
 import { createServiceClient } from "@/lib/supabase/service";
+import { orderConfirmed, referralReward } from "@/lib/emails";
 
 type OrderItem = { name: string; title: string; qty: number; price: number };
 type OrderForEmail = {
@@ -102,19 +102,7 @@ export async function POST(req: Request) {
               amount: Number(order.shipping_cost) > 0 ? formatMyr(Number(order.shipping_cost)) : "Free",
             });
           }
-          await sendEmail(customerEmail, `Order confirmed ${ref} — ${site.name}`, {
-            preheader: `Thanks! Your order ${ref} is confirmed.`,
-            heading: `Thanks for your order. ${ref} is confirmed`,
-            paragraphs: [
-              pickup
-                ? "We're getting your order ready. We'll message you on WhatsApp as soon as it's ready to collect."
-                : "We're packing your order now. We'll send delivery updates on WhatsApp and by email.",
-            ],
-            lines,
-            total: formatMyr(Number(order.total)),
-            cta: { label: "Continue shopping", url: `${site.url}/shop` },
-            note: `Questions about this order? Just reply to this email or WhatsApp us with your order number ${ref}.`,
-          });
+          await sendTemplate(customerEmail, orderConfirmed({ ref, pickup, lines, total: Number(order.total) }));
         }
       } catch (err) {
         console.error("Order confirmation email failed:", err);
@@ -130,14 +118,7 @@ export async function POST(req: Request) {
           max_redemptions: 1,
           code: `REF${Math.random().toString(36).slice(2, 8).toUpperCase()}`,
         });
-        await sendEmail(referral.owner_email, `Your friend just ordered, here's 10% off — ${site.name}`, {
-          preheader: "A thank-you for sharing: 10% off your next order.",
-          heading: "Thanks for sharing us with a friend",
-          paragraphs: ["Your friend just placed their first order. As a thank-you, here's 10% off your next one."],
-          code: promo.code,
-          cta: { label: "Shop now", url: `${site.url}/shop` },
-          note: "Enter the code at the payment step. It works once.",
-        });
+        await sendTemplate(referral.owner_email, referralReward(promo.code));
         await supabase.rpc("mark_referral_rewarded", { p_order_id: referral.order_id });
       }
     } catch (err) {

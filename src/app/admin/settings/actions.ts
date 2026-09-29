@@ -2,7 +2,11 @@
 
 import { revalidatePath, updateTag } from "next/cache";
 import { requireAdmin } from "@/lib/auth";
-import { MAX_MARGIN } from "@/lib/pricing";
+import { formatMyr, MAX_MARGIN } from "@/lib/pricing";
+import { redirect } from "next/navigation";
+import { abandonedCart, catHotelRequest, onItsWay, orderConfirmed, referralReward, restockReminder, reviewRequest, welcomeCode } from "@/lib/emails";
+import { sendTemplate } from "@/lib/resend";
+import { site } from "@/lib/site";
 
 export type SettingsState = { ok?: string; error?: string } | null;
 
@@ -72,4 +76,40 @@ export async function saveSettings(_prev: SettingsState, formData: FormData): Pr
   updateTag("delivery-settings");
   updateTag("welcome-offer");
   return error ? { error: error.message } : { ok: "Settings saved. They apply straight away." };
+}
+
+/**
+ * Sends one of every customer email, filled with sample data, to the signed-in admin only (subject starts
+ * "[TEST]"). Checks the real sender, wording and inbox placement without placing an order.
+ */
+export async function sendTestEmails() {
+  const { user } = await requireAdmin();
+  const to = user?.email;
+  if (!to) redirect("/admin/settings?emailtest=noemail");
+
+  const sample = [
+    { name: "Aniamor Skin & Coat Syrup", title: "200 ml", qty: 2, price: 25.7 },
+    { name: "Alps Chunky Lamb 415g", title: "3 Unit - 3 Can", qty: 1, price: 14.3 },
+  ];
+  const emails = [
+    orderConfirmed({
+      ref: "RPM2026-TEST",
+      pickup: false,
+      lines: [
+        ...sample.map((s) => ({ name: s.name, detail: `${s.title} × ${s.qty}`, amount: formatMyr(s.price * s.qty) })),
+        { name: "Delivery", detail: "Courier", amount: "Free" },
+      ],
+      total: 65.7,
+    }),
+    onItsWay("RPM2026-TEST", `${site.url}/account`),
+    catHotelRequest({ customerName: "Test", petLabel: "1 cat", checkIn: "2026-10-10", checkOut: "2026-10-12", notes: "Test booking" }),
+    welcomeCode(10, "WELCOME-TEST"),
+    referralReward("REF-TEST"),
+    abandonedCart(sample, 65.7),
+    restockReminder(sample),
+    reviewRequest(`${site.url}/reviews`),
+  ];
+  let failed = 0;
+  for (const email of emails) await sendTemplate(to, email, "[TEST] ").catch(() => (failed += 1));
+  redirect(`/admin/settings?emailtest=${failed ? `failed-${failed}` : `sent-${emails.length}`}`);
 }

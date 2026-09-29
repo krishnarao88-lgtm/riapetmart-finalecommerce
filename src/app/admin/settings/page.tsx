@@ -5,6 +5,7 @@ import { requireAdmin } from "@/lib/auth";
 import { isEasyParcelConnected } from "@/lib/shipping/easyparcel";
 import { isTikTokConnected } from "@/lib/tiktok";
 import { toWelcomeOffer } from "@/lib/welcome-offer";
+import { sendTestEmails } from "./actions";
 
 export const metadata: Metadata = { title: "Settings", robots: { index: false } };
 
@@ -13,9 +14,9 @@ type Tier = { max_days: number; discount: number };
 export default async function SettingsPage({
   searchParams,
 }: {
-  searchParams: Promise<{ easyparcel?: string; tiktok?: string }>;
+  searchParams: Promise<{ easyparcel?: string; tiktok?: string; emailtest?: string }>;
 }) {
-  const { easyparcel, tiktok } = await searchParams;
+  const { easyparcel, tiktok, emailtest } = await searchParams;
   const { supabase } = await requireAdmin();
   const connected = await isEasyParcelConnected().catch(() => false);
   const tiktokConnected = await isTikTokConnected().catch(() => false);
@@ -117,6 +118,29 @@ export default async function SettingsPage({
       </div>
 
       <SettingsForm values={values} />
+
+      <section className="grid gap-3 rounded-[var(--radius-chunk)] border-2 border-ink bg-surface p-5" aria-labelledby="emailtest-heading">
+        <h2 id="emailtest-heading" className="font-display text-xl font-extrabold">
+          Test customer emails
+        </h2>
+        <p className="text-sm text-ink-2">
+          Sends one of every customer email (order confirmed, on its way, Cat Hotel, welcome code, referral, cart
+          reminder, restock, review request) with sample details, to your own sign-in email only. Subjects start with
+          [TEST]. Sign-up and password-reset emails come from the login service: test those by using &ldquo;Forgot your
+          password?&rdquo; on the customer log-in page.
+        </p>
+        {emailtest?.startsWith("sent-") && (
+          <p className="text-sm font-semibold text-ok-fg">Sent {emailtest.slice(5)} test emails. Check your inbox (and spam).</p>
+        )}
+        {emailtest?.startsWith("failed-") && (
+          <p className="text-sm font-semibold text-bad-fg">{emailtest.slice(7)} emails failed to send. Check the Resend setup.</p>
+        )}
+        <form action={sendTestEmails}>
+          <button type="submit" className="btn-chunk bg-tangerine px-4 py-2 text-sm">
+            Send me test emails
+          </button>
+        </form>
+      </section>
     </div>
   );
 }

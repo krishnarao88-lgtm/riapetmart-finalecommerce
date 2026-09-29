@@ -1,10 +1,10 @@
 import { randomBytes } from "node:crypto";
 import { NextResponse } from "next/server";
-import { sendEmail } from "@/lib/resend";
-import { site } from "@/lib/site";
+import { sendTemplate } from "@/lib/resend";
 import { getStripe } from "@/lib/stripe";
 import { createServiceClient } from "@/lib/supabase/service";
 import { readWelcomeOffer } from "@/lib/welcome-offer";
+import { welcomeCode } from "@/lib/emails";
 
 /** One Stripe coupon per percentage (welcome10, welcome15…), created the first time it's needed. */
 async function welcomeCoupon(percent: number): Promise<string> {
@@ -44,16 +44,7 @@ export async function POST(req: Request) {
   }
 
   try {
-    await sendEmail(email, `Your ${offer.percent}% welcome code — ${site.name}`, {
-      preheader: `Here's ${offer.percent}% off your first order.`,
-      heading: `Welcome to ${site.name}`,
-      paragraphs: [
-        `Thanks for joining us. Here's ${offer.percent}% off your first order: food, treats, litter and care for your pets, with same-day delivery around Rawang, Selangor and KL.`,
-      ],
-      code,
-      cta: { label: "Start shopping", url: `${site.url}/shop` },
-      note: "Enter the code at the payment step. It works once.",
-    });
+    await sendTemplate(email, welcomeCode(offer.percent, code));
   } catch (err) {
     console.error("Welcome code email failed:", err);
   }
