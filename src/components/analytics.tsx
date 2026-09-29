@@ -1,26 +1,21 @@
 import Script from "next/script";
 
-// Google tag from Google Merchant Center / Ads setup (public ID). Loads alongside the Analytics property.
+// One Google tag (public ID) that forwards to Analytics (G-RH2GPCK931), Google Ads and Merchant Center.
+// Loading the G- ID as well would count every visit twice.
 const GOOGLE_TAG = "GT-PLWBKDKZ";
 
 export function Analytics() {
-  const gaId = process.env.NEXT_PUBLIC_GA_ID;
   const pixelId = process.env.NEXT_PUBLIC_META_PIXEL_ID;
 
   return (
     <>
-      {gaId && (
-        <>
-          <Script src={`https://www.googletagmanager.com/gtag/js?id=${gaId}`} strategy="afterInteractive" />
-          <Script id="ga4-init" strategy="afterInteractive">
-            {`window.dataLayer = window.dataLayer || [];
-              function gtag(){dataLayer.push(arguments);}
-              gtag('js', new Date());
-              gtag('config', '${gaId}');
-              gtag('config', '${GOOGLE_TAG}');`}
-          </Script>
-        </>
-      )}
+      <Script src={`https://www.googletagmanager.com/gtag/js?id=${GOOGLE_TAG}`} strategy="afterInteractive" />
+      <Script id="google-tag-init" strategy="afterInteractive">
+        {`window.dataLayer = window.dataLayer || [];
+          function gtag(){dataLayer.push(arguments);}
+          gtag('js', new Date());
+          gtag('config', '${GOOGLE_TAG}');`}
+      </Script>
       {pixelId && (
         <Script id="meta-pixel-init" strategy="afterInteractive">
           {`!function(f,b,e,v,n,t,s)
