@@ -9,7 +9,7 @@ const csp = [
   "style-src 'self' 'unsafe-inline'",
   "img-src 'self' data: blob: https:",
   "font-src 'self'",
-  `connect-src 'self' ${supabase} https://*.google-analytics.com https://*.analytics.google.com https://*.googletagmanager.com https://www.facebook.com https://connect.facebook.net`,
+  `connect-src 'self' ${supabase} https://*.google-analytics.com https://*.analytics.google.com https://*.googletagmanager.com https://*.google.com https://www.googleadservices.com https://*.doubleclick.net https://www.facebook.com https://connect.facebook.net`,
   "frame-src https://js.stripe.com https://www.google.com",
   "object-src 'none'",
   "base-uri 'self'",

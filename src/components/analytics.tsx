@@ -1,5 +1,8 @@
 import Script from "next/script";
 
+// Google tag from Google Merchant Center / Ads setup (public ID). Loads alongside the Analytics property.
+const GOOGLE_TAG = "GT-PLWBKDKZ";
+
 export function Analytics() {
   const gaId = process.env.NEXT_PUBLIC_GA_ID;
   const pixelId = process.env.NEXT_PUBLIC_META_PIXEL_ID;
@@ -13,7 +16,8 @@ export function Analytics() {
             {`window.dataLayer = window.dataLayer || [];
               function gtag(){dataLayer.push(arguments);}
               gtag('js', new Date());
-              gtag('config', '${gaId}');`}
+              gtag('config', '${gaId}');
+              gtag('config', '${GOOGLE_TAG}');`}
           </Script>
         </>
       )}
