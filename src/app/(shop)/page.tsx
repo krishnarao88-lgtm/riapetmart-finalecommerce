@@ -11,6 +11,7 @@ import { PromoBanner } from "@/components/promo-banner";
 import { ShortDatedDeals } from "@/components/short-dated-deals";
 import { Testimonial } from "@/components/testimonial";
 import { TikTokFeed } from "@/components/tiktok-feed";
+import { TRUST_POINTS } from "@/components/trust-line";
 import { TrustStats } from "@/components/trust-stats";
 import { createPublicClient } from "@/lib/supabase/public";
 
@@ -18,6 +19,8 @@ import { createPublicClient } from "@/lib/supabase/public";
 export const revalidate = 60;
 
 const promises = [
+  TRUST_POINTS[0],
+  TRUST_POINTS[1],
   { Icon: Bike, title: "Same-day delivery", body: "Selangor, KL and Putrajaya by Lalamove." },
   { Icon: PackageCheck, title: "Nationwide courier", body: "The cheapest courier to every other state." },
   { Icon: Store, title: "Free store pickup", body: "Bukit Beruntung, Rawang. Mon–Sat 10:00–19:00." },
@@ -47,7 +50,7 @@ export default async function Home() {
       <TikTokFeed />
 
       <section aria-label="Why shop with us" className="mx-auto max-w-6xl px-4 pb-14 pt-6">
-        <ul className="grid gap-4 rounded-3xl card-soft bg-cream p-5 sm:grid-cols-2 lg:grid-cols-4">
+        <ul className="grid gap-4 rounded-3xl card-soft bg-cream p-5 sm:grid-cols-2 lg:grid-cols-3">
           {promises.map(({ Icon, title, body }) => (
             <li key={title} className="flex gap-3">
               <span className="grid size-11 shrink-0 place-items-center rounded-full bg-peach">

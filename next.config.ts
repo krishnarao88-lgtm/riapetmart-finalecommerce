@@ -5,12 +5,12 @@ const supabase = "https://fveawvyiyqezrrkdwmpw.supabase.co";
 // img-src allows any https host because TikTok cover images come from rotating CDN hosts.
 const csp = [
   "default-src 'self'",
-  `script-src 'self' 'unsafe-inline'${process.env.NODE_ENV === "development" ? " 'unsafe-eval'" : ""} https://js.stripe.com https://www.googletagmanager.com https://connect.facebook.net`,
+  `script-src 'self' 'unsafe-inline'${process.env.NODE_ENV === "development" ? " 'unsafe-eval'" : ""} https://js.stripe.com https://www.googletagmanager.com https://googleads.g.doubleclick.net https://www.googleadservices.com https://connect.facebook.net`,
   "style-src 'self' 'unsafe-inline'",
   "img-src 'self' data: blob: https:",
   "font-src 'self'",
-  `connect-src 'self' ${supabase} https://*.google-analytics.com https://*.analytics.google.com https://*.googletagmanager.com https://*.google.com https://www.googleadservices.com https://*.doubleclick.net https://www.facebook.com https://connect.facebook.net`,
-  "frame-src https://js.stripe.com https://www.google.com",
+  `connect-src 'self' ${supabase} https://*.google-analytics.com https://*.analytics.google.com https://*.googletagmanager.com https://*.google.com https://www.googleadservices.com https://*.doubleclick.net https://www.merchant-center-analytics.goog https://www.facebook.com https://connect.facebook.net`,
+  "frame-src https://js.stripe.com https://www.google.com https://td.doubleclick.net",
   "object-src 'none'",
   "base-uri 'self'",
   "form-action 'self'",

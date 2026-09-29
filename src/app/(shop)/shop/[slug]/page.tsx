@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { cleanProductText, textBlocks } from "@/lib/product-text";
-import { BadgeCheck, Cat, Dog, FlaskConical, Info, PawPrint, Pill, ShieldCheck, Target } from "lucide-react";
+import { BadgeCheck, Cat, Dog, FlaskConical, Info, MessageCircle, PawPrint, Pill, ShieldCheck, Target } from "lucide-react";
 import Link from "next/link";
 import { notFound, permanentRedirect } from "next/navigation";
 import { AddToCart } from "@/components/add-to-cart";
@@ -15,7 +15,8 @@ import { discountedPrice, getExpiryBadge, type ExpirySettings } from "@/lib/expi
 import { formatMyr } from "@/lib/pricing";
 import { TrackViewItem } from "@/components/track-view-item";
 import { productDescription, productTitle, titleCase } from "@/lib/seo";
-import { site } from "@/lib/site";
+import { TrustLine } from "@/components/trust-line";
+import { site, whatsappLink } from "@/lib/site";
 import { createPublicClient } from "@/lib/supabase/public";
 
 async function getProduct(slug: string) {
@@ -322,6 +323,18 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
             />
           </div>
           <PaymentBadges />
+          <TrustLine />
+          <a
+            href={whatsappLink(`Hi Ria Pet Mart, I have a question about ${name}.`)}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex items-center gap-2 rounded-xl bg-peach/40 px-3 py-2 text-sm text-choc hover:bg-peach/60"
+          >
+            <MessageCircle className="size-4 shrink-0 text-rust" aria-hidden />
+            <span>
+              <strong>Not sure which food?</strong> WhatsApp us, Mon–Sat 10:00–19:00.
+            </span>
+          </a>
 
           {product.is_regulated && (
             <p className="rounded-xl bg-warn-bg px-3 py-2 text-sm text-warn-fg">

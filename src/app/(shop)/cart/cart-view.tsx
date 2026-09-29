@@ -5,6 +5,7 @@ import { Minus, Plus, ShoppingBag, Trash2 } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { FreeShippingProgress } from "@/components/free-shipping-progress";
+import { TrustLine } from "@/components/trust-line";
 import { useCart } from "@/lib/cart-context";
 import { MY_STATES } from "@/lib/my-states";
 import { formatMyr } from "@/lib/pricing";
@@ -464,6 +465,10 @@ export function CartView({
           Need help? WhatsApp us
         </a>
       </p>
+
+      <div className="mt-3 rounded-xl bg-peach/30 px-3 py-2">
+        <TrustLine />
+      </div>
 
       <p className="mt-4 text-center text-sm text-choc-2">or</p>
 
