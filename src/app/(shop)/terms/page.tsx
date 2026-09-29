@@ -37,8 +37,11 @@ export default function TermsPage() {
 
         <h2 className="font-bubble text-xl font-bold text-choc">Delivery and pickup</h2>
         <p>
-          Delivery estimates (same-day Klang Valley, nationwide courier, or free store pickup) are estimates,
-          not guarantees, and can be affected by courier delays, weather, or circumstances outside our control.
+          <strong>Same-day guarantee:</strong> Lalamove orders paid by 1pm Malaysia time, Monday to Saturday, are
+          delivered the same day within Selangor, Kuala Lumpur and Putrajaya. If yours isn&apos;t, we refund the
+          delivery fee you paid (orders placed after 1pm or on Sunday arrive the next shop day). Other delivery
+          times (nationwide courier, or free store pickup) are estimates, not guarantees, and can be affected by
+          courier delays, weather, or circumstances outside our control.
           Pickup orders should be collected during our opening hours ({site.hours.days},{" "}
           {site.hours.opens}–{site.hours.closes}).
         </p>

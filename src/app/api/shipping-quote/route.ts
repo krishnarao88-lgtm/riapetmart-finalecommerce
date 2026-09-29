@@ -4,6 +4,7 @@ import { freeDeliveryCap, freeDeliveryMin, type DeliverySettings } from "@/lib/d
 import { deliveryCharge, formatMyr } from "@/lib/pricing";
 import { quoteSecret, signQuote } from "@/lib/quote-signature";
 import { getLalamoveQuote, LALAMOVE_LIVE } from "@/lib/shipping/lalamove";
+import { lalamoveDelivery } from "@/lib/shipping/lalamove-rules";
 import { getEasyParcelQuote } from "@/lib/shipping/easyparcel";
 import { createClient } from "@/lib/supabase/server";
 
@@ -64,7 +65,7 @@ export async function POST(req: Request) {
       if (quote) {
         options.push({
           method: "lalamove",
-          label: `Same-day delivery (Lalamove)${note(quote.price)}`,
+          label: `${lalamoveDelivery().label}${note(quote.price)}`,
           price: charge(quote.price),
         });
       }

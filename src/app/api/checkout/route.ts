@@ -5,6 +5,7 @@ import { cleanAttribution, sourceLabel } from "@/lib/attribution";
 import { parseLines, priceCart } from "@/lib/cart-pricing";
 import type { DeliverySettings } from "@/lib/delivery-settings";
 import { quoteSecret, verifyQuote } from "@/lib/quote-signature";
+import { lalamoveDelivery } from "@/lib/shipping/lalamove-rules";
 import { getStripe } from "@/lib/stripe";
 import { createClient } from "@/lib/supabase/server";
 import { createServiceClient } from "@/lib/supabase/service";
@@ -26,7 +27,7 @@ type ShippingInput = {
 
 const EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const MY_MOBILE = /^(?:\+?60|0)1\d{8,9}$/;
-const DELIVERY_LABELS: Record<string, string> = { lalamove: "Same-day delivery (Lalamove)", easyparcel: "Courier delivery" };
+const DELIVERY_LABELS: Record<string, string> = { lalamove: "Lalamove delivery", easyparcel: "Courier delivery" };
 
 export async function POST(req: Request) {
   const body = (await req.json()) as {
@@ -100,7 +101,7 @@ export async function POST(req: Request) {
       price_data: {
         currency: "myr",
         unit_amount: Math.round(shippingPrice * 100),
-        product_data: { name: DELIVERY_LABELS[method] },
+        product_data: { name: method === "lalamove" ? lalamoveDelivery().short : DELIVERY_LABELS[method] },
       },
     });
   }

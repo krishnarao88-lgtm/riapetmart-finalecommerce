@@ -58,8 +58,8 @@ export function Hero() {
             ))}
           </h1>
           <p className="max-w-md text-lg font-medium text-cream/90">
-            Food, treats and care essentials from our neighbourhood shop, with same-day delivery across
-            Selangor and KL.
+            Food, treats and care essentials from our neighbourhood shop. Order by 1pm (Mon–Sat) and it&apos;s at
+            your door today across Selangor and KL.
           </p>
           {/* Desktop search lives here; below lg the header already shows a search row. */}
           <form action="/shop" role="search" className="hidden max-w-md items-center gap-2 rounded-full border-2 border-choc bg-cream p-1.5 pl-4 shadow-[3px_3px_0_0_var(--color-choc)] lg:flex">

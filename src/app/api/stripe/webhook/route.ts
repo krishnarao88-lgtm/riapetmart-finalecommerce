@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { type Attribution, sourceLabel } from "@/lib/attribution";
 import { sendMetaPurchase } from "@/lib/meta-capi";
+import { lalamoveDelivery } from "@/lib/shipping/lalamove-rules";
 import { getStripe } from "@/lib/stripe";
 import { formatMyr } from "@/lib/pricing";
 import { sendTemplate } from "@/lib/resend";
@@ -100,7 +101,13 @@ export async function POST(req: Request) {
         `🛒 <b>New order ${tg(paid.order_number)}</b> — ${tg(formatMyr(Number(paid.total)))}\n` +
           `${tg(paid.customer_name)} · ${tg(paid.customer_phone)}${customerEmail ? ` · ${tg(customerEmail)}` : ""}\n` +
           `${paid.shipping_method === "pickup" ? "Store pickup" : `${tg(paid.shipping_method)}${town ? ` to ${tg(town)}` : ""}`}\n${items}\n` +
-          `Source: ${tg(sourceLabel(attribution))}`,
+          `Source: ${tg(sourceLabel(attribution))}` +
+          // Paid before the 1pm cut-off: the customer was promised today, or their delivery fee back.
+          (paid.shipping_method === "lalamove"
+            ? lalamoveDelivery().sameDay
+              ? "\n⏰ <b>SAME-DAY PROMISED</b>: book Lalamove now (delivery fee refund if it misses today)"
+              : `\n🗓 ${tg(lalamoveDelivery().short)}`
+            : ""),
       );
       // Same value and event id as the browser pixel on /order/success, so Meta de-duplicates the pair.
       await sendMetaPurchase({
@@ -132,7 +139,7 @@ export async function POST(req: Request) {
           }));
           if (order.shipping_method) {
             lines.push({
-              name: pickup ? "Store pickup" : order.shipping_method === "lalamove" ? "Same-day delivery (Lalamove)" : "Courier delivery",
+              name: pickup ? "Store pickup" : order.shipping_method === "lalamove" ? "Lalamove delivery" : "Courier delivery",
               detail: "",
               amount: Number(order.shipping_cost) > 0 ? formatMyr(Number(order.shipping_cost)) : "Free",
             });
