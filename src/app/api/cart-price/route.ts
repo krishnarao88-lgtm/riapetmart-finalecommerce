@@ -30,7 +30,9 @@ export async function POST(request: Request) {
     supabase.from("bundle_offers").select("product_id, discount").eq("approved", true),
   ]);
   const bundleOff = new Map((offerRows ?? []).map((o) => [o.product_id as string, Number(o.discount)]));
-  const suggestions: CartSuggestion[] = suggestHouse(cart.care, products, 3).flatMap((p) => {
+  // Suggest once: after the shopper adds any own-brand item, stop suggesting (otherwise every pick suggests more).
+  const picks = cart.care.some((p) => p.house) ? [] : suggestHouse(cart.care, products, 3);
+  const suggestions: CartSuggestion[] = picks.flatMap((p) => {
     const variant = p.variants
       .filter((v) => (stock?.get(v.id)?.available ?? 1) > 0)
       .sort((a, b) => a.price - b.price)[0];

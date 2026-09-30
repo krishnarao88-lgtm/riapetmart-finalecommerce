@@ -2,7 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { requireAdmin } from "@/lib/auth";
-import { submitEasyParcelOrder } from "@/lib/shipping/easyparcel";
+import { isSandboxAwb, submitEasyParcelOrder } from "@/lib/shipping/easyparcel";
 import { bookLalamoveOrder } from "@/lib/shipping/lalamove";
 import { LALAMOVE_REBOOKABLE, toE164MY } from "@/lib/shipping/lalamove-rules";
 import { sendTemplate } from "@/lib/resend";
@@ -43,11 +43,14 @@ export async function bookEasyParcelShipment(_prev: ActionState, formData: FormD
 
   const { data: order, error: orderError } = await supabase
     .from("orders")
-    .select("order_number, shipping_method, shipping_service_id, shipping_address, items, easyparcel_order_number")
+    .select("order_number, shipping_method, shipping_service_id, shipping_address, items, easyparcel_order_number, easyparcel_awb_number")
     .eq("id", orderId)
     .single();
   if (orderError || !order) return { error: "Order not found." };
-  if (order.easyparcel_order_number) return { error: "This order is already booked." };
+  // A sandbox (test) waybill isn't a real booking, so it can be replaced once the live account is connected.
+  if (order.easyparcel_order_number && !isSandboxAwb(order.easyparcel_awb_number)) {
+    return { error: "This order is already booked." };
+  }
   if (order.shipping_method !== "easyparcel" || !order.shipping_service_id) {
     return { error: "This order isn't set up for EasyParcel booking." };
   }

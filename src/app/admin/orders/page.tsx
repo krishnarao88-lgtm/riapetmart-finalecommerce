@@ -4,6 +4,7 @@ import { BookEasyParcel } from "@/components/admin/book-easyparcel";
 import { type Attribution, sourceLabel } from "@/lib/attribution";
 import { formatMyr } from "@/lib/pricing";
 import { requireStaff } from "@/lib/auth";
+import { isSandboxAwb } from "@/lib/shipping/easyparcel";
 import { LALAMOVE_REBOOKABLE } from "@/lib/shipping/lalamove-rules";
 import { setFulfilmentStatus, type FulfilmentStatus } from "./actions";
 
@@ -25,6 +26,7 @@ type Order = {
   shipping_method: string | null;
   shipping_address: ShippingAddress;
   easyparcel_order_number: string | null;
+  easyparcel_awb_number: string | null;
   easyparcel_awb_url: string | null;
   easyparcel_tracking_url: string | null;
   lalamove_order_id: string | null;
@@ -69,7 +71,7 @@ export default async function OrdersPage() {
   const { data } = await supabase
     .from("orders")
     .select(
-      "id, order_number, created_at, status, customer_email, customer_name, customer_phone, total, fulfilment_status, items, shipping_method, shipping_address, easyparcel_order_number, easyparcel_awb_url, easyparcel_tracking_url, lalamove_order_id, lalamove_status, lalamove_share_link, attribution",
+      "id, order_number, created_at, status, customer_email, customer_name, customer_phone, total, fulfilment_status, items, shipping_method, shipping_address, easyparcel_order_number, easyparcel_awb_number, easyparcel_awb_url, easyparcel_tracking_url, lalamove_order_id, lalamove_status, lalamove_share_link, attribution",
     )
     .order("created_at", { ascending: false })
     .limit(200);
@@ -161,7 +163,7 @@ export default async function OrdersPage() {
                 Print packing list
               </Link>
               {order.status === "paid" && order.shipping_method === "easyparcel" && (
-                order.easyparcel_awb_url ? (
+                order.easyparcel_awb_url && !isSandboxAwb(order.easyparcel_awb_number) ? (
                   <div className="flex flex-wrap gap-3 text-sm font-semibold">
                     <a href={order.easyparcel_awb_url} target="_blank" rel="noopener noreferrer" className="text-grape underline">
                       Print waybill ({order.easyparcel_order_number})
@@ -173,11 +175,19 @@ export default async function OrdersPage() {
                     )}
                   </div>
                 ) : role === "admin" ? (
+                  <>
+                  {isSandboxAwb(order.easyparcel_awb_number) && (
+                    <p className="rounded-xl bg-warn-bg px-3 py-2 text-sm font-semibold text-warn-fg">
+                      This waybill came from the EasyParcel test (sandbox) account, so no courier is coming. Reconnect
+                      EasyParcel with your live account in Settings, then book it again below.
+                    </p>
+                  )}
                   <BookEasyParcel
                     orderId={order.id}
                     defaultName={order.customer_name ?? ""}
                     defaultPhone={order.customer_phone ?? ""}
                   />
+                  </>
                 ) : null
               )}
               {order.status === "paid" && order.shipping_method === "lalamove" && (

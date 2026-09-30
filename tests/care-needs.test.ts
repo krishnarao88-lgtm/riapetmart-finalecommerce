@@ -23,6 +23,17 @@ test("a cat-only product never suggests a dog-only product", () => {
   assert.deepEqual(suggestHouse([catSkin], [dogTreat]), []);
 });
 
+test("plain food pairs with that pet's everyday care, exact pet first", () => {
+  const uteri = { id: "u", name: "Aniamor Uteri Care Tablet", highlights: ["Urinary health"], pet_type: "dog_cat", house: true };
+  const kidney = { id: "kd", name: "Aniamor Kidney Care Tablet", highlights: ["Kidney support"], pet_type: "dog_cat", house: true };
+  // Cat food: urinary / skin / digestion care, never joints or kidney medicine.
+  const forCat = suggestHouse([catFood], [jointTab, kidney, uteri, skinSyrup]).map((p) => p.id);
+  assert.deepEqual(forCat.sort(), ["s", "u"]);
+  // Dog food: the dog-only Robust treat ranks above the dog-and-cat syrup for the same need.
+  const dogFood = { id: "d", name: "Alps Chunky Lamb", highlights: null, pet_type: "dog", house: false };
+  assert.equal(suggestHouse([dogFood], [skinSyrup, dogTreat])[0].id, "r");
+});
+
 test("bundle discount needs a matching non-own-brand partner in the cart", () => {
   assert.deepEqual([...bundleEligible([conaseb, skinSyrup, jointTab])], ["s"]);
   assert.deepEqual([...bundleEligible([skinSyrup, dogTreat])], []); // two own-brand items alone don't qualify

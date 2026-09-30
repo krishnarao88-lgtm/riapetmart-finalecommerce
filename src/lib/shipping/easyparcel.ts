@@ -36,6 +36,14 @@ export async function exchangeCodeForToken(code: string, redirectUri: string) {
   await saveTokens("easyparcel", (await res.json()) as OAuthTokens);
 }
 
+/**
+ * EasyParcel picks sandbox or live from the account that authorised the OAuth connection (same URLs and
+ * client id for both). Sandbox bookings get fake "EPSAMPLE…" waybills; Admin lets those orders be booked again.
+ */
+export function isSandboxAwb(awbNumber: string | null | undefined) {
+  return !!awbNumber?.startsWith("EPSAMPLE");
+}
+
 export async function isEasyParcelConnected(): Promise<boolean> {
   return isConnected("easyparcel");
 }

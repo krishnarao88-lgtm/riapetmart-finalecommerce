@@ -55,15 +55,33 @@ export function bundleEligible(cart: CareProduct[]): Set<string> {
   );
 }
 
-/** Own-brand products that serve the same needs as `forProducts`, best match first. */
+// Plain food and treats name no health need, so they pair with the everyday care for that pet instead.
+// Only for suggestions: the bundle discount still needs a real shared need (bundleEligible).
+const EVERYDAY: Record<string, string[]> = {
+  cat: ["urinary", "skin", "digestion"],
+  dog: ["skin", "joint", "dental"],
+  dog_cat: ["skin", "digestion"],
+};
+
+function suggestionNeeds(p: CareProduct): Set<string> {
+  const needs = careNeeds(p);
+  return needs.size ? needs : new Set(EVERYDAY[p.pet_type] ?? []);
+}
+
+/** Own-brand products that serve the same needs as `forProducts`, best match first (exact pet preferred). */
 export function suggestHouse<T extends CareProduct>(forProducts: CareProduct[], house: T[], limit = 3): T[] {
   const taken = new Set(forProducts.map((p) => p.id));
   return house
     .filter((h) => !taken.has(h.id))
-    .map((h) => ({
-      h,
-      score: forProducts.reduce((s, p) => s + (petsMatch(p.pet_type, h.pet_type) ? shareNeed(p, h) : 0), 0),
-    }))
+    .map((h) => {
+      const hNeeds = careNeeds(h);
+      const score = forProducts.reduce((s, p) => {
+        if (!petsMatch(p.pet_type, h.pet_type)) return s;
+        const shared = [...suggestionNeeds(p)].filter((n) => hNeeds.has(n)).length;
+        return shared ? s + shared * 2 + (p.pet_type === h.pet_type ? 1 : 0) : s;
+      }, 0);
+      return { h, score };
+    })
     .filter((x) => x.score > 0)
     .sort((a, b) => b.score - a.score || a.h.name.localeCompare(b.h.name))
     .slice(0, limit)
