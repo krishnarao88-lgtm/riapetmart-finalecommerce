@@ -93,6 +93,50 @@ export async function getEasyParcelQuote(
     : null;
 }
 
+type ListedShipment = { shipment_number?: string; awb_number?: string; shipment_status_code?: number | string; shipment_status?: string };
+
+/** The account's shipments from the last 90 days (newest first, up to 250), or null if EasyParcel didn't answer. */
+async function listShipments(token: string): Promise<ListedShipment[] | null> {
+  const res = await fetch(`${API_BASE}/shipment/list`, {
+    method: "POST",
+    headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+    body: JSON.stringify({ limit: 250, date_from: new Date(Date.now() - 90 * 86_400_000).toISOString().slice(0, 10) }),
+    signal: AbortSignal.timeout(6000),
+  }).catch(() => null);
+  if (!res?.ok) {
+    if (res) console.error(`EasyParcel shipment list failed: ${res.status} ${await res.text()}`);
+    return null;
+  }
+  return ((await res.json()) as { data?: ListedShipment[] }).data ?? [];
+}
+
+/**
+ * Cancels a booked shipment (only possible before the courier has processed it). EasyParcel refunds the
+ * shipping charge to the EasyParcel wallet. Throws a readable message when EasyParcel refuses.
+ */
+export async function cancelEasyParcelShipment(awbNumber: string, awbUrl: string | null, remark: string) {
+  const token = await getValidAccessToken("easyparcel", refreshToken);
+  if (!token) throw new Error("EasyParcel is not connected");
+  // The cancel call needs the ES-YYMM-XXXXX shipment number: look it up by waybill, else read it off the label link.
+  const listed = (await listShipments(token))?.find((s) => s.awb_number === awbNumber)?.shipment_number;
+  const shipmentNumber = listed ?? awbUrl?.match(/(ES-\d{4}-[A-Z0-9]+)/)?.[1];
+  if (!shipmentNumber) throw new Error("Couldn't find this shipment in EasyParcel. Cancel it in the EasyParcel app instead.");
+
+  const res = await fetch(`${API_BASE}/shipment/cancel`, {
+    method: "POST",
+    headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+    body: JSON.stringify({ cancel_list: [{ shipment_number: shipmentNumber, remark: remark.slice(0, 200) || "Cancelled by shop" }] }),
+    signal: AbortSignal.timeout(10_000),
+  });
+  const body = (await res.json().catch(() => ({}))) as { message?: string; data?: { status?: string; message?: string }[] };
+  const result = body.data?.[0];
+  // EasyParcel answers 200 even when the cancel failed, so check the per-shipment result.
+  if (!res.ok || result?.status !== "success") {
+    console.error("EasyParcel cancel rejected:", JSON.stringify(body));
+    throw new Error(result?.message ?? body.message ?? "EasyParcel couldn't cancel this shipment");
+  }
+}
+
 export type TrackingResult = { awb_number: string; latest_shipment_status_code: number; latest_tracking_status: string };
 
 /**
@@ -106,21 +150,10 @@ export async function getTrackingStatuses(awbNumbers: string[]): Promise<Trackin
   if (!token) return [];
   const wanted = new Set(awbNumbers);
   const fromList: TrackingResult[] = [];
-  const list = await fetch(`${API_BASE}/shipment/list`, {
-    method: "POST",
-    headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
-    body: JSON.stringify({ limit: 250, date_from: new Date(Date.now() - 90 * 86_400_000).toISOString().slice(0, 10) }),
-    signal: AbortSignal.timeout(6000),
-  }).catch(() => null);
-  if (list?.ok) {
-    const body = (await list.json()) as { data?: { awb_number?: string; shipment_status_code?: number | string; shipment_status?: string }[] };
-    for (const s of body.data ?? []) {
-      if (s.awb_number && wanted.has(s.awb_number) && s.shipment_status_code !== undefined) {
-        fromList.push({ awb_number: s.awb_number, latest_shipment_status_code: Number(s.shipment_status_code), latest_tracking_status: s.shipment_status ?? "" });
-      }
+  for (const s of (await listShipments(token)) ?? []) {
+    if (s.awb_number && wanted.has(s.awb_number) && s.shipment_status_code !== undefined) {
+      fromList.push({ awb_number: s.awb_number, latest_shipment_status_code: Number(s.shipment_status_code), latest_tracking_status: s.shipment_status ?? "" });
     }
-  } else if (list) {
-    console.error(`EasyParcel shipment list failed: ${list.status} ${await list.text()}`);
   }
   const missing = awbNumbers.filter((a) => !fromList.some((r) => r.awb_number === a));
   if (missing.length === 0) return fromList;

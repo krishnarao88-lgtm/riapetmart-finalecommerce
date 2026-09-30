@@ -5,6 +5,7 @@ import { type Attribution, sourceLabel } from "@/lib/attribution";
 import { formatMyr } from "@/lib/pricing";
 import { requireStaff } from "@/lib/auth";
 import { AutoRefresh } from "@/components/admin/auto-refresh";
+import { OrderMoneyActions } from "@/components/admin/order-money-actions";
 import { isSandboxAwb } from "@/lib/shipping/easyparcel";
 import { EP_CANCELLED, EP_PROBLEM, EP_STATUS } from "@/lib/shipping/easyparcel-status";
 import { syncEasyParcelStatuses } from "@/lib/shipping/easyparcel-sync";
@@ -33,6 +34,7 @@ type Order = {
   easyparcel_status_code: number | null;
   easyparcel_status: string | null;
   refunded_amount: number;
+  code_discount: number | null;
   easyparcel_awb_url: string | null;
   easyparcel_tracking_url: string | null;
   lalamove_order_id: string | null;
@@ -79,7 +81,7 @@ export default async function OrdersPage() {
   const { data } = await supabase
     .from("orders")
     .select(
-      "id, order_number, created_at, status, customer_email, customer_name, customer_phone, total, fulfilment_status, items, shipping_method, shipping_address, easyparcel_order_number, easyparcel_awb_number, easyparcel_awb_url, easyparcel_tracking_url, easyparcel_status_code, easyparcel_status, lalamove_order_id, lalamove_status, lalamove_share_link, attribution, refunded_amount",
+      "id, order_number, created_at, status, customer_email, customer_name, customer_phone, total, fulfilment_status, items, shipping_method, shipping_address, easyparcel_order_number, easyparcel_awb_number, easyparcel_awb_url, easyparcel_tracking_url, easyparcel_status_code, easyparcel_status, lalamove_order_id, lalamove_status, lalamove_share_link, attribution, refunded_amount, code_discount",
     )
     .order("created_at", { ascending: false })
     .limit(200);
@@ -185,6 +187,20 @@ export default async function OrdersPage() {
               >
                 Print packing list
               </Link>
+              {role === "admin" && order.status === "paid" && (
+                <OrderMoneyActions
+                  orderId={order.id}
+                  orderNumber={order.order_number ?? "this order"}
+                  refundable={Math.max(0, Math.round((Number(order.total) - Number(order.code_discount ?? 0) - Number(order.refunded_amount)) * 100) / 100)}
+                  canCancelCourier={
+                    order.shipping_method === "easyparcel" &&
+                    !!order.easyparcel_awb_number &&
+                    !isSandboxAwb(order.easyparcel_awb_number) &&
+                    order.easyparcel_status_code !== EP_CANCELLED &&
+                    order.easyparcel_status_code !== 5
+                  }
+                />
+              )}
               {order.status === "paid" && order.shipping_method === "easyparcel" && (
                 order.easyparcel_awb_url &&
                 !isSandboxAwb(order.easyparcel_awb_number) &&
