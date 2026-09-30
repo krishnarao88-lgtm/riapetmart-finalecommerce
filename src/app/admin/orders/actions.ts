@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { requireAdmin } from "@/lib/auth";
 import { isSandboxAwb, submitEasyParcelOrder } from "@/lib/shipping/easyparcel";
+import { EP_CANCELLED } from "@/lib/shipping/easyparcel-status";
 import { bookLalamoveOrder } from "@/lib/shipping/lalamove";
 import { LALAMOVE_REBOOKABLE, toE164MY } from "@/lib/shipping/lalamove-rules";
 import { sendTemplate } from "@/lib/resend";
@@ -43,12 +44,13 @@ export async function bookEasyParcelShipment(_prev: ActionState, formData: FormD
 
   const { data: order, error: orderError } = await supabase
     .from("orders")
-    .select("order_number, shipping_method, shipping_service_id, shipping_address, items, easyparcel_order_number, easyparcel_awb_number")
+    .select("order_number, shipping_method, shipping_service_id, shipping_address, items, easyparcel_order_number, easyparcel_awb_number, easyparcel_status_code")
     .eq("id", orderId)
     .single();
   if (orderError || !order) return { error: "Order not found." };
-  // A sandbox (test) waybill isn't a real booking, so it can be replaced once the live account is connected.
-  if (order.easyparcel_order_number && !isSandboxAwb(order.easyparcel_awb_number)) {
+  // A sandbox (test) waybill or a shipment the courier cancelled isn't a live booking, so it can be replaced.
+  const rebookable = isSandboxAwb(order.easyparcel_awb_number) || order.easyparcel_status_code === EP_CANCELLED;
+  if (order.easyparcel_order_number && !rebookable) {
     return { error: "This order is already booked." };
   }
   if (order.shipping_method !== "easyparcel" || !order.shipping_service_id) {
@@ -81,6 +83,11 @@ export async function bookEasyParcelShipment(_prev: ActionState, formData: FormD
       p_awb_url: result.awbUrl,
       p_tracking_url: result.trackingUrl,
     });
+    // New waybill: forget the old shipment's courier status so the badge starts fresh.
+    await supabase
+      .from("orders")
+      .update({ easyparcel_status_code: null, easyparcel_status: null, easyparcel_status_at: null })
+      .eq("id", orderId);
     revalidatePath("/admin/orders");
     return { ok: `Booked with ${result.courierName}. Refresh to see the waybill link.` };
   } catch (err) {

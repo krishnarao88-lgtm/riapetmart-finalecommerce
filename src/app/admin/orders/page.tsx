@@ -4,7 +4,10 @@ import { BookEasyParcel } from "@/components/admin/book-easyparcel";
 import { type Attribution, sourceLabel } from "@/lib/attribution";
 import { formatMyr } from "@/lib/pricing";
 import { requireStaff } from "@/lib/auth";
+import { AutoRefresh } from "@/components/admin/auto-refresh";
 import { isSandboxAwb } from "@/lib/shipping/easyparcel";
+import { EP_CANCELLED, EP_PROBLEM, EP_STATUS } from "@/lib/shipping/easyparcel-status";
+import { syncEasyParcelStatuses } from "@/lib/shipping/easyparcel-sync";
 import { LALAMOVE_REBOOKABLE } from "@/lib/shipping/lalamove-rules";
 import { setFulfilmentStatus, type FulfilmentStatus } from "./actions";
 
@@ -27,6 +30,9 @@ type Order = {
   shipping_address: ShippingAddress;
   easyparcel_order_number: string | null;
   easyparcel_awb_number: string | null;
+  easyparcel_status_code: number | null;
+  easyparcel_status: string | null;
+  refunded_amount: number;
   easyparcel_awb_url: string | null;
   easyparcel_tracking_url: string | null;
   lalamove_order_id: string | null;
@@ -68,10 +74,12 @@ const nextStep: Partial<Record<FulfilmentStatus, FulfilmentStatus>> = {
 
 export default async function OrdersPage() {
   const { supabase, role } = await requireStaff();
+  // Pull the latest courier status for shipments on their way (the webhook does this too; this catches misses).
+  await syncEasyParcelStatuses();
   const { data } = await supabase
     .from("orders")
     .select(
-      "id, order_number, created_at, status, customer_email, customer_name, customer_phone, total, fulfilment_status, items, shipping_method, shipping_address, easyparcel_order_number, easyparcel_awb_number, easyparcel_awb_url, easyparcel_tracking_url, lalamove_order_id, lalamove_status, lalamove_share_link, attribution",
+      "id, order_number, created_at, status, customer_email, customer_name, customer_phone, total, fulfilment_status, items, shipping_method, shipping_address, easyparcel_order_number, easyparcel_awb_number, easyparcel_awb_url, easyparcel_tracking_url, easyparcel_status_code, easyparcel_status, lalamove_order_id, lalamove_status, lalamove_share_link, attribution, refunded_amount",
     )
     .order("created_at", { ascending: false })
     .limit(200);
@@ -83,6 +91,7 @@ export default async function OrdersPage() {
       <div className="grid gap-1">
         <h1 className="font-display text-3xl font-extrabold tracking-tight">Orders</h1>
         <p className="text-ink-2">Paid orders come from Stripe checkout. Pending ones never completed payment.</p>
+        <AutoRefresh seconds={60} />
       </div>
 
       {orders.length === 0 ? (
@@ -98,7 +107,21 @@ export default async function OrdersPage() {
                   {order.order_number && <strong className="mr-2 text-ink">{order.order_number}</strong>}
                   {new Date(order.created_at).toLocaleString("en-MY", { timeZone: "Asia/Kuala_Lumpur" })}
                 </span>
-                <span className="flex gap-1.5">
+                <span className="flex flex-wrap justify-end gap-1.5">
+                  {Number(order.refunded_amount) > 0 && (
+                    <span className="rounded-full bg-bad-bg px-2.5 py-1 text-xs font-bold text-bad-fg">
+                      Refunded {formatMyr(Number(order.refunded_amount))}
+                      {Number(order.refunded_amount) < Number(order.total) ? " (partial)" : ""}
+                    </span>
+                  )}
+                  {order.easyparcel_status_code != null && !isSandboxAwb(order.easyparcel_awb_number) && (
+                    <span
+                      title={order.easyparcel_status ?? undefined}
+                      className={`rounded-full px-2.5 py-1 text-xs font-bold ${EP_PROBLEM.has(order.easyparcel_status_code) ? "bg-bad-bg text-bad-fg" : "border border-line text-ink-2"}`}
+                    >
+                      Courier: {EP_STATUS[order.easyparcel_status_code] ?? order.easyparcel_status}
+                    </span>
+                  )}
                   {order.status === "paid" && (
                     <span className={`rounded-full px-2.5 py-1 text-xs font-bold ${fulfilmentStyle[order.fulfilment_status]}`}>
                       {order.fulfilment_status}
@@ -163,7 +186,9 @@ export default async function OrdersPage() {
                 Print packing list
               </Link>
               {order.status === "paid" && order.shipping_method === "easyparcel" && (
-                order.easyparcel_awb_url && !isSandboxAwb(order.easyparcel_awb_number) ? (
+                order.easyparcel_awb_url &&
+                !isSandboxAwb(order.easyparcel_awb_number) &&
+                order.easyparcel_status_code !== EP_CANCELLED ? (
                   <div className="flex flex-wrap gap-3 text-sm font-semibold">
                     <a href={order.easyparcel_awb_url} target="_blank" rel="noopener noreferrer" className="text-grape underline">
                       Print waybill ({order.easyparcel_order_number})
@@ -176,6 +201,12 @@ export default async function OrdersPage() {
                   </div>
                 ) : role === "admin" ? (
                   <>
+                  {order.easyparcel_status_code === EP_CANCELLED && !isSandboxAwb(order.easyparcel_awb_number) && (
+                    <p className="rounded-xl bg-bad-bg px-3 py-2 text-sm font-semibold text-bad-fg">
+                      EasyParcel shipment {order.easyparcel_order_number} was cancelled, so no courier is coming. Book it
+                      again below, or cancel/refund the order if the customer no longer wants it.
+                    </p>
+                  )}
                   {isSandboxAwb(order.easyparcel_awb_number) && (
                     <p className="rounded-xl bg-warn-bg px-3 py-2 text-sm font-semibold text-warn-fg">
                       This waybill came from the EasyParcel test (sandbox) account, so no courier is coming. Reconnect

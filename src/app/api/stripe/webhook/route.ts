@@ -52,11 +52,12 @@ export async function POST(req: Request) {
   if (event.type === "charge.refunded") {
     const charge = event.data.object;
     const paymentIntent = typeof charge.payment_intent === "string" ? charge.payment_intent : charge.payment_intent?.id;
-    // charge.refunded also fires for partial refunds; only a full refund marks the order refunded.
-    if (paymentIntent && charge.refunded) {
+    // Fires for partial refunds too: always record the running refunded total (the Admin badge);
+    // only a full refund also marks the order refunded.
+    if (paymentIntent) {
       const { error } = await supabase
         .from("orders")
-        .update({ fulfilment_status: "refunded" })
+        .update({ refunded_amount: charge.amount_refunded / 100, ...(charge.refunded && { fulfilment_status: "refunded" }) })
         .eq("stripe_payment_intent", paymentIntent);
       if (error) return NextResponse.json({ error: "Could not update order" }, { status: 500 });
     }

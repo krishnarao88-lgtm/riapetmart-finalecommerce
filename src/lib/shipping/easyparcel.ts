@@ -93,6 +93,27 @@ export async function getEasyParcelQuote(
     : null;
 }
 
+export type TrackingResult = { awb_number: string; latest_shipment_status_code: number; latest_tracking_status: string };
+
+/** Current courier status for up to 100 waybills, straight from EasyParcel (the source of truth for Admin). */
+export async function getTrackingStatuses(awbNumbers: string[]): Promise<TrackingResult[]> {
+  if (awbNumbers.length === 0) return [];
+  const token = await getValidAccessToken("easyparcel", refreshToken);
+  if (!token) return [];
+  const res = await fetch(`${API_BASE}/shipment/tracking_status`, {
+    method: "POST",
+    headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+    body: JSON.stringify({ awb_numbers: awbNumbers.slice(0, 100) }),
+    signal: AbortSignal.timeout(6000),
+  });
+  if (!res.ok) {
+    console.error(`EasyParcel tracking failed: ${res.status} ${await res.text()}`);
+    return [];
+  }
+  const body = (await res.json()) as { data?: { results?: (TrackingResult & { status: string })[] } };
+  return (body.data?.results ?? []).filter((r) => r.status === "success" && typeof r.latest_shipment_status_code === "number");
+}
+
 type SubmitOrderReceiver = {
   name: string;
   phone: string;
