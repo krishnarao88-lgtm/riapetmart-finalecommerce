@@ -95,23 +95,51 @@ export async function getEasyParcelQuote(
 
 export type TrackingResult = { awb_number: string; latest_shipment_status_code: number; latest_tracking_status: string };
 
-/** Current courier status for up to 100 waybills, straight from EasyParcel (the source of truth for Admin). */
+/**
+ * Current status for our waybills, straight from EasyParcel (the source of truth for Admin). The shipment
+ * list carries the account-side status (a shipment cancelled in EasyParcel shows code 0 there); the courier's
+ * tracking feed doesn't, so it's only used for waybills the list didn't return.
+ */
 export async function getTrackingStatuses(awbNumbers: string[]): Promise<TrackingResult[]> {
   if (awbNumbers.length === 0) return [];
   const token = await getValidAccessToken("easyparcel", refreshToken);
   if (!token) return [];
+  const wanted = new Set(awbNumbers);
+  const fromList: TrackingResult[] = [];
+  const list = await fetch(`${API_BASE}/shipment/list`, {
+    method: "POST",
+    headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+    body: JSON.stringify({ limit: 250, date_from: new Date(Date.now() - 90 * 86_400_000).toISOString().slice(0, 10) }),
+    signal: AbortSignal.timeout(6000),
+  }).catch(() => null);
+  if (list?.ok) {
+    const body = (await list.json()) as { data?: { awb_number?: string; shipment_status_code?: number | string; shipment_status?: string }[] };
+    for (const s of body.data ?? []) {
+      if (s.awb_number && wanted.has(s.awb_number) && s.shipment_status_code !== undefined) {
+        fromList.push({ awb_number: s.awb_number, latest_shipment_status_code: Number(s.shipment_status_code), latest_tracking_status: s.shipment_status ?? "" });
+      }
+    }
+  } else if (list) {
+    console.error(`EasyParcel shipment list failed: ${list.status} ${await list.text()}`);
+  }
+  const missing = awbNumbers.filter((a) => !fromList.some((r) => r.awb_number === a));
+  if (missing.length === 0) return fromList;
+
   const res = await fetch(`${API_BASE}/shipment/tracking_status`, {
     method: "POST",
     headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
-    body: JSON.stringify({ awb_numbers: awbNumbers.slice(0, 100) }),
+    body: JSON.stringify({ awb_numbers: missing.slice(0, 100) }),
     signal: AbortSignal.timeout(6000),
-  });
-  if (!res.ok) {
-    console.error(`EasyParcel tracking failed: ${res.status} ${await res.text()}`);
-    return [];
+  }).catch(() => null);
+  if (!res?.ok) {
+    if (res) console.error(`EasyParcel tracking failed: ${res.status} ${await res.text()}`);
+    return fromList;
   }
   const body = (await res.json()) as { data?: { results?: (TrackingResult & { status: string })[] } };
-  return (body.data?.results ?? []).filter((r) => r.status === "success" && typeof r.latest_shipment_status_code === "number");
+  return [
+    ...fromList,
+    ...(body.data?.results ?? []).filter((r) => r.status === "success" && typeof r.latest_shipment_status_code === "number"),
+  ];
 }
 
 type SubmitOrderReceiver = {
