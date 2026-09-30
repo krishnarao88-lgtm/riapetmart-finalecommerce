@@ -340,7 +340,10 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
 
           {product.is_regulated && (
             <p className="rounded-xl bg-warn-bg px-3 py-2 text-sm text-warn-fg">
-              This is a regulated pet-health product. Follow the label and consult a vet if unsure.
+              This is a regulated pet-health product. Follow the label and consult a vet if unsure.{" "}
+              <Link href="/vets" className="font-semibold underline">
+                Find a vet near you
+              </Link>
             </p>
           )}
 

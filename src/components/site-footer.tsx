@@ -17,6 +17,7 @@ const COLUMNS = [
     links: [
       ["/account", "My orders"],
       ["/contact", "Contact us"],
+      ["/vets", "Find a vet near you"],
       ["/returns", "Returns & refunds"],
       ["/about", "About us"],
     ],
