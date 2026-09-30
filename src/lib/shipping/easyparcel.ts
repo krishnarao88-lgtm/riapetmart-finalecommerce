@@ -153,7 +153,8 @@ export async function submitEasyParcelOrder(
           receiver: {
             name: receiver.name,
             phone_number_country_code: "MY",
-            phone_number: receiver.phone,
+            // National number without the country code, like the sender's: +60 14-646 2194 → 146462194.
+            phone_number: receiver.phone.replace(/\D/g, "").replace(/^60/, "").replace(/^0/, ""),
             address_1: receiver.addressLine,
             postcode: receiver.postcode,
             city: receiver.city,
@@ -177,7 +178,7 @@ export async function submitEasyParcelOrder(
         awb_number: string | null;
         awb_url: string | null;
         tracking_url: string | null;
-        errors?: string[];
+        errors?: unknown[];
       }[];
     }[];
   };
@@ -187,7 +188,10 @@ export async function submitEasyParcelOrder(
   const order = body.data?.[0];
   const shipment = order?.shipments?.[0];
   if (!order || !shipment || shipment.status !== "success") {
-    throw new Error(shipment?.errors?.join(", ") ?? body.message ?? "EasyParcel booking failed");
+    // Errors can be strings or objects ({ field, message }): show them as readable text, never "[object Object]".
+    const errors = (shipment?.errors ?? []).map((e) => (typeof e === "string" ? e : JSON.stringify(e)));
+    console.error("EasyParcel booking rejected:", JSON.stringify(body));
+    throw new Error(errors.length ? errors.join("; ") : (body.message ?? "EasyParcel booking failed"));
   }
 
   return {
