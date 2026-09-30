@@ -336,7 +336,7 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
               <strong>Not sure which food?</strong> WhatsApp us, Mon–Sat 10:00–19:00.
             </span>
           </a>
-          <RefillReminder productId={product.id} />
+          <RefillReminder productId={product.id} monthlyDose={/nexgard/i.test(name)} />
 
           {product.is_regulated && (
             <p className="rounded-xl bg-warn-bg px-3 py-2 text-sm text-warn-fg">

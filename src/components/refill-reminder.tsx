@@ -6,7 +6,7 @@ import { useState } from "react";
 const field = "min-h-11 w-full rounded-xl border-2 border-line bg-surface px-3 text-sm";
 
 /** "Remind me on WhatsApp before it runs out": the shop messages them on the day (see api/refill-reminder). */
-export function RefillReminder({ productId }: { productId: string }) {
+export function RefillReminder({ productId, monthlyDose = false }: { productId: string; monthlyDose?: boolean }) {
   const [state, setState] = useState<{ done?: string; error?: string; busy?: boolean }>({});
 
   async function submit(e: React.FormEvent<HTMLFormElement>) {
@@ -35,7 +35,8 @@ export function RefillReminder({ productId }: { productId: string }) {
   return (
     <details className="rounded-xl bg-peach/40 px-3 py-2 text-sm text-choc">
       <summary className="flex cursor-pointer items-center gap-2 font-semibold">
-        <BellRing className="size-4 shrink-0 text-rust" aria-hidden /> Remind me on WhatsApp before it runs out
+        <BellRing className="size-4 shrink-0 text-rust" aria-hidden />
+        {monthlyDose ? "Remind me on WhatsApp when the next monthly dose is due" : "Remind me on WhatsApp before it runs out"}
       </summary>
       {state.done ? (
         <p role="status" className="mt-2 font-semibold text-ok-fg">

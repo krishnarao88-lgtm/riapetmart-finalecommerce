@@ -8,6 +8,7 @@ const COLUMNS = [
     links: [
       ["/shop", "Shop all"],
       ["/cat-hotel", "Cat hotel"],
+      ["/flea-tick", "Flea & tick (NexGard)"],
       ["/guides", "Buying guides"],
       ["/reviews", "Reviews"],
     ],

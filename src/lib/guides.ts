@@ -88,6 +88,64 @@ export const guides: Guide[] = [
     ],
     shopLinks: [{ label: "Shop cat litter", href: "/shop?category=cat-litter" }],
   },
+  {
+    slug: "vitamin-kucing-bulu-gugur",
+    title: "Vitamin Kucing untuk Bulu Gugur & Badan Berisi",
+    description:
+      "Kenapa bulu kucing gugur, apa yang boleh membantu (makanan, omega, sikat, rawatan kutu) dan bila perlu jumpa doktor haiwan. Panduan ringkas dari Ria Pet Mart, Rawang.",
+    intro:
+      "Bulu gugur sedikit adalah perkara biasa, terutama bila cuaca panas. Tetapi bulu yang gugur banyak, kulit merah atau tompok botak selalunya ada punca lain yang perlu dirawat dahulu.",
+    sections: [
+      {
+        heading: "Punca biasa bulu kucing gugur",
+        body: "Musim luruh bulu, kutu, alahan makanan atau kulit, stres dan pemakanan yang kurang seimbang. Jika ada tompok botak, kudis, kulit merah atau kucing asyik menggaru, jumpa doktor haiwan dahulu: vitamin tidak akan merawat kutu atau jangkitan kulat.",
+      },
+      {
+        heading: "Apa yang membantu bulu lebih sihat",
+        body: "Makanan lengkap yang sesuai dengan umur kucing, suplemen kulit dan bulu yang mengandungi omega-3 dan omega-6, sikat bulu beberapa kali seminggu, dan rawatan kutu bulanan. Beri suplemen ikut dos pada label dan beri masa beberapa minggu untuk nampak perubahan.",
+      },
+      {
+        heading: "Nak kucing lebih berisi?",
+        body: "Pilih makanan tinggi protein (makanan anak kucing juga sesuai untuk kucing kurus yang sihat), beri dalam hidangan kecil tetapi lebih kerap, dan tambah makanan basah untuk selera. Kucing yang susut berat tanpa sebab perlu diperiksa doktor haiwan.",
+      },
+    ],
+    shopLinks: [
+      { label: "Aniamor Skin & Coat Syrup", href: "/shop/aniamor-skin-and-coat-syrup" },
+      { label: "Semua suplemen kucing", href: "/shop?pet=cat&category=supplements" },
+      { label: "Rawatan kutu (NexGard)", href: "/flea-tick" },
+    ],
+  },
+  {
+    slug: "makanan-kucing-terbaik-malaysia",
+    title: "Cara Pilih Makanan Kucing Terbaik di Malaysia",
+    description:
+      "Panduan memilih makanan kucing ikut umur, keperluan dan bajet: kering vs basah, anak kucing vs dewasa, indoor, hairball dan urinary, serta cara tukar makanan dengan selamat.",
+    intro:
+      "Makanan kucing \"terbaik\" ialah yang sesuai dengan kucing anda: umurnya, gaya hidupnya dan bajet anda. Ini cara mudah untuk memilih.",
+    sections: [
+      {
+        heading: "Ikut umur",
+        body: "Anak kucing (kitten) perlukan lebih protein dan tenaga, jadi pilih makanan berlabel kitten sehingga kira-kira 12 bulan. Kucing dewasa pilih formula adult. Kucing tua (7 tahun ke atas) selalunya lebih sesuai dengan formula senior.",
+      },
+      {
+        heading: "Ikut keperluan",
+        body: "Kucing dalam rumah atau sudah dimandulkan: pilih formula indoor atau sterilised supaya tidak terlebih berat. Banyak bola bulu (hairball): formula hairball. Masalah kencing: formula urinary, dan jumpa doktor haiwan segera jika kucing susah kencing.",
+      },
+      {
+        heading: "Kering atau basah?",
+        body: "Makanan kering lebih jimat dan mudah disimpan. Makanan basah membantu kucing yang kurang minum air dan kucing yang cerewet. Ramai pemilik beri kedua-duanya: kurangkan makanan kering bila menambah makanan basah.",
+      },
+      {
+        heading: "Tukar makanan perlahan-lahan",
+        body: "Campur makanan baru dengan yang lama selama 7 hingga 10 hari. Tukar secara mengejut boleh menyebabkan cirit-birit atau kucing enggan makan.",
+      },
+    ],
+    shopLinks: [
+      { label: "Makanan kucing kering", href: "/shop?pet=cat&category=dry-food" },
+      { label: "Makanan kucing basah", href: "/shop?pet=cat&category=wet-food" },
+      { label: "Tawaran pelepasan (clearance)", href: "/shop?deal=short-dated" },
+    ],
+  },
 ];
 
 export function getGuide(slug: string) {

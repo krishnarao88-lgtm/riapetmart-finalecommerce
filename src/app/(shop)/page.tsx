@@ -1,4 +1,5 @@
 import { Bike, PackageCheck, ShieldCheck, Store } from "lucide-react";
+import Link from "next/link";
 import { BestSellers } from "@/components/best-sellers";
 import { CategoryQuickLinks } from "@/components/category-quick-links";
 import { FeaturedProducts } from "@/components/featured-products";
@@ -41,6 +42,18 @@ export default async function Home() {
       <CategoryQuickLinks />
       <PromoBanner />
       <ShortDatedDeals />
+      <section aria-label="Flea and tick protection" className="mx-auto max-w-6xl px-4 pt-8">
+        <Link
+          href="/flea-tick"
+          className="flex flex-wrap items-center justify-between gap-3 rounded-3xl card-soft bg-peach/40 px-5 py-4 transition-transform hover:-translate-y-0.5"
+        >
+          <span className="grid">
+            <span className="font-bubble text-lg font-extrabold text-choc">Flea &amp; tick season? Protect them monthly</span>
+            <span className="text-sm text-choc-2">NexGard for dogs &amp; cats · pick the right size by weight</span>
+          </span>
+          <span className="btn-bubble bg-rust px-4 py-2 text-sm text-cream">Find their size →</span>
+        </Link>
+      </section>
       <FeaturedProducts />
       <BestSellers />
       <TrustStats publishedProductCount={count ?? 0} />

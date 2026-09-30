@@ -27,7 +27,7 @@ export const categorySeo: Record<string, LandingSeo> = {
     h1: "Wet cat food & dog food",
     intro:
       "Wet food adds water to your pet's diet, which helps cats that don't drink much and fussy eaters who prefer real meat in gravy. Choose pouches and cans for cats, kittens and dogs, and mix them with dry food. Delivered same-day in Selangor and KL, or pick up free at our Rawang shop.",
-    alsoSearched: ["wet cat food pouch", "wet dog food", "makanan kucing basah", "湿猫粮", "猫罐头"],
+    alsoSearched: ["wet cat food pouch", "wet dog food", "makanan kucing basah", "wet food kucing terbaik", "makanan anjing dalam tin", "湿猫粮", "猫罐头"],
     faqs: [
       {
         q: "Is wet or dry food better for my cat?",
@@ -47,7 +47,17 @@ export const categorySeo: Record<string, LandingSeo> = {
     h1: "Dry cat food & dog food",
     intro:
       "Our best-selling range: dry cat food and dog food for every life stage, from kitten and puppy food to adult and indoor recipes, grain-free options and big-value bags up to 18 kg. Not sure which one suits your pet? WhatsApp us and we'll help you choose.",
-    alsoSearched: ["cat food Malaysia", "dog food Malaysia", "makanan kucing", "makanan anjing", "猫粮", "狗粮"],
+    alsoSearched: [
+      "cat food Malaysia",
+      "dog food Malaysia",
+      "cat food brands in Malaysia",
+      "makanan kucing",
+      "makanan kucing terbaik",
+      "makanan anjing",
+      "makanan anjing murah",
+      "猫粮",
+      "狗粮",
+    ],
     faqs: [
       {
         q: "What is the best food for indoor or sterilised cats?",
@@ -94,7 +104,16 @@ export const categorySeo: Record<string, LandingSeo> = {
     h1: "Dog & cat supplements",
     intro:
       "Supplements can support older dogs' joints, a healthier skin and coat, digestion and urinary health. They work alongside a good diet, not instead of a vet: if your pet is limping, scratching a lot or straining to pee, see a vet first.",
-    alsoSearched: ["dog joint supplement", "dog probiotics", "vitamin kucing", "vitamin anjing", "猫咪营养品", "狗狗营养品"],
+    alsoSearched: [
+      "dog joint supplement",
+      "dog probiotics",
+      "vitamin kucing",
+      "vitamin kucing bulu gugur",
+      "vitamin kucing gemuk dan bulu",
+      "vitamin anjing",
+      "猫咪营养品",
+      "狗狗营养品",
+    ],
     faqs: [
       {
         q: "What helps a dog with joint pain or weak back legs?",
@@ -156,7 +175,18 @@ export const categorySeo: Record<string, LandingSeo> = {
     h1: "Flea, tick & deworming",
     intro:
       "Fleas and ticks cause itching and can spread disease, and worms are common in kittens and puppies. Choose a treatment for your pet's species and weight, and never use a dog product on a cat. Our panel clinic, All Animal Health Clinic, can advise.",
-    alsoSearched: ["cat flea treatment", "dog ticks treatment", "ubat kutu kucing", "ubat kutu anjing", "猫咪驱虫药", "狗狗驱虫药"],
+    alsoSearched: [
+      "NexGard Malaysia",
+      "NexGard price Malaysia",
+      "NexGard COMBO for cats",
+      "cat flea treatment",
+      "dog ticks treatment",
+      "ubat kutu kucing",
+      "ubat kutu anjing",
+      "ubat kutu NexGard",
+      "猫咪驱虫药",
+      "狗狗驱虫药",
+    ],
     faqs: [
       {
         q: "How do I get rid of fleas on my cat?",
@@ -253,7 +283,14 @@ export const petSeo: Record<string, LandingSeo> = {
 /** Site-wide keywords (meta keywords is minor for Google, but other engines and tools read it). */
 export const siteKeywords = [
   "pet shop Rawang",
+  "pet store Rawang",
   "pet shop Bukit Beruntung",
+  "kedai haiwan Rawang",
+  "dog shop Rawang",
+  "pet hotel Rawang",
+  "cat boarding Rawang",
+  "pet food delivery same day",
+  "NexGard Malaysia",
   "pet supplies Rawang",
   "pet shop Selangor",
   "online pet shop Malaysia",

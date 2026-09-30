@@ -11,7 +11,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     .select("slug, pet_type, categories(slug), brands(slug)")
     .eq("status", "published");
 
-  const staticPages = ["", "/shop", "/about", "/contact", "/returns", "/privacy", "/terms", "/reviews", "/guides", "/cat-hotel", "/vets"].map((path) => ({
+  const staticPages = ["", "/shop", "/about", "/contact", "/returns", "/privacy", "/terms", "/reviews", "/guides", "/cat-hotel", "/vets", "/flea-tick"].map((path) => ({
     url: `${site.url}${path}`,
     changeFrequency: (path === "/shop" ? "daily" : "monthly") as "daily" | "monthly",
   }));
