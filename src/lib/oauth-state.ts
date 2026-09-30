@@ -1,6 +1,6 @@
 import { randomBytes, timingSafeEqual } from "node:crypto";
 
-export type OAuthProvider = "easyparcel" | "tiktok";
+export type OAuthProvider = "easyparcel" | "tiktok" | "instagram";
 
 export const stateCookieName = (provider: OAuthProvider) => `oauth_state_${provider}`;
 

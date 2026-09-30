@@ -1,7 +1,7 @@
 import "server-only";
 import { createServiceClient } from "@/lib/supabase/service";
 
-export type Provider = "easyparcel" | "tiktok";
+export type Provider = "easyparcel" | "tiktok" | "instagram";
 export type OAuthTokens = { access_token: string; refresh_token: string; expires_in: number };
 
 export async function saveTokens(provider: Provider, tokens: OAuthTokens) {
@@ -17,10 +17,14 @@ export async function saveTokens(provider: Provider, tokens: OAuthTokens) {
   if (error) throw new Error(`Saving ${provider} tokens failed: ${error.message}`);
 }
 
-/** Returns a usable access token, refreshing it when it expires within a minute. */
+/**
+ * Returns a usable access token, refreshing it when it expires within `refreshWithinMs` (a minute by default;
+ * Instagram tokens can only be renewed while still valid, so that caller refreshes days early).
+ */
 export async function getValidAccessToken(
   provider: Provider,
   refresh: (refreshToken: string) => Promise<OAuthTokens | null>,
+  refreshWithinMs = 60_000,
 ): Promise<string | null> {
   const { data } = await createServiceClient()
     .from("integration_tokens")
@@ -30,11 +34,12 @@ export async function getValidAccessToken(
   if (!data) return null;
 
   const expiresInMs = data.expires_at ? new Date(data.expires_at).getTime() - Date.now() : 0;
-  if (expiresInMs > 60_000) return data.access_token;
+  if (expiresInMs > refreshWithinMs) return data.access_token;
   if (!data.refresh_token) return null;
 
   const refreshed = await refresh(data.refresh_token);
-  if (!refreshed) return null;
+  // A failed early refresh isn't fatal while the current token still works.
+  if (!refreshed) return expiresInMs > 60_000 ? data.access_token : null;
   // The fresh access token still works for this request even if persisting it fails.
   await saveTokens(provider, refreshed).catch(console.error);
   return refreshed.access_token;

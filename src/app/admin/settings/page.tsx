@@ -3,6 +3,7 @@ import type { Metadata } from "next";
 import { SettingsForm, type SettingsValues } from "@/components/admin/settings-form";
 import { requireAdmin } from "@/lib/auth";
 import { isEasyParcelConnected } from "@/lib/shipping/easyparcel";
+import { isInstagramConnected } from "@/lib/instagram";
 import { isTikTokConnected } from "@/lib/tiktok";
 import { toWelcomeOffer } from "@/lib/welcome-offer";
 import { sendTestEmails } from "./actions";
@@ -14,12 +15,13 @@ type Tier = { max_days: number; discount: number };
 export default async function SettingsPage({
   searchParams,
 }: {
-  searchParams: Promise<{ easyparcel?: string; tiktok?: string; emailtest?: string }>;
+  searchParams: Promise<{ easyparcel?: string; tiktok?: string; instagram?: string; emailtest?: string }>;
 }) {
-  const { easyparcel, tiktok, emailtest } = await searchParams;
+  const { easyparcel, tiktok, instagram, emailtest } = await searchParams;
   const { supabase } = await requireAdmin();
   const connected = await isEasyParcelConnected().catch(() => false);
   const tiktokConnected = await isTikTokConnected().catch(() => false);
+  const instagramConnected = await isInstagramConnected().catch(() => false);
   const { data } = await supabase.from("settings").select("key, value");
   const byKey = new Map((data ?? []).map((row) => [row.key, row.value as Record<string, unknown>]));
 
@@ -113,6 +115,28 @@ export default async function SettingsPage({
           </span>
           <a href="/api/oauth/start?provider=tiktok" className="btn-chunk bg-tangerine px-4 py-2 text-sm">
             {tiktokConnected ? "Reconnect" : "Connect TikTok"}
+          </a>
+        </div>
+        {instagram === "connected" && (
+          <p className="rounded-xl bg-ok-bg px-3 py-2 text-sm font-medium text-ok-fg">Instagram connected.</p>
+        )}
+        {instagram === "error" && (
+          <p className="rounded-xl bg-bad-bg px-3 py-2 text-sm font-medium text-bad-fg">
+            Couldn&apos;t connect Instagram. It must be a Business or Creator account, and the app&apos;s redirect URL
+            must be https://www.riapetmart.com/api/instagram/callback.
+          </p>
+        )}
+        <div className="flex items-center justify-between gap-3">
+          <span className="flex items-center gap-2 font-semibold">
+            {instagramConnected ? (
+              <CheckCircle2 className="size-5 text-ok-fg" aria-hidden />
+            ) : (
+              <XCircle className="size-5 text-bad-fg" aria-hidden />
+            )}
+            Instagram (latest posts on homepage)
+          </span>
+          <a href="/api/oauth/start?provider=instagram" className="btn-chunk bg-tangerine px-4 py-2 text-sm">
+            {instagramConnected ? "Reconnect" : "Connect Instagram"}
           </a>
         </div>
       </div>

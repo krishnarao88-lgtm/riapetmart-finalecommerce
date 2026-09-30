@@ -8,12 +8,15 @@ const authorizeUrl: Record<OAuthProvider, (origin: string, state: string) => str
     `https://api.easyparcel.com/oauth/login?client_id=${process.env.EASYPARCEL_CLIENT_ID ?? ""}&redirect_uri=${encodeURIComponent(`${origin}/api/easyparcel/callback`)}&state=${state}`,
   tiktok: (origin, state) =>
     `https://www.tiktok.com/v2/auth/authorize/?client_key=${process.env.TIKTOK_Client_key ?? ""}&scope=${encodeURIComponent("user.info.profile,user.info.stats,video.list")}&response_type=code&redirect_uri=${encodeURIComponent(`${origin}/api/tiktok/callback`)}&state=${state}`,
+  // Read-only: basic profile + media. Needs a Business or Creator Instagram account.
+  instagram: (origin, state) =>
+    `https://www.instagram.com/oauth/authorize?client_id=${process.env.INSTAGRAM_APP_ID ?? ""}&redirect_uri=${encodeURIComponent(`${origin}/api/instagram/callback`)}&response_type=code&scope=instagram_business_basic&state=${state}`,
 };
 
 export async function GET(req: NextRequest) {
   await requireAdmin();
   const provider = req.nextUrl.searchParams.get("provider");
-  if (provider !== "easyparcel" && provider !== "tiktok") {
+  if (provider !== "easyparcel" && provider !== "tiktok" && provider !== "instagram") {
     return new NextResponse("Unknown provider", { status: 400 });
   }
 

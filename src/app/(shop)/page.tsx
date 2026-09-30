@@ -5,6 +5,7 @@ import { FeaturedProducts } from "@/components/featured-products";
 import { BrandMarquee } from "@/components/brand-marquee";
 import { CareHub } from "@/components/care-hub";
 import { Hero } from "@/components/hero";
+import { InstagramFeed } from "@/components/instagram-feed";
 import { LocalSeo } from "@/components/local-seo";
 import { PetCollage } from "@/components/pet-collage";
 import { PromoBanner } from "@/components/promo-banner";
@@ -47,6 +48,7 @@ export default async function Home() {
       <BrandMarquee />
       <CareHub />
       <Testimonial />
+      <InstagramFeed />
       <TikTokFeed />
 
       <section aria-label="Why shop with us" className="mx-auto max-w-6xl px-4 pb-14 pt-6">
