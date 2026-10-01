@@ -26,7 +26,7 @@ const promises = [
   { Icon: Bike, title: "Order by 1pm, delivered today", body: "Mon–Sat in Selangor, KL and Putrajaya by Lalamove, or your delivery fee back." },
   { Icon: PackageCheck, title: "Nationwide courier", body: "The cheapest courier to every other state." },
   { Icon: Store, title: "Free store pickup", body: "Bukit Beruntung, Rawang. Mon–Sat 10:00–19:00." },
-  { Icon: ShieldCheck, title: "Secure checkout", body: "FPX, cards, Apple Pay and Google Pay." },
+  { Icon: ShieldCheck, title: "Secure checkout", body: "FPX online banking, GrabPay, cards, Apple Pay and Google Pay." },
 ];
 
 export default async function Home() {
