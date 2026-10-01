@@ -8,7 +8,7 @@ import { FreeShippingProgress } from "@/components/free-shipping-progress";
 import { TrustLine } from "@/components/trust-line";
 import { readAttribution } from "@/lib/attribution";
 import { useCart } from "@/lib/cart-context";
-import { MY_STATES } from "@/lib/my-states";
+import { MY_STATES, stateForPostcode } from "@/lib/my-states";
 import { formatMyr } from "@/lib/pricing";
 import { site, whatsappLink } from "@/lib/site";
 import { track } from "@/lib/track";
@@ -127,14 +127,24 @@ export function CartView({
       });
       const data = await res.json();
       if (!res.ok || !data.options) throw new Error(data.error ?? "Could not get delivery options");
+      // Show the options; the shopper picks one (nothing is chosen for them).
       setQuote({ key, options: data.options });
-      setSelected({ key, option: data.options[0] });
     } catch (err) {
       setQuoteError(err instanceof Error ? err.message : "Could not get delivery options");
     } finally {
       setQuoting(false);
     }
   }
+
+  // Load delivery options by themselves once the address and a 5-digit postcode are in (no button press needed).
+  const addressReady = address.addressLine.trim().length > 3 && /^\d{5}$/.test(address.postcode.trim());
+  useEffect(() => {
+    if (!addressReady || lines.length === 0 || quote?.key === quoteKey) return;
+    const timer = setTimeout(() => void getShippingOptions(), 800);
+    return () => clearTimeout(timer);
+    // getShippingOptions reads the same state quoteKey is built from
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [quoteKey, addressReady]);
 
   async function payNow() {
     setPaying(true);
@@ -366,7 +376,13 @@ export function CartView({
           />
           <input
             value={address.postcode}
-            onChange={(e) => setAddress((a) => ({ ...a, postcode: e.target.value }))}
+            onChange={(e) => {
+              const postcode = e.target.value.replace(/\D/g, "").slice(0, 5);
+              // Fill in the state from the postcode so the two always match (it can still be changed below).
+              setAddress((a) => ({ ...a, postcode, state: stateForPostcode(postcode) ?? a.state }));
+            }}
+            inputMode="numeric"
+            autoComplete="postal-code"
             placeholder="Postcode"
             className="rounded-xl border border-choc/40 px-3 py-2"
           />
@@ -389,9 +405,21 @@ export function CartView({
           className="btn-bubble bg-choc px-6 py-2.5 text-cream disabled:opacity-60"
         >
           {quoting ? <Loader2 className="size-4 animate-spin" aria-hidden /> : <Truck className="size-4" aria-hidden />}
-          {quoting ? "Getting delivery options…" : "Get delivery options"}
+          {quoting ? "Getting delivery options…" : shippingOptions ? "Refresh delivery options" : "Get delivery options"}
         </button>
-        {quoteError && <p className="text-sm font-medium text-bad-fg">{quoteError}</p>}
+        {!addressReady && !shippingOptions && (
+          <p className="text-xs text-choc-2">Delivery options and prices appear here once you enter your address and postcode.</p>
+        )}
+        {quoteError && (
+          <p className="text-sm font-medium text-bad-fg">
+            {quoteError}. Check the postcode and state
+            {pickupEnabled ? ", choose free store pickup above," : ""} or{" "}
+            <a href={whatsappLink(`Hi Ria Pet Mart, I can't get delivery options for postcode ${address.postcode}.`)} target="_blank" rel="noopener noreferrer" className="underline">
+              WhatsApp us
+            </a>{" "}
+            and we&apos;ll arrange it.
+          </p>
+        )}
 
         {shippingOptions && (
           <fieldset className="grid gap-2">

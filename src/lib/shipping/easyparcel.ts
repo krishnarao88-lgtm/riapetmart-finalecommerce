@@ -1,6 +1,7 @@
 import "server-only";
 import { getValidAccessToken, isConnected, saveTokens, type OAuthTokens } from "@/lib/integration-tokens";
 import { MY_STATE_CODES } from "@/lib/my-states";
+import { site } from "@/lib/site";
 
 const API_BASE = "https://api.easyparcel.com/open_api/2026-06";
 const TOKEN_URL = "https://api.easyparcel.com/oauth/token";
@@ -14,10 +15,24 @@ async function refreshToken(refreshToken: string) {
   const res = await fetch(TOKEN_URL, {
     method: "POST",
     headers: { Authorization: `Basic ${basic}`, "Content-Type": "application/x-www-form-urlencoded" },
-    body: new URLSearchParams({ grant_type: "refresh_token", refresh_token: refreshToken }),
+    // EasyParcel's token docs list redirect_uri on refresh too; it must match the one registered for the app.
+    body: new URLSearchParams({
+      grant_type: "refresh_token",
+      refresh_token: refreshToken,
+      redirect_uri: `${site.url}/api/easyparcel/callback`,
+    }),
   });
-  if (!res.ok) return null;
-  return res.json() as Promise<OAuthTokens>;
+  const body = (await res.json().catch(() => null)) as Partial<OAuthTokens> | null;
+  // An error can come back as JSON without a token; never save that (it used to crash quotes with "Invalid time value").
+  if (!res.ok || !body?.access_token || !Number.isFinite(Number(body.expires_in))) {
+    console.error("EasyParcel token refresh failed:", res.status, JSON.stringify(body)?.slice(0, 300));
+    return null;
+  }
+  return {
+    access_token: body.access_token,
+    refresh_token: body.refresh_token ?? refreshToken, // keep the old one if EasyParcel doesn't rotate it
+    expires_in: Number(body.expires_in),
+  };
 }
 
 /** Exchanges a one-time OAuth authorization code for tokens (used only by the callback route). */
