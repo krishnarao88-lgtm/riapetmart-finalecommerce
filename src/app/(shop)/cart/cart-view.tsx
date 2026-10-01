@@ -485,7 +485,7 @@ export function CartView({
           <Lock className="size-3.5" aria-hidden /> Secured by Stripe
         </span>
         <span aria-hidden>·</span>
-        <span>Card · FPX</span>
+        <span>FPX · GrabPay · Card · Apple/Google Pay</span>
         <span aria-hidden>·</span>
         <Link href="/returns" className="underline hover:text-choc">
           Returns &amp; refunds
