@@ -3,6 +3,7 @@ import { createHmac } from "node:crypto";
 import { geocodeAddress } from "@/lib/geocode";
 import { site } from "@/lib/site";
 import { toE164MY } from "./lalamove-rules";
+import { lalamoveVehicle } from "./parcel";
 
 /** Sandbox until LALAMOVE_SANDBOX=false is set with production keys (needs a topped-up wallet). */
 export const LALAMOVE_LIVE = process.env.LALAMOVE_SANDBOX === "false";
@@ -41,9 +42,11 @@ async function lalamoveRequest(method: "GET" | "POST", path: string, body?: unkn
 }
 
 function quotationBody(dropoff: { lat: string; lng: string }, dropoffAddress: string, weightKg: number) {
+  const vehicle = lalamoveVehicle(weightKg);
+  if (!vehicle) throw new Error(`Too heavy for Lalamove (${weightKg} kg) — send by courier`);
   return {
     data: {
-      serviceType: "MOTORCYCLE",
+      serviceType: vehicle,
       language: "en_MY",
       stops: [
         {
@@ -52,7 +55,10 @@ function quotationBody(dropoff: { lat: string; lng: string }, dropoffAddress: st
         },
         { coordinates: dropoff, address: dropoffAddress },
       ],
-      item: { quantity: "1", weight: weightKg <= 3 ? "LESS_THAN_3_KG" : "3_TO_10_KG", categories: ["OTHERS"] },
+      // The motorcycle weight bands stop at 10kg; for a car the vehicle itself carries the limit.
+      item: vehicle === "MOTORCYCLE"
+        ? { quantity: "1", weight: weightKg <= 3 ? "LESS_THAN_3_KG" : "3_TO_10_KG", categories: ["OTHERS"] }
+        : { quantity: "1", categories: ["OTHERS"] },
     },
   };
 }
@@ -95,6 +101,7 @@ export async function getLalamoveQuote(
   dropoffAddress: string,
   weightKg: number,
 ): Promise<{ price: number; currency: string } | null> {
+  if (!lalamoveVehicle(weightKg)) return null;
   const dropoff = await geocodeAddress(dropoffAddress);
   if (!dropoff) return null;
 

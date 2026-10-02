@@ -1,11 +1,13 @@
 "use server";
 
+import type { SupabaseClient } from "@supabase/supabase-js";
 import { revalidatePath } from "next/cache";
 import { requireAdmin } from "@/lib/auth";
 import { isSandboxAwb, submitEasyParcelOrder } from "@/lib/shipping/easyparcel";
 import { EP_CANCELLED } from "@/lib/shipping/easyparcel-status";
 import { bookLalamoveOrder } from "@/lib/shipping/lalamove";
 import { LALAMOVE_REBOOKABLE, toE164MY } from "@/lib/shipping/lalamove-rules";
+import { lineGrams, parcelKg } from "@/lib/shipping/parcel";
 import { sendTemplate } from "@/lib/resend";
 import { site } from "@/lib/site";
 import { onItsWay } from "@/lib/emails";
@@ -30,6 +32,23 @@ export async function setFulfilmentStatus(formData: FormData) {
 }
 
 type OrderItem = { variant_id: string; name: string; title: string; qty: number; price: number };
+
+/** Same packed weight the checkout quoted, so the courier's reweigh matches what we declared. */
+async function orderParcelKg(supabase: SupabaseClient, items: OrderItem[]): Promise<number> {
+  const { data: variants } = await supabase
+    .from("variants")
+    .select("id, weight_grams, products(categories(name))")
+    .in("id", items.map((i) => i.variant_id));
+  const byId = new Map(
+    ((variants ?? []) as unknown as { id: string; weight_grams: number | null; products: { categories: { name: string } | null } | null }[])
+      .map((v) => [v.id, v]),
+  );
+  const grams = items.reduce((sum, i) => {
+    const v = byId.get(i.variant_id);
+    return sum + lineGrams(v?.weight_grams ?? null, i.qty, v?.products?.categories?.name);
+  }, 0);
+  return parcelKg(grams);
+}
 type ShippingAddress = { addressLine: string; city: string; postcode: string; state: string } | null;
 
 export async function bookEasyParcelShipment(_prev: ActionState, formData: FormData): Promise<ActionState> {
@@ -61,13 +80,7 @@ export async function bookEasyParcelShipment(_prev: ActionState, formData: FormD
   if (!address) return { error: "No delivery address on file for this order." };
 
   const items = order.items as unknown as OrderItem[];
-  const { data: variants } = await supabase
-    .from("variants")
-    .select("id, weight_grams")
-    .in("id", items.map((i) => i.variant_id));
-  const weightByVariant = new Map((variants ?? []).map((v) => [v.id, v.weight_grams ?? 500]));
-  const totalGrams = items.reduce((sum, i) => sum + (weightByVariant.get(i.variant_id) ?? 500) * i.qty, 0);
-  const weightKg = Math.max(0.5, totalGrams / 1000);
+  const weightKg = await orderParcelKg(supabase, items);
 
   try {
     const result = await submitEasyParcelOrder(
@@ -117,9 +130,7 @@ export async function bookLalamoveRider(_prev: ActionState, formData: FormData):
   if (!address) return { error: "No delivery address on file for this order." };
 
   const items = order.items as unknown as OrderItem[];
-  const { data: variants } = await supabase.from("variants").select("id, weight_grams").in("id", items.map((i) => i.variant_id));
-  const weightByVariant = new Map((variants ?? []).map((v) => [v.id, v.weight_grams ?? 500]));
-  const weightKg = items.reduce((sum, i) => sum + (weightByVariant.get(i.variant_id) ?? 500) * i.qty, 0) / 1000;
+  const weightKg = await orderParcelKg(supabase, items);
   const ref = order.order_number ?? `#${orderId.slice(0, 8).toUpperCase()}`;
 
   try {

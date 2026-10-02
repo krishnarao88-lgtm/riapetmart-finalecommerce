@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { parcelKg } from "@/lib/shipping/parcel";
 import { parseLines, priceCart } from "@/lib/cart-pricing";
 import { freeDeliveryCap, freeDeliveryMin, type DeliverySettings } from "@/lib/delivery-settings";
 import { deliveryCharge, formatMyr } from "@/lib/pricing";
@@ -52,7 +53,7 @@ export async function POST(req: Request) {
       : charge(raw) === 0
         ? ` — free over ${formatMyr(freeMin)}`
         : ` — ${formatMyr(raw - charge(raw))} off (order over ${formatMyr(freeMin)})`;
-  const weightKg = Math.max(0.5, cart.weightGrams / 1000);
+  const weightKg = parcelKg(cart.weightGrams);
 
   const options: ShippingOption[] = [];
   const isSameDayZone = delivery.same_day_states?.includes(state) ?? false;
