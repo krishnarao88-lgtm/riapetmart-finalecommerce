@@ -402,6 +402,9 @@ export type FeedItem = {
   inStock: boolean;
   brand: string | null;
   gtin: string | null;
+  googleCategory?: string | null;
+  productType?: string | null;
+  highlights?: string[];
 };
 
 const XML_ESCAPES: Record<string, string> = { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&apos;" };
@@ -435,6 +438,9 @@ export function productFeedXml(channel: { title: string; link: string; descripti
       tag("g:brand", i.brand),
       tag("g:gtin", i.gtin),
       tag("g:condition", "new"),
+      tag("g:google_product_category", i.googleCategory ?? null),
+      tag("g:product_type", i.productType ?? null),
+      ...(i.highlights ?? []).map((h) => tag("g:product_highlight", h)),
       "</item>",
     ].join(""),
   );
