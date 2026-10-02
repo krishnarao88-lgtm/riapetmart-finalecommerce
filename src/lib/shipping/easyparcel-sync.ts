@@ -16,6 +16,7 @@ export async function syncEasyParcelStatuses(onlyAwb?: string): Promise<number> 
       .from("orders")
       .select("id, order_number, fulfilment_status, easyparcel_awb_number, easyparcel_status_code")
       .eq("shipping_method", "easyparcel")
+      .eq("is_test", false)
       .not("easyparcel_awb_number", "is", null)
       .not("easyparcel_awb_number", "like", "EPSAMPLE%");
     query = onlyAwb

@@ -101,6 +101,7 @@ export async function orderStatus(orderNumber: string, email: string) {
     .select("id, created_at, status, fulfilment_status, shipping_method, total, easyparcel_tracking_url, easyparcel_awb_number, lalamove_share_link")
     .eq("customer_email", mail)
     .eq("order_number", code)
+    .eq("is_test", false)
     .maybeSingle();
   // Same answer for "wrong email" and "no such order", so the tool can't be used to probe emails.
   if (!order) return { found: false, reason: "No order matches that number and email." };

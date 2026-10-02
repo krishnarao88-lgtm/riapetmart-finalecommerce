@@ -9,7 +9,7 @@ import { createServiceClient } from "@/lib/supabase/service";
 async function soldByVariant() {
   // ponytail: sums paid orders in JS (PostgREST caps at 1000 rows); move to a SQL view/RPC over
   // jsonb_array_elements(items) when orders grow.
-  const { data, error } = await createServiceClient().from("orders").select("items").eq("status", "paid");
+  const { data, error } = await createServiceClient().from("orders").select("items").eq("status", "paid").eq("is_test", false);
   if (error) throw error;
   const sold = new Map<string, number>();
   for (const { items } of data as { items: { variant_id?: string; qty?: number }[] }[]) {

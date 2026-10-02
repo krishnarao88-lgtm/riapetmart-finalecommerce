@@ -87,6 +87,7 @@ export default async function OrdersPage() {
     .select(
       "id, order_number, created_at, status, customer_email, customer_name, customer_phone, total, fulfilment_status, items, shipping_method, shipping_address, easyparcel_order_number, easyparcel_awb_number, easyparcel_awb_url, easyparcel_tracking_url, easyparcel_status_code, easyparcel_status, lalamove_order_id, lalamove_status, lalamove_share_link, attribution, refunded_amount, code_discount, shipping_cost, courier_cost",
     )
+    .eq("is_test", false)
     .order("created_at", { ascending: false })
     .limit(200);
 

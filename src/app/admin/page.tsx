@@ -103,6 +103,7 @@ export default async function AdminDashboard({
         .from("orders")
         .select("id, order_number, customer_name, created_at, total, shipping_cost, fulfilment_status, items")
         .eq("status", "paid")
+        .eq("is_test", false)
         .gte("created_at", inRange.from)
         .lt("created_at", inRange.to)
         .order("created_at", { ascending: false }),

@@ -29,8 +29,8 @@ export async function GET(req: Request) {
 
   const weekAgo = new Date(Date.now() - 7 * 86_400_000).toISOString();
   const [orders, pending, accounts, signups, hotel, carts, views, adds, week] = await Promise.all([
-    supabase.from("orders").select("order_number, customer_name, total").eq("status", "paid").gte("created_at", since),
-    supabase.from("orders").select("id", { count: "exact", head: true }).eq("status", "pending").gte("created_at", since),
+    supabase.from("orders").select("order_number, customer_name, total").eq("status", "paid").eq("is_test", false).gte("created_at", since),
+    supabase.from("orders").select("id", { count: "exact", head: true }).eq("status", "pending").eq("is_test", false).gte("created_at", since),
     supabase.from("profiles").select("email").eq("role", "customer").gte("created_at", since),
     supabase.from("newsletter_signups").select("id", { count: "exact", head: true }).gte("created_at", since),
     supabase.from("cat_hotel_bookings").select("id", { count: "exact", head: true }).gte("created_at", since),
@@ -41,6 +41,7 @@ export async function GET(req: Request) {
       .from("orders")
       .select("created_at, total, shipping_cost, code_discount, refunded_amount, shipping_method, courier_cost, items")
       .eq("status", "paid")
+      .eq("is_test", false)
       .gte("created_at", weekAgo),
   ]);
 

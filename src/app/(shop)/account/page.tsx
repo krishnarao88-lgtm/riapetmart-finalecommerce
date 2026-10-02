@@ -45,6 +45,7 @@ export default async function AccountPage() {
     supabase
       .from("orders")
       .select("id, order_number, created_at, status, total, shipping_cost, shipping_method, easyparcel_tracking_url, items")
+      .eq("is_test", false)
       .order("created_at", { ascending: false }),
     supabase.rpc("get_or_create_my_referral_code"),
   ]);

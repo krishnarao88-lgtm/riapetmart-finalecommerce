@@ -60,6 +60,7 @@ export default async function FinancePage({ searchParams }: PageProps<"/admin/fi
         .from("orders")
         .select("total, shipping_cost, code_discount, items")
         .eq("status", "paid")
+        .eq("is_test", false)
         .gte("created_at", since),
       supabase
         .from("products")

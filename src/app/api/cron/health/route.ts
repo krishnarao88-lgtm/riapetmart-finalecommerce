@@ -103,8 +103,8 @@ export async function GET(req: Request) {
   // 4. The shop's own queue: things that need a person.
   const dayAgo = new Date(Date.now() - 86_400_000).toISOString();
   const [stuck, courier, weekly, published] = await Promise.all([
-    supabase.from("orders").select("order_number").eq("status", "paid").in("fulfilment_status", ["new", "packed"]).lt("created_at", dayAgo),
-    supabase.from("orders").select("order_number").in("easyparcel_status_code", [0, 6, 8]).not("fulfilment_status", "in", "(cancelled,refunded,delivered)"),
+    supabase.from("orders").select("order_number").eq("status", "paid").eq("is_test", false).in("fulfilment_status", ["new", "packed"]).lt("created_at", dayAgo),
+    supabase.from("orders").select("order_number").eq("is_test", false).in("easyparcel_status_code", [0, 6, 8]).not("fulfilment_status", "in", "(cancelled,refunded,delivered)"),
     supabase.from("site_reports").select("created_at").order("created_at", { ascending: false }).limit(1).maybeSingle(),
     supabase.from("products").select("id, variants(id)").eq("status", "published"),
   ]);
