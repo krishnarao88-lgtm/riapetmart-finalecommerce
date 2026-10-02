@@ -14,7 +14,8 @@ import { getVariantStock } from "@/components/product-card";
 import { discountedPrice, getExpiryBadge, type ExpirySettings } from "@/lib/expiry";
 import { formatMyr } from "@/lib/pricing";
 import { TrackViewItem } from "@/components/track-view-item";
-import { productDescription, productTitle, titleCase } from "@/lib/seo";
+import { productSeo } from "@/lib/feed-enrich";
+import { productTitle, titleCase } from "@/lib/seo";
 import { RefillReminder } from "@/components/refill-reminder";
 import { TrustLine } from "@/components/trust-line";
 import { site, whatsappLink } from "@/lib/site";
@@ -53,13 +54,22 @@ export async function generateMetadata({
   const prices = (product.variants ?? []).map((v) => v.price);
   const name = titleCase(product.name);
   const seoTitle = product.seo_title?.trim();
-  const description =
-    product.seo_description?.trim() || productDescription(product.name, prices.length ? Math.min(...prices) : null);
+  // Search wording from pet + category (e.g. "… Dog Wet Food 415g", "makanan anjing basah"); a hand-written SEO title
+  // or description in Admin always wins.
+  const auto = productSeo({
+    name: product.name,
+    brand: (product.brands as unknown as { name: string } | null)?.name ?? null,
+    petType: product.pet_type,
+    category: (product.categories as unknown as { name: string } | null)?.name ?? null,
+    fromPrice: prices.length ? Math.min(...prices) : null,
+  });
+  const description = product.seo_description?.trim() || auto.description;
 
   return {
     // The layout template appends " · Ria Pet Mart", so a hand-written title that already names the shop is used as-is.
-    title: seoTitle ? (seoTitle.includes(site.name) ? { absolute: seoTitle } : seoTitle) : productTitle(product.name),
+    title: seoTitle ? (seoTitle.includes(site.name) ? { absolute: seoTitle } : seoTitle) : productTitle(auto.title),
     description,
+    keywords: auto.keywords,
     alternates: { canonical: `/shop/${slug}` },
     openGraph: {
       title: name,

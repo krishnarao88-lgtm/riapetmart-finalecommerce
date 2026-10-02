@@ -4,6 +4,7 @@ import { sendMetaPurchase } from "@/lib/meta-capi";
 import { lalamoveDelivery } from "@/lib/shipping/lalamove-rules";
 import { getStripe } from "@/lib/stripe";
 import { formatMyr } from "@/lib/pricing";
+import { referralLinkFor } from "@/lib/referral";
 import { sendTemplate } from "@/lib/resend";
 import { createServiceClient } from "@/lib/supabase/service";
 import { orderConfirmed, referralReward } from "@/lib/emails";
@@ -145,7 +146,8 @@ export async function POST(req: Request) {
               amount: Number(order.shipping_cost) > 0 ? formatMyr(Number(order.shipping_cost)) : "Free",
             });
           }
-          await sendTemplate(customerEmail, orderConfirmed({ ref, pickup, lines, total: Number(order.total) }));
+          const referralUrl = (await referralLinkFor(customerEmail).catch(() => null)) ?? undefined;
+          await sendTemplate(customerEmail, orderConfirmed({ ref, pickup, lines, total: Number(order.total), referralUrl }));
         }
       } catch (err) {
         console.error("Order confirmation email failed:", err);

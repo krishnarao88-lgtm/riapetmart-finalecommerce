@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
-import { feedHighlights, feedTitle, googleCategory, productType } from "../src/lib/feed-enrich.ts";
+import { feedHighlights, feedTitle, googleCategory, productSeo, productType } from "../src/lib/feed-enrich.ts";
 import { localInventoryXml, productFeedXml } from "../src/lib/seo.ts";
 
 test("local inventory feed: shelf stock per store, same-day pickup only when in stock", () => {
@@ -52,4 +52,16 @@ test("feed XML carries the new tags", () => {
   assert.match(xml, /<g:google_product_category>Animals &amp; Pet Supplies &gt; Pet Supplies &gt; Cat Supplies &gt; Cat Food<\/g:google_product_category>/);
   assert.match(xml, /<g:product_type>Cat &gt; Wet Food<\/g:product_type>/);
   assert.equal(xml.match(/<g:product_highlight>/g)?.length, 2);
+});
+
+test("product page SEO: searchable title, Malay phrase and keywords from pet + category", () => {
+  const seo = productSeo({ name: "ALPS CHUNKY LAMB 415GM", brand: "Alps", petType: "dog", category: "Wet Food", fromPrice: 4.8 });
+  assert.equal(seo.title, "Alps Chunky Lamb Dog Wet Food 415g");
+  assert.match(seo.description, /^Alps Chunky Lamb Dog Wet Food 415g \(makanan anjing basah\)\. From RM4\.80\. Same-day delivery/);
+  assert.ok(seo.keywords.includes("makanan anjing basah"));
+  assert.ok(seo.keywords.includes("Alps dog food Malaysia"));
+  assert.ok(seo.keywords.includes("dog wet food Rawang"));
+  const plain = productSeo({ name: "Mystery Item", brand: null, petType: null, category: null, fromPrice: null });
+  assert.equal(plain.title, "Mystery Item");
+  assert.deepEqual(plain.keywords, ["Mystery Item", "pet shop Rawang"]);
 });

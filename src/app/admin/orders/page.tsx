@@ -5,6 +5,7 @@ import { type Attribution, sourceLabel } from "@/lib/attribution";
 import { formatMyr } from "@/lib/pricing";
 import { requireStaff } from "@/lib/auth";
 import { AutoRefresh } from "@/components/admin/auto-refresh";
+import { OrderDetailsForm } from "@/components/admin/order-details-form";
 import { OrderMoneyActions } from "@/components/admin/order-money-actions";
 import { isSandboxAwb } from "@/lib/shipping/easyparcel";
 import { EP_CANCELLED, EP_PROBLEM, EP_STATUS } from "@/lib/shipping/easyparcel-status";
@@ -171,166 +172,189 @@ export default async function OrdersPage({ searchParams }: PageProps<"/admin/ord
           {q ? `No orders match "${q}".` : "No orders here."}
         </p>
       ) : (
-        <ul className="grid gap-3">
-          {orders.map((order) => (
-            <li key={order.id} className="grid gap-2 rounded-[var(--radius-chunk)] border-2 border-ink bg-surface p-4">
-              <div className="flex flex-wrap items-center justify-between gap-2">
-                <span className="text-sm text-ink-2">
-                  {order.order_number && <strong className="mr-2 text-ink">{order.order_number}</strong>}
-                  {new Date(order.created_at).toLocaleString("en-MY", { timeZone: "Asia/Kuala_Lumpur" })}
-                </span>
-                <span className="flex flex-wrap justify-end gap-1.5">
-                  {Number(order.refunded_amount) > 0 && (
-                    <span className="rounded-full bg-bad-bg px-2.5 py-1 text-xs font-bold text-bad-fg">
-                      Refunded {formatMyr(Number(order.refunded_amount))}
-                      {Number(order.refunded_amount) < Number(order.total) ? " (partial)" : ""}
+        <ul className="grid gap-2">
+          {orders.map((order) => {
+            const pickup = order.shipping_method === "pickup";
+            const epLive = !!order.easyparcel_awb_number && !isSandboxAwb(order.easyparcel_awb_number) && order.easyparcel_status_code !== EP_CANCELLED;
+            const lmLive = !!order.lalamove_order_id && !LALAMOVE_REBOOKABLE.includes(order.lalamove_status ?? "");
+            const refundable = Math.max(0, Math.round((Number(order.total) - Number(order.code_discount ?? 0) - Number(order.refunded_amount)) * 100) / 100);
+            const canCancelCourier = order.shipping_method === "easyparcel" && epLive && order.easyparcel_status_code !== 5;
+            return (
+              <li key={order.id}>
+                <details className="group rounded-[var(--radius-chunk)] border-2 border-ink bg-surface">
+                  <summary className="flex cursor-pointer list-none flex-wrap items-center justify-between gap-2 p-3">
+                    <span className="grid gap-0.5 text-sm">
+                      <span>
+                        <strong className="mr-2 text-ink">{order.order_number ?? "Unpaid checkout"}</strong>
+                        <span className="text-ink-2">
+                          {new Date(order.created_at).toLocaleString("en-MY", { timeZone: "Asia/Kuala_Lumpur", dateStyle: "medium", timeStyle: "short" })}
+                        </span>
+                      </span>
+                      <span className="text-ink-2">
+                        {order.customer_name ?? "No name"} · {order.items.length} item{order.items.length === 1 ? "" : "s"} ·{" "}
+                        {pickup ? "Store pickup" : order.shipping_method === "lalamove" ? "Lalamove" : order.shipping_method === "easyparcel" ? "Courier" : "—"}
+                      </span>
                     </span>
-                  )}
-                  {order.easyparcel_status_code != null && !isSandboxAwb(order.easyparcel_awb_number) && (
-                    <span
-                      title={order.easyparcel_status ?? undefined}
-                      className={`rounded-full px-2.5 py-1 text-xs font-bold ${EP_PROBLEM.has(order.easyparcel_status_code) ? "bg-bad-bg text-bad-fg" : "border border-line text-ink-2"}`}
-                    >
-                      Courier: {EP_STATUS[order.easyparcel_status_code] ?? order.easyparcel_status}
+                    <span className="flex flex-wrap items-center justify-end gap-1.5">
+                      {Number(order.refunded_amount) > 0 && (
+                        <span className="rounded-full bg-bad-bg px-2.5 py-1 text-xs font-bold text-bad-fg">
+                          Refunded {formatMyr(Number(order.refunded_amount))}
+                          {Number(order.refunded_amount) < Number(order.total) ? " (partial)" : ""}
+                        </span>
+                      )}
+                      {order.easyparcel_status_code != null && !isSandboxAwb(order.easyparcel_awb_number) && (
+                        <span
+                          title={order.easyparcel_status ?? undefined}
+                          className={`rounded-full px-2.5 py-1 text-xs font-bold ${EP_PROBLEM.has(order.easyparcel_status_code) ? "bg-bad-bg text-bad-fg" : "border border-line text-ink-2"}`}
+                        >
+                          Courier: {EP_STATUS[order.easyparcel_status_code] ?? order.easyparcel_status}
+                        </span>
+                      )}
+                      {order.status === "paid" ? (
+                        <span className={`rounded-full px-2.5 py-1 text-xs font-bold ${fulfilmentStyle[order.fulfilment_status]}`}>
+                          {order.fulfilment_status}
+                        </span>
+                      ) : (
+                        <span className={`rounded-full px-2.5 py-1 text-xs font-bold ${statusStyle[order.status]}`}>{order.status}</span>
+                      )}
+                      <span className="font-display text-base font-extrabold tabular-nums">{formatMyr(order.total)}</span>
+                      <span aria-hidden className="text-ink-2 transition-transform group-open:rotate-180">▾</span>
                     </span>
-                  )}
-                  {order.status === "paid" && (
-                    <span className={`rounded-full px-2.5 py-1 text-xs font-bold ${fulfilmentStyle[order.fulfilment_status]}`}>
-                      {order.fulfilment_status}
-                    </span>
-                  )}
-                  <span className={`rounded-full px-2.5 py-1 text-xs font-bold ${statusStyle[order.status]}`}>
-                    {order.status}
-                  </span>
-                </span>
-              </div>
-              <ul className="grid gap-1 text-sm">
-                {order.items.map((item) => (
-                  <li key={item.variant_id} className="flex justify-between gap-2">
-                    <span>
-                      {item.name} <span className="text-ink-2">({item.title})</span> × {item.qty}
-                    </span>
-                    <span className="font-semibold">{formatMyr(item.price * item.qty)}</span>
-                  </li>
-                ))}
-              </ul>
-              {order.shipping_address && (
-                <p className="text-sm text-ink-2">
-                  {order.shipping_method ? `${order.shipping_method} — ` : ""}
-                  {order.shipping_address.addressLine}, {order.shipping_address.city},{" "}
-                  {order.shipping_address.postcode} {order.shipping_address.state}
-                </p>
-              )}
-              <div className="flex flex-wrap items-center justify-between gap-2 border-t border-line pt-2">
-                <span className="text-sm text-ink-2">
-                  {order.customer_name ?? "No name on file"}
-                  {order.customer_phone ? ` · ${order.customer_phone}` : ""}
-                  {order.customer_email ? ` · ${order.customer_email}` : ""}
-                  <span className="ml-2 rounded-full border border-line px-2 py-0.5 text-xs">
-                    Source: {sourceLabel(order.attribution)}
-                  </span>
-                </span>
-                <span className="font-display text-lg font-extrabold">{formatMyr(order.total)}</span>
-              </div>
-              {role === "admin" && order.status === "paid" && nextStep[order.fulfilment_status] && (
-                <form action={setFulfilmentStatus} className="flex flex-wrap gap-2">
-                  <input type="hidden" name="order_id" value={order.id} />
-                  <button
-                    type="submit"
-                    name="fulfilment_status"
-                    value={nextStep[order.fulfilment_status]}
-                    className="btn-chunk bg-tangerine px-3 py-1.5 text-sm"
-                  >
-                    Mark {nextStep[order.fulfilment_status]}
-                  </button>
-                  {order.fulfilment_status !== "shipped" && (
-                    <button type="submit" name="fulfilment_status" value="cancelled" className="btn-chunk bg-surface px-3 py-1.5 text-sm">
-                      Cancel order
-                    </button>
-                  )}
-                </form>
-              )}
-              <Link
-                href={`/admin/orders/${order.id}/packing-slip`}
-                target="_blank"
-                className="w-fit text-sm font-semibold text-grape underline"
-              >
-                Print packing list
-              </Link>
-              {role === "admin" && order.status === "paid" && (
-                <OrderMoneyActions
-                  orderId={order.id}
-                  orderNumber={order.order_number ?? "this order"}
-                  refundable={Math.max(0, Math.round((Number(order.total) - Number(order.code_discount ?? 0) - Number(order.refunded_amount)) * 100) / 100)}
-                  canCancelCourier={
-                    order.shipping_method === "easyparcel" &&
-                    !!order.easyparcel_awb_number &&
-                    !isSandboxAwb(order.easyparcel_awb_number) &&
-                    order.easyparcel_status_code !== EP_CANCELLED &&
-                    order.easyparcel_status_code !== 5
-                  }
-                />
-              )}
-              {order.status === "paid" && order.shipping_method === "easyparcel" && (
-                order.easyparcel_awb_url &&
-                !isSandboxAwb(order.easyparcel_awb_number) &&
-                order.easyparcel_status_code !== EP_CANCELLED ? (
-                  <div className="flex flex-wrap gap-3 text-sm font-semibold">
-                    <a href={order.easyparcel_awb_url} target="_blank" rel="noopener noreferrer" className="text-grape underline">
-                      Print waybill ({order.easyparcel_order_number})
-                    </a>
-                    {order.easyparcel_tracking_url && (
-                      <a href={order.easyparcel_tracking_url} target="_blank" rel="noopener noreferrer" className="text-ink-2 underline">
-                        Track shipment
-                      </a>
-                    )}
-                  </div>
-                ) : role === "admin" ? (
-                  <>
-                  {order.easyparcel_status_code === EP_CANCELLED && !isSandboxAwb(order.easyparcel_awb_number) && (
-                    <p className="rounded-xl bg-bad-bg px-3 py-2 text-sm font-semibold text-bad-fg">
-                      EasyParcel shipment {order.easyparcel_order_number} was cancelled, so no courier is coming. Book it
-                      again below, or cancel/refund the order if the customer no longer wants it.
-                    </p>
-                  )}
-                  {isSandboxAwb(order.easyparcel_awb_number) && (
-                    <p className="rounded-xl bg-warn-bg px-3 py-2 text-sm font-semibold text-warn-fg">
-                      This waybill came from the EasyParcel test (sandbox) account, so no courier is coming. Reconnect
-                      EasyParcel with your live account in Settings, then book it again below.
-                    </p>
-                  )}
-                  <BookEasyParcel
-                    orderId={order.id}
-                    defaultName={order.customer_name ?? ""}
-                    defaultPhone={order.customer_phone ?? ""}
-                  />
-                  </>
-                ) : null
-              )}
-              {order.status === "paid" && order.shipping_method === "lalamove" && (
-                <div className="grid gap-2">
-                  {order.lalamove_order_id && (
-                    <p className="flex flex-wrap gap-3 text-sm font-semibold">
-                      <span>Lalamove: {LALAMOVE_LABEL[order.lalamove_status ?? ""] ?? order.lalamove_status}</span>
+                  </summary>
+
+                  <div className="grid gap-3 border-t border-line p-3">
+                    <ul className="grid gap-1 text-sm">
+                      {order.items.map((item) => (
+                        <li key={item.variant_id} className="flex justify-between gap-2">
+                          <span>
+                            {item.name} <span className="text-ink-2">({item.title})</span> × {item.qty}
+                          </span>
+                          <span className="font-semibold">{formatMyr(item.price * item.qty)}</span>
+                        </li>
+                      ))}
+                    </ul>
+
+                    <div className="grid gap-0.5 text-sm text-ink-2">
+                      <span>
+                        {order.customer_name ?? "No name on file"}
+                        {order.customer_phone ? ` · ${order.customer_phone}` : ""}
+                        {order.customer_email ? ` · ${order.customer_email}` : ""}
+                      </span>
+                      {order.shipping_address && (
+                        <span>
+                          {order.shipping_address.addressLine}, {order.shipping_address.city}, {order.shipping_address.postcode}{" "}
+                          {order.shipping_address.state}
+                        </span>
+                      )}
+                      <span className="w-fit rounded-full border border-line px-2 py-0.5 text-xs">Source: {sourceLabel(order.attribution)}</span>
+                    </div>
+
+                    <div className="flex flex-wrap gap-3 text-sm font-semibold">
+                      <Link href={`/admin/orders/${order.id}/packing-slip`} target="_blank" className="text-grape underline">
+                        Print packing list
+                      </Link>
+                      {order.easyparcel_awb_url && epLive && (
+                        <a href={order.easyparcel_awb_url} target="_blank" rel="noopener noreferrer" className="text-grape underline">
+                          Print waybill ({order.easyparcel_order_number})
+                        </a>
+                      )}
+                      {order.easyparcel_tracking_url && epLive && (
+                        <a href={order.easyparcel_tracking_url} target="_blank" rel="noopener noreferrer" className="text-ink-2 underline">
+                          Track shipment
+                        </a>
+                      )}
                       {order.lalamove_share_link && (
                         <a href={order.lalamove_share_link} target="_blank" rel="noopener noreferrer" className="text-grape underline">
                           Track rider
                         </a>
                       )}
-                    </p>
-                  )}
-                  {role === "admin" && (!order.lalamove_order_id || LALAMOVE_REBOOKABLE.includes(order.lalamove_status ?? "")) && (
-                    <BookEasyParcel
-                      carrier="lalamove"
-                      orderId={order.id}
-                      defaultName={order.customer_name ?? ""}
-                      defaultPhone={order.customer_phone ?? ""}
-                    />
-                  )}
-                </div>
-              )}
-            </li>
-          ))}
+                    </div>
+
+                    {order.status === "paid" && order.shipping_method === "lalamove" && order.lalamove_order_id && (
+                      <p className="text-sm font-semibold">Lalamove: {LALAMOVE_LABEL[order.lalamove_status ?? ""] ?? order.lalamove_status}</p>
+                    )}
+
+                    {role === "admin" && order.status === "paid" && order.shipping_method === "easyparcel" && !epLive && (
+                      <>
+                        {order.easyparcel_status_code === EP_CANCELLED && !isSandboxAwb(order.easyparcel_awb_number) && (
+                          <p className="rounded-xl bg-bad-bg px-3 py-2 text-sm font-semibold text-bad-fg">
+                            EasyParcel shipment {order.easyparcel_order_number} was cancelled, so no courier is coming. Book it again
+                            below, or refund the order if the customer no longer wants it.
+                          </p>
+                        )}
+                        {isSandboxAwb(order.easyparcel_awb_number) && (
+                          <p className="rounded-xl bg-warn-bg px-3 py-2 text-sm font-semibold text-warn-fg">
+                            This waybill came from the EasyParcel test (sandbox) account, so no courier is coming. Book it again below.
+                          </p>
+                        )}
+                        <BookEasyParcel orderId={order.id} defaultName={order.customer_name ?? ""} defaultPhone={order.customer_phone ?? ""} />
+                      </>
+                    )}
+                    {role === "admin" && order.status === "paid" && order.shipping_method === "lalamove" && !lmLive && (
+                      <BookEasyParcel carrier="lalamove" orderId={order.id} defaultName={order.customer_name ?? ""} defaultPhone={order.customer_phone ?? ""} />
+                    )}
+
+                    {order.status === "paid" &&
+                      (pickup ? (
+                        role === "admin" &&
+                        nextStep[order.fulfilment_status] && (
+                          <form action={setFulfilmentStatus} className="flex flex-wrap items-center gap-2">
+                            <input type="hidden" name="order_id" value={order.id} />
+                            <button
+                              type="submit"
+                              name="fulfilment_status"
+                              value={order.fulfilment_status === "new" ? "packed" : "delivered"}
+                              className="btn-chunk bg-tangerine px-3 py-1.5 text-sm"
+                            >
+                              {order.fulfilment_status === "new" ? "Mark ready for collection" : "Mark collected"}
+                            </button>
+                          </form>
+                        )
+                      ) : (
+                        <p className="text-xs text-ink-2">
+                          Status updates automatically: packed when the courier is booked, then shipped and delivered from{" "}
+                          {order.shipping_method === "lalamove" ? "Lalamove" : "EasyParcel"}.
+                        </p>
+                      ))}
+
+                    {role === "admin" && order.status === "paid" && !["delivered", "cancelled", "refunded"].includes(order.fulfilment_status) && (
+                      <OrderDetailsForm
+                        orderId={order.id}
+                        name={order.customer_name ?? ""}
+                        phone={order.customer_phone ?? ""}
+                        address={order.shipping_address}
+                        pickup={pickup}
+                        courierBooked={epLive || lmLive}
+                      />
+                    )}
+
+                    {role === "admin" && order.status === "paid" && (refundable > 0 || canCancelCourier || order.fulfilment_status !== "cancelled") && (
+                      <details className="rounded-xl border-2 border-bad-fg/30 px-3 py-2 text-sm">
+                        <summary className="cursor-pointer font-semibold text-bad-fg">Refund or cancel…</summary>
+                        <div className="mt-2 grid gap-3">
+                          <p className="text-xs text-ink-2">These can&apos;t be undone. Each one asks you to confirm first.</p>
+                          <OrderMoneyActions
+                            orderId={order.id}
+                            orderNumber={order.order_number ?? "this order"}
+                            refundable={refundable}
+                            canCancelCourier={canCancelCourier}
+                          />
+                          {!["shipped", "delivered", "cancelled", "refunded"].includes(order.fulfilment_status) && (
+                            <form action={setFulfilmentStatus}>
+                              <input type="hidden" name="order_id" value={order.id} />
+                              <button type="submit" name="fulfilment_status" value="cancelled" className="font-semibold text-bad-fg underline">
+                                Mark order cancelled
+                              </button>
+                            </form>
+                          )}
+                        </div>
+                      </details>
+                    )}
+                  </div>
+                </details>
+              </li>
+            );
+          })}
         </ul>
       )}
     </div>

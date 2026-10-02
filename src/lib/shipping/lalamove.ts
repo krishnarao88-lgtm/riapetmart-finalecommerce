@@ -14,7 +14,7 @@ function sign(method: string, path: string, body: string, timestamp: string, sec
   return createHmac("sha256", secret).update(raw).digest("hex");
 }
 
-async function lalamoveRequest(method: "GET" | "POST", path: string, body?: unknown) {
+async function lalamoveRequest(method: "GET" | "POST" | "DELETE", path: string, body?: unknown) {
   const key = process.env.LALAMOVE_API_KEY;
   const secret = process.env.LALAMOVE_API_SECRET;
   if (!key || !secret) throw new Error("Lalamove credentials are not set");
@@ -89,6 +89,11 @@ export async function bookLalamoveOrder(opts: {
     })
   ).data;
   return { orderId: order.orderId, shareLink: order.shareLink ?? null, status: order.status, price: order.priceBreakdown?.total };
+}
+
+/** Cancels a rider booking before pickup (Lalamove refunds the wallet). Throws Lalamove's reason if it refuses. */
+export async function cancelLalamoveOrder(orderId: string): Promise<void> {
+  await lalamoveRequest("DELETE", `/v3/orders/${encodeURIComponent(orderId)}`);
 }
 
 /** Authoritative order state straight from Lalamove (used to verify webhook calls). */

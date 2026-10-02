@@ -67,4 +67,43 @@ export function feedHighlights(highlights: string[] | null, category: string | n
   return highlights.map((h) => h.trim()).filter((h) => h.length >= 2 && h.length <= 150).slice(0, 10);
 }
 
-export const DELIVERY_NOTE = "Same-day delivery in the Klang Valley (order by 1pm, Mon–Sat), nationwide courier, or free store pickup in Rawang.";
+// How Malaysians search for the same thing in Malay (from Google's Malaysian search suggestions).
+const MALAY: Record<string, string> = {
+  "cat:Wet Food": "makanan kucing basah",
+  "cat:Dry Food": "makanan kucing kering",
+  "cat:Treats": "snek kucing",
+  "dog:Wet Food": "makanan anjing basah",
+  "dog:Dry Food": "makanan anjing kering",
+  "dog:Treats": "snek anjing",
+  "cat:Supplements": "vitamin kucing",
+  "dog:Supplements": "vitamin anjing",
+  "dog_cat:Supplements": "vitamin kucing dan anjing",
+  "cat:Pet Health / Medication": "ubat kutu kucing",
+  "dog:Pet Health / Medication": "ubat kutu anjing",
+  "dog_cat:Grooming & Cleaning": "syampu kucing dan anjing",
+  "small_pet:Small Animal Food": "makanan hamster",
+};
+
+/**
+ * Search wording for a product page, built from its pet + category so every product gets it without hand-typing:
+ * the title shoppers search ("Alps Chunky Lamb Dog Wet Food 415g"), the Malay phrase, and a keyword list.
+ */
+export function productSeo(o: { name: string; brand: string | null; petType: string | null; category: string | null; fromPrice: number | null }) {
+  const title = feedTitle(o.name, o.petType, o.category);
+  const malay = MALAY[`${o.petType}:${o.category}`] ?? null;
+  const price = o.fromPrice !== null ? ` From RM${o.fromPrice.toFixed(2)}.` : "";
+  const description = `${title}${malay ? ` (${malay})` : ""}.${price} Same-day delivery in the Klang Valley, nationwide courier, or free pickup in Rawang.`;
+  const pet = o.petType ? PET_LABEL[o.petType] : null;
+  const keywords = [
+    title,
+    o.brand,
+    o.brand && pet ? `${o.brand} ${pet.toLowerCase()} food Malaysia` : null,
+    malay,
+    o.category && pet ? `${pet.toLowerCase()} ${o.category.toLowerCase()} Malaysia` : null,
+    o.category && pet ? `${pet.toLowerCase()} ${o.category.toLowerCase()} Rawang` : null,
+    "pet shop Rawang",
+  ].filter((k): k is string => !!k);
+  return { title, description, keywords: [...new Set(keywords)] };
+}
+
+export const DELIVERY_NOTE ="Same-day delivery in the Klang Valley (order by 1pm, Mon–Sat), nationwide courier, or free store pickup in Rawang.";

@@ -7,7 +7,16 @@ import { site, whatsappLink } from "@/lib/site";
 export type Email = { subject: string; content: EmailContent; marketing?: boolean };
 type Line = { name: string; title: string; qty: number; price?: number };
 
-export function orderConfirmed(o: { ref: string; pickup: boolean; lines: EmailContent["lines"]; total: number }): Email {
+/** The referral offer as one sentence, shared by the thank-you page and the confirmation email. */
+export const REFERRAL_PITCH = "Know another pet owner? Share your link. When they place their first order, we'll send you 10% off your next one.";
+
+export function orderConfirmed(o: {
+  ref: string;
+  pickup: boolean;
+  lines: EmailContent["lines"];
+  total: number;
+  referralUrl?: string;
+}): Email {
   return {
     subject: `Order confirmed ${o.ref} — ${site.name}`,
     content: {
@@ -17,6 +26,7 @@ export function orderConfirmed(o: { ref: string; pickup: boolean; lines: EmailCo
         o.pickup
           ? "We're getting your order ready. We'll message you on WhatsApp as soon as it's ready to collect."
           : "We're packing your order now. We'll send delivery updates on WhatsApp and by email.",
+        ...(o.referralUrl ? [`${REFERRAL_PITCH} Your link: ${o.referralUrl}`] : []),
       ],
       lines: o.lines,
       total: formatMyr(o.total),
@@ -89,6 +99,45 @@ export function welcomeCode(percent: number, code: string): Email {
       code,
       cta: { label: "Start shopping", url: `${site.url}/shop` },
       note: "Enter the code at the payment step. It works once.",
+    },
+  };
+}
+
+/** Welcome series, day 3: practical help, no hard sell. */
+export function welcomeGuide(): Email {
+  return {
+    subject: `3 quick checks before you switch pet food — ${site.name}`,
+    marketing: true,
+    content: {
+      preheader: "Life stage, the first ingredient, and a 7-day switch.",
+      heading: "3 quick checks before you switch food",
+      paragraphs: [
+        "1. Match the life stage. Kitten and puppy food has more protein and calories than adult food; seniors often do better on lighter recipes.",
+        "2. Read the first ingredient. A named meat or fish (chicken, salmon, lamb) first on the list is a good sign.",
+        "3. Switch slowly. Mix the new food in over about 7 days, a little more each day, so tummies can adjust.",
+        `Our guides go further: choosing dog food (${site.url}/guides/choosing-dog-food-malaysia) and wet vs dry cat food (${site.url}/guides/cat-food-wet-vs-dry).`,
+      ],
+      cta: { label: "Read our pet care guides", url: `${site.url}/guides` },
+      note: "Not sure what to pick? Reply to this email or WhatsApp us with your pet's age and weight and we'll suggest something.",
+    },
+  };
+}
+
+/** Welcome series, day 7: what other customers buy, plus a nudge that the welcome code still works. */
+export function welcomeBestSellers(products: { name: string; url: string }[]): Email {
+  return {
+    subject: `What pet owners in Rawang & KL are buying — ${site.name}`,
+    marketing: true,
+    content: {
+      preheader: "Our best sellers, with same-day delivery around Rawang, Selangor and KL.",
+      heading: "Our best sellers this month",
+      paragraphs: [
+        "These are what our customers reorder most. Order by 1pm (Mon–Sat) for same-day delivery around Rawang, Selangor and KL, or pick up free at our Bukit Beruntung shop.",
+        ...products.map((p) => `• ${p.name}: ${p.url}`),
+        "Your welcome code from our first email still works on your first order.",
+      ],
+      cta: { label: "See all best sellers", url: `${site.url}/shop` },
+      note: "Questions? Reply to this email or WhatsApp us. A real person at the shop will answer.",
     },
   };
 }

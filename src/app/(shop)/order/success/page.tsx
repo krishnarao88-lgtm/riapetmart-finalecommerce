@@ -3,7 +3,10 @@ import Link from "next/link";
 import { ClearCartOnMount } from "@/components/clear-cart-on-mount";
 import { GoogleReviewsOptIn } from "@/components/google-reviews-optin";
 import { TrackPurchase } from "@/components/track-purchase";
+import { REFERRAL_PITCH } from "@/lib/emails";
 import { formatMyr } from "@/lib/pricing";
+import { referralLinkFor } from "@/lib/referral";
+import { site } from "@/lib/site";
 import { getStripe } from "@/lib/stripe";
 import { createServiceClient } from "@/lib/supabase/service";
 
@@ -30,6 +33,8 @@ export default async function OrderSuccessPage({
       })
     : { data: null };
   const items = order?.items ?? [];
+  const customerEmail = paid ? session?.customer_details?.email : null;
+  const referralUrl = customerEmail ? await referralLinkFor(customerEmail).catch(() => null) : null;
 
   return (
     <div className="mx-auto max-w-xl px-4 py-16 text-center">
@@ -87,6 +92,22 @@ export default async function OrderSuccessPage({
       <Link href="/shop" className="btn-bubble mt-6 inline-flex bg-terracotta px-6 py-3 text-cream">
         Continue shopping
       </Link>
+
+      {referralUrl && (
+        <section aria-label="Refer a friend" className="mt-8 grid gap-2 rounded-3xl card-soft bg-peach/40 p-5 text-left">
+          <h2 className="font-bubble text-lg font-extrabold text-choc">Share with a friend, get 10% off</h2>
+          <p className="text-sm text-choc-2">{REFERRAL_PITCH}</p>
+          <p className="break-all rounded-xl bg-surface px-3 py-2 text-sm font-semibold text-choc select-all">{referralUrl}</p>
+          <a
+            href={`https://wa.me/?text=${encodeURIComponent(`I order my pet food from ${site.name}, same-day delivery around Rawang & KL: ${referralUrl}`)}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="btn-bubble w-fit bg-rust px-4 py-2 text-sm text-cream"
+          >
+            Share on WhatsApp
+          </a>
+        </section>
+      )}
     </div>
   );
 }
