@@ -118,7 +118,7 @@ export async function POST(req: Request) {
     line_items: lineItems,
     allow_promotion_codes: codesAllowed,
     customer_email: EMAIL.test(email) ? email : undefined,
-    metadata: { customer_phone: customerPhone },
+    metadata: { customer_phone: customerPhone, delivery_method: method },
     success_url: `${origin}/order/success?session_id={CHECKOUT_SESSION_ID}`,
     cancel_url: `${origin}/cart`,
   });

@@ -1,12 +1,19 @@
 import { CheckCircle2 } from "lucide-react";
 import Link from "next/link";
 import { ClearCartOnMount } from "@/components/clear-cart-on-mount";
+import { GoogleReviewsOptIn } from "@/components/google-reviews-optin";
 import { TrackPurchase } from "@/components/track-purchase";
 import { formatMyr } from "@/lib/pricing";
 import { getStripe } from "@/lib/stripe";
 import { createServiceClient } from "@/lib/supabase/service";
 
-type OrderItem = { variant_id: string; name: string; title: string; qty: number; price: number };
+// Google sends the review survey after this date: pickup/Lalamove land within a day, couriers within ~5.
+function deliveryDate(method: string | undefined) {
+  const days = method === "pickup" || method === "lalamove" ? 1 : 5;
+  return new Date(Date.now() + days * 86_400_000).toLocaleDateString("en-CA", { timeZone: "Asia/Kuala_Lumpur" });
+}
+
+type OrderItem ={ variant_id: string; name: string; title: string; qty: number; price: number };
 
 export default async function OrderSuccessPage({
   searchParams,
@@ -38,6 +45,13 @@ export default async function OrderSuccessPage({
             price: it.price,
             quantity: it.qty,
           }))}
+        />
+      )}
+      {paid && order?.id && session?.customer_details?.email && (
+        <GoogleReviewsOptIn
+          orderId={order.order_number ?? order.id}
+          email={session.customer_details.email}
+          deliveryDate={deliveryDate(session.metadata?.delivery_method)}
         />
       )}
       <CheckCircle2 className="mx-auto size-14 text-ok-fg" aria-hidden />
