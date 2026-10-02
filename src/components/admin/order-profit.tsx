@@ -1,18 +1,25 @@
+import { setCourierCost } from "@/app/admin/orders/actions";
 import type { orderProfit } from "@/lib/finance";
 import { formatMyr } from "@/lib/pricing";
 
 type Profit = ReturnType<typeof orderProfit>;
 
 /** Admin-only money breakdown for one paid order: in, out, what's left. */
-export function OrderProfit({ p }: { p: Profit }) {
-  const rows: [string, number, string?][] = [
-    ["Products sold", p.goods],
-    ["Delivery the customer paid", p.deliveryCharged],
-    ["Product cost", -p.productCost, p.costMissing ? `${p.costMissing} item(s) have no cost price in Admin` : undefined],
-    ["Courier", -p.courier, p.courierEstimated ? "Not booked yet — assumed the same as the customer paid" : undefined],
-    ["Card / FPX fee", -p.fee, "Estimate: 3% + RM1"],
+export function OrderProfit({ orderId, p, booked }: { orderId: string; p: Profit; booked: boolean }) {
+  const courierNote = !p.courierEstimated
+    ? undefined
+    : booked
+      ? "Booked before courier prices were recorded — type the real charge below"
+      : "Not booked yet — assumed the same as the customer paid";
+  // [label, amount, is a cost, note]
+  const rows: [string, number, boolean, string?][] = [
+    ["Products sold", p.goods, false],
+    ["Delivery the customer paid", p.deliveryCharged, false],
+    ["Product cost", p.productCost, true, p.costMissing ? `${p.costMissing} item(s) have no cost price in Admin` : undefined],
+    ["Courier", p.courier, true, courierNote],
+    ["Card / FPX fee", p.fee, true, "Estimate: 3% + RM1"],
   ];
-  if (p.refunded) rows.push(["Refunded", -p.refunded]);
+  if (p.refunded) rows.push(["Refunded", p.refunded, true]);
   const tone = p.profit < 0 ? "text-bad-fg" : "text-ok-fg";
   return (
     <details className="rounded-xl border border-line px-3 py-2 text-sm">
@@ -25,13 +32,13 @@ export function OrderProfit({ p }: { p: Profit }) {
         </span>
       </summary>
       <ul className="mt-2 grid gap-1">
-        {rows.map(([label, value, note]) => (
+        {rows.map(([label, value, cost, note]) => (
           <li key={label} className="flex justify-between gap-3">
             <span>
               {label}
               {note && <span className="block text-xs text-ink-2">{note}</span>}
             </span>
-            <span className="tabular-nums">{value < 0 ? `− ${formatMyr(-value)}` : formatMyr(value)}</span>
+            <span className="tabular-nums">{cost && value > 0 ? `− ${formatMyr(value)}` : formatMyr(value)}</span>
           </li>
         ))}
         <li className={`flex justify-between gap-3 border-t border-line pt-1 font-bold ${tone}`}>
@@ -39,6 +46,24 @@ export function OrderProfit({ p }: { p: Profit }) {
           <span className="tabular-nums">{formatMyr(p.profit)}</span>
         </li>
       </ul>
+      {booked && (
+        <form action={setCourierCost} className="mt-2 flex flex-wrap items-end gap-2 border-t border-line pt-2">
+          <input type="hidden" name="order_id" value={orderId} />
+          <label className="grid gap-1 text-xs text-ink-2">
+            Courier cost (RM, from your EasyParcel / Lalamove bill)
+            <input
+              name="courier_cost"
+              type="number"
+              inputMode="decimal"
+              step="0.01"
+              min="0"
+              defaultValue={p.courierEstimated ? "" : p.courier.toFixed(2)}
+              className="w-32 rounded-lg border border-line bg-surface px-2 py-1 text-sm text-ink"
+            />
+          </label>
+          <button type="submit" className="btn-chunk bg-surface px-3 py-1 text-sm">Save</button>
+        </form>
+      )}
     </details>
   );
 }

@@ -175,7 +175,11 @@ export default async function OrdersPage() {
                 </span>
                 <span className="font-display text-lg font-extrabold">{formatMyr(order.total)}</span>
               </div>
-              {role === "admin" && order.status === "paid" && <OrderProfit p={orderProfit(order, costs)} />}
+              {role === "admin" && order.status === "paid" && <OrderProfit
+                  orderId={order.id}
+                  p={orderProfit(order, costs)}
+                  booked={Boolean(order.easyparcel_order_number || order.lalamove_order_id)}
+                />}
               {role === "admin" && order.status === "paid" && nextStep[order.fulfilment_status] && (
                 <form action={setFulfilmentStatus} className="flex flex-wrap gap-2">
                   <input type="hidden" name="order_id" value={order.id} />

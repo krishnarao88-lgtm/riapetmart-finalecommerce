@@ -51,6 +51,20 @@ async function orderParcelKg(supabase: SupabaseClient, items: OrderItem[]): Prom
 }
 type ShippingAddress = { addressLine: string; city: string; postcode: string; state: string } | null;
 
+/** Owner types the courier's real charge (from the EasyParcel/Lalamove bill) when it wasn't recorded at booking. */
+export async function setCourierCost(formData: FormData) {
+  const { supabase } = await requireAdmin();
+  const orderId = String(formData.get("order_id") ?? "");
+  const raw = String(formData.get("courier_cost") ?? "").trim();
+  const cost = raw === "" ? null : Number(raw);
+  if (!orderId || (cost !== null && (!Number.isFinite(cost) || cost < 0 || cost > 2000))) {
+    throw new Error("Enter the courier cost in RM, e.g. 12.50.");
+  }
+  const { error } = await supabase.from("orders").update({ courier_cost: cost }).eq("id", orderId);
+  if (error) throw new Error(`Couldn't save the courier cost: ${error.message}`);
+  revalidatePath("/admin/orders");
+}
+
 export async function bookEasyParcelShipment(_prev: ActionState, formData: FormData): Promise<ActionState> {
   const { supabase } = await requireAdmin();
   const orderId = String(formData.get("order_id"));
