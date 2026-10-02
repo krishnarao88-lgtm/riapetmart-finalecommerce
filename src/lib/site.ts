@@ -21,7 +21,7 @@ export const site = {
   // Real figures from the owner's Google Business Profile — never invent a rating or review count.
   google: { rating: 4.1, reviewCount: 67, url: "https://share.google/nyn2T6MXEyIGxYOcw" },
   // Business Profile store code; Merchant Center matches the local inventory feed to the shop with it. Empty = feed off.
-  storeCode: "",
+  storeCode: "RPM01",
   // The owner's exact pinned Google Maps listing (real Place ID) — opens the installed
   // Google Maps app on Android/iOS, falling back to the Maps website otherwise.
   // The owner's own marketplace stores, listed as the same business in structured data.
