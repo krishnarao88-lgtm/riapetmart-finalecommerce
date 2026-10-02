@@ -421,6 +421,26 @@ export function feedDescription(text: string): string {
   return text.replace(/(,\s*)?(and\s+)?(salt and\s+)?sodium nitrite/gi, "").replace(/\s{2,}/g, " ").trim();
 }
 
+/** Merchant Center local inventory: what's on the shelf in the shop, for free local listings ("in stock nearby"). */
+export function localInventoryXml(storeCode: string, items: FeedItem[]): string {
+  const tag = (name: string, value: string | null) => (value ? `<${name}>${escapeXml(value)}</${name}>` : "");
+  const entries = items.map((i) =>
+    [
+      "<item>",
+      tag("g:store_code", storeCode),
+      tag("g:id", i.id),
+      tag("g:availability", i.inStock ? "in_stock" : "out_of_stock"),
+      tag("g:price", money(i.price)),
+      tag("g:sale_price", i.salePrice !== null ? money(i.salePrice) : null),
+      // Paid online, collected the same day from the shop.
+      tag("g:pickup_method", i.inStock ? "buy" : null),
+      tag("g:pickup_sla", i.inStock ? "same day" : null),
+      "</item>",
+    ].join(""),
+  );
+  return ['<?xml version="1.0" encoding="UTF-8"?>', '<rss version="2.0" xmlns:g="http://base.google.com/ns/1.0">', "<channel>", ...entries, "</channel>", "</rss>"].join("\n");
+}
+
 export function productFeedXml(channel: { title: string; link: string; description: string }, items: FeedItem[]): string {
   const tag = (name: string, value: string | null) => (value ? `<${name}>${escapeXml(value)}</${name}>` : "");
   const entries = items.map((i) =>

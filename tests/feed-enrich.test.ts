@@ -1,7 +1,18 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 import { feedHighlights, feedTitle, googleCategory, productType } from "../src/lib/feed-enrich.ts";
-import { productFeedXml } from "../src/lib/seo.ts";
+import { localInventoryXml, productFeedXml } from "../src/lib/seo.ts";
+
+test("local inventory feed: shelf stock per store, same-day pickup only when in stock", () => {
+  const base = { groupId: null, title: "T", description: "D", link: "https://x/p", image: "https://x/i.png", brand: null, gtin: null };
+  const xml = localInventoryXml("RPM01", [
+    { ...base, id: "v1", price: 12.3, salePrice: 10, inStock: true },
+    { ...base, id: "v2", price: 5, salePrice: null, inStock: false },
+  ]);
+  assert.equal(xml.match(/<g:store_code>RPM01<\/g:store_code>/g)?.length, 2);
+  assert.match(xml, /<g:id>v1<\/g:id><g:availability>in_stock<\/g:availability><g:price>12\.30 MYR<\/g:price><g:sale_price>10\.00 MYR<\/g:sale_price><g:pickup_method>buy<\/g:pickup_method><g:pickup_sla>same day<\/g:pickup_sla>/);
+  assert.match(xml, /<g:id>v2<\/g:id><g:availability>out_of_stock<\/g:availability><g:price>5\.00 MYR<\/g:price><\/item>/);
+});
 
 test("feed titles gain the pet + food words shoppers search for, before the size", () => {
   assert.equal(feedTitle("WANPY DOG CANNED SALMON 375G", "dog", "Wet Food"), "Wanpy Dog Canned Salmon Wet Food 375g");
