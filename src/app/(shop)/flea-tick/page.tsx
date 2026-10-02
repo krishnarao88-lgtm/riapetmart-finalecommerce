@@ -15,12 +15,13 @@ export const metadata: Metadata = {
   alternates: { canonical: "/flea-tick" },
 };
 
-// Pack weight bands (from each pack's label), mapped to our product pages.
-const BANDS: Omit<FleaTickOption, "name" | "price" | "inStock">[] = [
+// Malaysian pack weight ranges (owner, 2 Oct 2026), mapped to our product pages. A dog exactly on a boundary
+// (4, 10, 25 kg) takes the smaller pack: `min` is exclusive, `max` inclusive.
+const BANDS: Omit<FleaTickOption, "name" | "price" | "tabletPrice" | "inStock">[] = [
   { pet: "dog", min: 1.99, max: 4, band: "2–4 kg", slug: "nexgard-chewables-2-4-kg" },
-  { pet: "dog", min: 4, max: 10, band: "4.1–10 kg", slug: "nexgard-chewables-4-1-10-kg" },
-  { pet: "dog", min: 10, max: 25, band: "10.1–25 kg", slug: "nexgard-chewables-10-25-kg" },
-  { pet: "dog", min: 25, max: 50, band: "25.1–50 kg", slug: "nexgard-chewables-25-50-kg" },
+  { pet: "dog", min: 4, max: 10, band: "4–10 kg", slug: "nexgard-chewables-4-1-10-kg" },
+  { pet: "dog", min: 10, max: 25, band: "10–25 kg", slug: "nexgard-chewables-10-25-kg" },
+  { pet: "dog", min: 25, max: 50, band: "25–50 kg", slug: "nexgard-chewables-25-50-kg" },
   { pet: "cat", min: 0, max: 2.5, band: "up to 2.5 kg", slug: "nexgard-combo-small" },
   { pet: "cat", min: 2.5, max: 7.5, band: "2.5–7.5 kg", slug: "nexgard-combo-large" },
 ];
@@ -32,7 +33,7 @@ const FAQS = [
   },
   {
     q: "How often do I give NexGard?",
-    a: "Follow the pack label. NexGard is given monthly, so a 6-pack lasts about six months. On the product page, tap “Remind me on WhatsApp” and we'll message you before the next dose is due.",
+    a: "Once a month, one chewable per dog. A box of 6 lasts one dog about six months, or buy single tablets month by month. Each tablet is for one dog only: don't split or share it. On the product page, tap “Remind me on WhatsApp” and we'll message you before the next dose is due.",
   },
   {
     q: "Can I give my dog's NexGard to my cat?",
@@ -48,20 +49,23 @@ export default async function FleaTickPage() {
   const supabase = createPublicClient();
   const { data } = await supabase
     .from("products")
-    .select("slug, name, variants(id, price)")
+    .select("slug, name, variants(id, title, price, sort)")
     .eq("status", "published")
     .in("slug", BANDS.map((b) => b.slug));
-  const rows = (data ?? []) as { slug: string; name: string; variants: { id: string; price: number }[] }[];
+  const rows = (data ?? []) as { slug: string; name: string; variants: { id: string; title: string; price: number; sort: number }[] }[];
   const stock = await getVariantStock(supabase, rows.flatMap((r) => r.variants.map((v) => v.id)));
   const options: FleaTickOption[] = BANDS.flatMap((b) => {
     const row = rows.find((r) => r.slug === b.slug);
     if (!row) return [];
-    const variant = row.variants[0];
+    const variants = [...row.variants].sort((x, y) => x.sort - y.sort);
+    const tablet = variants.find((v) => /tablet/i.test(v.title) && !/box/i.test(v.title));
+    const pack = variants.find((v) => v !== tablet) ?? variants[0];
     return [
       {
         ...b,
         name: row.name,
-        price: variant ? Number(variant.price) : null,
+        price: pack ? Number(pack.price) : null,
+        tabletPrice: tablet ? Number(tablet.price) : null,
         inStock: row.variants.some((v) => (stock?.get(v.id)?.available ?? 0) > 0),
       },
     ];

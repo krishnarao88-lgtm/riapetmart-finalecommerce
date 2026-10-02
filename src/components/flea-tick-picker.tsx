@@ -12,7 +12,9 @@ export type FleaTickOption = {
   band: string;
   slug: string;
   name: string;
+  /** Box (6 tablets) price, and the single-tablet price where sold. */
   price: number | null;
+  tabletPrice?: number | null;
   inStock: boolean;
 };
 
@@ -67,9 +69,13 @@ export function FleaTickPicker({ options }: { options: FleaTickOption[] }) {
           </p>
           <p className="font-bubble text-xl font-extrabold text-choc">{match.name}</p>
           <p className="font-semibold text-choc">
-            {match.price !== null ? formatMyr(match.price) : ""}
+            {match.price !== null ? `${formatMyr(match.price)}${match.tabletPrice ? " for a box of 6" : ""}` : ""}
+            {match.tabletPrice ? ` · or ${formatMyr(match.tabletPrice)} for 1 tablet` : ""}
             {match.inStock ? " · in stock" : " · out of stock, WhatsApp us"}
           </p>
+          {pet === "dog" && (
+            <p className="text-sm text-choc-2">One tablet per dog, once a month. Each tablet is for one dog only. Don&apos;t split or share it.</p>
+          )}
           <Link href={`/shop/${match.slug}`} className="btn-bubble w-fit bg-rust px-5 py-2 text-cream">
             View &amp; add to cart →
           </Link>
@@ -85,9 +91,13 @@ export function FleaTickPicker({ options }: { options: FleaTickOption[] }) {
           Over {heaviest.max} kg: WhatsApp us or ask your vet for the right dose.
         </p>
       )}
+      <p className="rounded-xl bg-warn-bg px-3 py-2 text-sm font-semibold text-warn-fg">
+        Important: weigh your {pet} before choosing a size, and use the size for their weight today. Each tablet is for one
+        pet only. Never split or share it.
+      </p>
       <p className="text-xs text-choc-2">
-        Weigh your pet and follow the pack label. Between two sizes, or pregnant, very young, old or unwell? Ask a vet
-        first. Never give a dog product to a cat.
+        Follow the pack label. Between two sizes, or pregnant, very young, old or unwell? Ask a vet first. Never give a
+        dog product to a cat.
       </p>
     </div>
   );
