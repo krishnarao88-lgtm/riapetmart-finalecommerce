@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { orderProfit, type ProfitOrder } from "@/lib/finance";
+import { syncOrderCosts } from "@/lib/order-costs-sync";
 import { formatMyr } from "@/lib/pricing";
 import { site } from "@/lib/site";
 import { createServiceClient } from "@/lib/supabase/service";
@@ -23,6 +24,7 @@ export async function GET(req: Request) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
   const supabase = createServiceClient();
+  await syncOrderCosts(); // real Stripe fees and courier charges before today's profit
   // Start of today in Malaysia (UTC+8).
   const kl = new Date(Date.now() + 8 * 3_600_000);
   const since = new Date(Date.UTC(kl.getUTCFullYear(), kl.getUTCMonth(), kl.getUTCDate()) - 8 * 3_600_000).toISOString();
@@ -39,7 +41,7 @@ export async function GET(req: Request) {
     supabase.from("cart_adds").select("product_id, products(name)").gte("created_at", since),
     supabase
       .from("orders")
-      .select("created_at, total, shipping_cost, code_discount, refunded_amount, shipping_method, courier_cost, items")
+      .select("created_at, total, shipping_cost, code_discount, refunded_amount, shipping_method, courier_cost, payment_fee, items")
       .eq("status", "paid")
       .eq("is_test", false)
       .gte("created_at", weekAgo),

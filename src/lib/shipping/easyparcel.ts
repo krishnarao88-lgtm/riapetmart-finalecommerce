@@ -156,7 +156,27 @@ export async function cancelEasyParcelShipment(awbNumber: string, awbUrl: string
   }
 }
 
-export type TrackingResult = { awb_number: string; latest_shipment_status_code: number; latest_tracking_status: string };
+// The list's money fields, most specific first: what EasyParcel actually took from the wallet (after any
+// reweigh adjustment), else the shipment total.
+const CHARGE_FIELDS = ["seller_payable_amount", "total_amount", "total_price", "price"] as const;
+
+/** What EasyParcel charged for each of our waybills (from the account's shipment list). Never throws. */
+export async function getShipmentCharges(awbNumbers: string[]): Promise<Map<string, number>> {
+  const charges = new Map<string, number>();
+  if (awbNumbers.length === 0) return charges;
+  const token = await getValidAccessToken("easyparcel", refreshToken).catch(() => null);
+  if (!token) return charges;
+  const wanted = new Set(awbNumbers);
+  for (const s of ((await listShipments(token)) ?? []) as (ListedShipment & Record<string, unknown>)[]) {
+    if (!s.awb_number || !wanted.has(s.awb_number)) continue;
+    const field = CHARGE_FIELDS.find((f) => Number.isFinite(Number(s[f])) && s[f] !== null && s[f] !== "");
+    if (field) charges.set(s.awb_number, Number(s[field]));
+    else console.error(`EasyParcel list has no charge field for ${s.awb_number}; fields: ${Object.keys(s).join(", ")}`);
+  }
+  return charges;
+}
+
+export type TrackingResult ={ awb_number: string; latest_shipment_status_code: number; latest_tracking_status: string };
 
 /**
  * Current status for our waybills, straight from EasyParcel (the source of truth for Admin). The shipment

@@ -92,9 +92,9 @@ export async function bookLalamoveOrder(opts: {
 }
 
 /** Authoritative order state straight from Lalamove (used to verify webhook calls). */
-export async function getLalamoveOrder(orderId: string): Promise<{ status: string; shareLink: string | null }> {
+export async function getLalamoveOrder(orderId: string): Promise<{ status: string; shareLink: string | null; price: number | null }> {
   const data = (await lalamoveRequest("GET", `/v3/orders/${encodeURIComponent(orderId)}`)).data;
-  return { status: data.status, shareLink: data.shareLink ?? null };
+  return { status: data.status, shareLink: data.shareLink ?? null, price: Number(data.priceBreakdown?.total) || null };
 }
 
 export async function getLalamoveQuote(

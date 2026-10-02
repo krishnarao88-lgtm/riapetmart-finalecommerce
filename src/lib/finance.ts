@@ -65,6 +65,8 @@ export type ProfitOrder = FinanceOrder & {
   shipping_method: string | null;
   courier_cost: number | null;
   refunded_amount: number | null;
+  /** Stripe's real fee once synced; otherwise the 3% + RM1 estimate is used. */
+  payment_fee?: number | null;
 };
 
 /**
@@ -87,7 +89,8 @@ export function orderProfit(o: ProfitOrder, costs: Map<string, number>) {
   const pickup = o.shipping_method === "pickup";
   const courierEstimated = !pickup && o.courier_cost == null;
   const courier = pickup ? 0 : courierEstimated ? deliveryCharged : Number(o.courier_cost);
-  const fee = paid > 0 ? paid * STRIPE_FEE.rate + STRIPE_FEE.fixed : 0;
+  const feeEstimated = o.payment_fee == null;
+  const fee = !feeEstimated ? Number(o.payment_fee) : paid > 0 ? paid * STRIPE_FEE.rate + STRIPE_FEE.fixed : 0;
   return {
     goods: round2(goods),
     deliveryCharged: round2(deliveryCharged),
@@ -100,6 +103,7 @@ export function orderProfit(o: ProfitOrder, costs: Map<string, number>) {
     fee: round2(fee),
     profit: round2(paid - refunded - productCost - courier - fee),
     courierEstimated,
+    feeEstimated,
     costMissing,
   };
 }

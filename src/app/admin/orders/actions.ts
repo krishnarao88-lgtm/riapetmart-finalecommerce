@@ -62,7 +62,7 @@ export async function setCourierCost(formData: FormData) {
   }
   const { error } = await supabase.from("orders").update({ courier_cost: cost }).eq("id", orderId);
   if (error) throw new Error(`Couldn't save the courier cost: ${error.message}`);
-  revalidatePath("/admin/orders");
+  revalidatePath("/admin/finance");
 }
 
 export async function bookEasyParcelShipment(_prev: ActionState, formData: FormData): Promise<ActionState> {

@@ -7,9 +7,9 @@ type Profit = ReturnType<typeof orderProfit>;
 /** Admin-only money breakdown for one paid order: in, out, what's left. */
 export function OrderProfit({ orderId, p, booked }: { orderId: string; p: Profit; booked: boolean }) {
   const courierNote = !p.courierEstimated
-    ? undefined
+    ? p.courier > 0 ? "Actual charge from the courier" : undefined
     : booked
-      ? "Booked before courier prices were recorded — type the real charge below"
+      ? "Courier charge not fetched yet — it fills in automatically, or type it below"
       : "Not booked yet — assumed the same as the customer paid";
   // [label, amount, is a cost, note]
   const rows: [string, number, boolean, string?][] = [
@@ -17,7 +17,7 @@ export function OrderProfit({ orderId, p, booked }: { orderId: string; p: Profit
     ["Delivery the customer paid", p.deliveryCharged, false],
     ["Product cost", p.productCost, true, p.costMissing ? `${p.costMissing} item(s) have no cost price in Admin` : undefined],
     ["Courier", p.courier, true, courierNote],
-    ["Card / FPX fee", p.fee, true, "Estimate: 3% + RM1"],
+    ["Payment fee", p.fee, true, p.feeEstimated ? "Estimate 3% + RM1 — Stripe's real fee fills in once the payment settles" : "Actual fee from Stripe"],
   ];
   if (p.refunded) rows.push(["Refunded", p.refunded, true]);
   const tone = p.profit < 0 ? "text-bad-fg" : "text-ok-fg";
@@ -28,7 +28,7 @@ export function OrderProfit({ orderId, p, booked }: { orderId: string; p: Profit
         <span className={`font-bold tabular-nums ${tone}`}>
           {formatMyr(p.profit)}
           {p.deliveryCovered > 0 && <span className="ml-2 font-normal text-ink-2">(you covered {formatMyr(p.deliveryCovered)} delivery)</span>}
-          {(p.courierEstimated || p.costMissing > 0) && <span className="ml-2 font-normal text-ink-2">· estimate</span>}
+          {(p.courierEstimated || p.feeEstimated || p.costMissing > 0) && <span className="ml-2 font-normal text-ink-2">· estimate</span>}
         </span>
       </summary>
       <ul className="mt-2 grid gap-1">
@@ -46,7 +46,7 @@ export function OrderProfit({ orderId, p, booked }: { orderId: string; p: Profit
           <span className="tabular-nums">{formatMyr(p.profit)}</span>
         </li>
       </ul>
-      {booked && (
+      {booked && p.courierEstimated && (
         <form action={setCourierCost} className="mt-2 flex flex-wrap items-end gap-2 border-t border-line pt-2">
           <input type="hidden" name="order_id" value={orderId} />
           <label className="grid gap-1 text-xs text-ink-2">
@@ -57,7 +57,6 @@ export function OrderProfit({ orderId, p, booked }: { orderId: string; p: Profit
               inputMode="decimal"
               step="0.01"
               min="0"
-              defaultValue={p.courierEstimated ? "" : p.courier.toFixed(2)}
               className="w-32 rounded-lg border border-line bg-surface px-2 py-1 text-sm text-ink"
             />
           </label>

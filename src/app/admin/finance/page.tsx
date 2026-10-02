@@ -2,7 +2,9 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { requireAdmin } from "@/lib/auth";
 import { AutoRefresh } from "@/components/admin/auto-refresh";
-import { moneySummary, productScenarios, safePrice, type FinanceOrder, type Scenario } from "@/lib/finance";
+import { OrderProfit } from "@/components/admin/order-profit";
+import { moneySummary, orderProfit, productScenarios, safePrice, type ProfitOrder, type Scenario } from "@/lib/finance";
+import { syncOrderCosts } from "@/lib/order-costs-sync";
 import { formatMyr } from "@/lib/pricing";
 import { promoFor, type Promotion } from "@/lib/promotions";
 import { toWelcomeOffer } from "@/lib/welcome-offer";
@@ -53,15 +55,20 @@ export default async function FinancePage({ searchParams }: PageProps<"/admin/fi
   const showAll = all === "1";
   const { supabase } = await requireAdmin();
   const { since, today } = periodStart(days);
+  // Pull real Stripe fees and courier charges into recent orders before adding them up.
+  await syncOrderCosts();
 
   const [{ data: orderRows }, { data: productRows }, { data: bundleRows }, { data: promoRows }, { data: settingRows }] =
     await Promise.all([
       supabase
         .from("orders")
-        .select("total, shipping_cost, code_discount, items")
+        .select(
+          "id, order_number, created_at, customer_name, total, shipping_cost, code_discount, items, shipping_method, courier_cost, payment_fee, refunded_amount, easyparcel_order_number, lalamove_order_id",
+        )
         .eq("status", "paid")
         .eq("is_test", false)
-        .gte("created_at", since),
+        .gte("created_at", since)
+        .order("created_at", { ascending: false }),
       supabase
         .from("products")
         .select("id, name, brand_id, category_id, brands(is_house_brand), variants(id, title, price, variant_costs(cost_price))")
@@ -82,11 +89,32 @@ export default async function FinancePage({ searchParams }: PageProps<"/admin/fi
   const promos = (promoRows ?? []).map((p) => ({ ...p, discount: Number(p.discount) })) as Promotion[];
 
   // ---- Money in and out over the period
-  const orders = (orderRows ?? []) as unknown as FinanceOrder[];
+  type OrderRow = ProfitOrder & {
+    id: string;
+    order_number: string | null;
+    created_at: string;
+    customer_name: string | null;
+    easyparcel_order_number: string | null;
+    lalamove_order_id: string | null;
+  };
+  const orders = (orderRows ?? []) as unknown as OrderRow[];
   const products = (productRows ?? []) as unknown as Product[];
   const costs = new Map<string, number>();
   for (const p of products) for (const v of p.variants) if (v.variant_costs) costs.set(v.id, Number(v.variant_costs.cost_price));
+  // Older orders may include variants no longer published; their cost prices still count.
+  const missingIds = [...new Set(orders.flatMap((o) => o.items.map((i) => i.variant_id)))].filter((id) => !costs.has(id));
+  if (missingIds.length) {
+    const { data: extra } = await supabase.from("variant_costs").select("variant_id, cost_price").in("variant_id", missingIds);
+    for (const c of extra ?? []) costs.set(c.variant_id as string, Number(c.cost_price));
+  }
   const money = moneySummary(orders, costs);
+  const perOrder = orders.map((o) => ({ order: o, p: orderProfit(o, costs) }));
+  const sum = (pick: (p: ReturnType<typeof orderProfit>) => number) =>
+    Math.round(perOrder.reduce((s, { p }) => s + pick(p), 0) * 100) / 100;
+  const realFees = sum((p) => p.fee);
+  const realProfit = sum((p) => p.profit);
+  const covered = sum((p) => p.deliveryCovered);
+  const anyEstimate = perOrder.some(({ p }) => p.feeEstimated || p.courierEstimated);
   const discountTotal = money.discounts.clearance + money.discounts.bundle + money.discounts.sale + money.codes;
 
   // ---- Per-item margins under every discount
@@ -157,7 +185,8 @@ export default async function FinancePage({ searchParams }: PageProps<"/admin/fi
       <div className="grid gap-1">
         <h1 className="font-display text-3xl font-extrabold tracking-tight">Finance</h1>
         <p className="text-ink-2">
-          What the shop is making and what discounts cost you. Every profit figure is after the 3% + RM1 card fee.
+          What the shop is making and what discounts cost you. Order profits use real Stripe fees and courier charges;
+          the item margins below assume the 3% + RM1 card fee.
         </p>
         <AutoRefresh seconds={60} />
       </div>
@@ -186,23 +215,60 @@ export default async function FinancePage({ searchParams }: PageProps<"/admin/fi
             value={money.productCost}
             note={money.costMissingUnits ? `${money.costMissingUnits} units have no cost price` : "At today's cost prices"}
           />
-          <Tile label="Card fees" value={money.fees} note="3% + RM1 per order (estimate)" />
-          <Tile label="Profit" value={money.profit} tone={money.profit >= 0 ? "ok" : "bad"} note="Collected − cost − fees − delivery" />
+          <Tile label="Payment fees" value={realFees} note={anyEstimate ? "Stripe's real fees, estimated where not settled yet" : "Stripe's real fees"} />
+          <Tile
+            label="Profit"
+            value={realProfit}
+            tone={realProfit >= 0 ? "ok" : "bad"}
+            note="Collected − cost − fees − courier − refunds"
+          />
         </div>
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
           <Tile label="Given away: clearance" value={money.discounts.clearance} />
           <Tile label="Given away: bundles" value={money.discounts.bundle} />
           <Tile label="Given away: sales" value={money.discounts.sale} />
           <Tile label="Given away: promo codes" value={money.codes} note="Sign-up and referral codes" />
-          <Tile label="Delivery charged" value={money.delivery} note="Passed on to the courier" />
+          <Tile label="Delivery you covered" value={covered} note={`Courier cost above what customers paid (${formatMyr(money.delivery)} charged)`} />
         </div>
         <p className="text-sm text-ink-2">
           Discounts given in total: <strong>{formatMyr(discountTotal)}</strong>.
           {money.unknownDiscountOrders > 0 &&
             ` ${money.unknownDiscountOrders} older orders were placed before discounts were recorded, so their discounts aren't in these figures.`}
-          {cap != null &&
-            ` On free-delivery orders you also pay up to ${formatMyr(Number(cap))} of the courier fee; courier bills aren't tracked here yet.`}
+          {cap != null && ` Free delivery covers up to ${formatMyr(Number(cap))} of the courier fee on orders over the minimum.`}
         </p>
+      </section>
+
+      <section aria-labelledby="order-profit-heading" className="grid gap-3">
+        <div>
+          <h2 id="order-profit-heading" className="font-display text-xl font-extrabold">
+            Profit per order
+          </h2>
+          <p className="text-sm text-ink-2">
+            Courier charges come from EasyParcel and Lalamove, payment fees from Stripe — filled in automatically. Tap an
+            order for the breakdown.
+          </p>
+        </div>
+        {perOrder.length === 0 ? (
+          <p className="text-sm text-ink-2">No paid orders in this period.</p>
+        ) : (
+          <ul className="grid gap-2">
+            {perOrder.map(({ order, p }) => (
+              <li key={order.id} className="grid gap-1 rounded-2xl border-2 border-line bg-surface p-3">
+                <span className="flex flex-wrap justify-between gap-2 text-sm">
+                  <span>
+                    <strong>{order.order_number ?? order.id.slice(0, 8)}</strong>
+                    <span className="ml-2 text-ink-2">
+                      {new Date(order.created_at).toLocaleDateString("en-MY", { timeZone: "Asia/Kuala_Lumpur" })} ·{" "}
+                      {order.customer_name ?? "—"} · {order.shipping_method ?? "—"}
+                    </span>
+                  </span>
+                  <span className="font-semibold tabular-nums">{formatMyr(Number(order.total))}</span>
+                </span>
+                <OrderProfit orderId={order.id} p={p} booked={Boolean(order.easyparcel_order_number || order.lalamove_order_id)} />
+              </li>
+            ))}
+          </ul>
+        )}
       </section>
 
       <section aria-labelledby="margin-heading" className="grid gap-4">

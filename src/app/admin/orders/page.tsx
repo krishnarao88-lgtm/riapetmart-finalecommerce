@@ -6,8 +6,6 @@ import { formatMyr } from "@/lib/pricing";
 import { requireStaff } from "@/lib/auth";
 import { AutoRefresh } from "@/components/admin/auto-refresh";
 import { OrderMoneyActions } from "@/components/admin/order-money-actions";
-import { OrderProfit } from "@/components/admin/order-profit";
-import { orderProfit } from "@/lib/finance";
 import { isSandboxAwb } from "@/lib/shipping/easyparcel";
 import { EP_CANCELLED, EP_PROBLEM, EP_STATUS } from "@/lib/shipping/easyparcel-status";
 import { syncEasyParcelStatuses } from "@/lib/shipping/easyparcel-sync";
@@ -43,8 +41,6 @@ type Order = {
   lalamove_status: string | null;
   lalamove_share_link: string | null;
   attribution: Attribution | null;
-  shipping_cost: number | null;
-  courier_cost: number | null;
 };
 
 const statusStyle: Record<Order["status"], string> = {
@@ -78,41 +74,101 @@ const nextStep: Partial<Record<FulfilmentStatus, FulfilmentStatus>> = {
   shipped: "delivered",
 };
 
-export default async function OrdersPage() {
+const TABS = {
+  all: { label: "All" },
+  new: { label: "New", status: "paid", fulfilment: ["new"] },
+  ready: { label: "Ready to ship", status: "paid", fulfilment: ["packed"] },
+  shipped: { label: "Shipped", status: "paid", fulfilment: ["shipped"] },
+  delivered: { label: "Delivered", status: "paid", fulfilment: ["delivered"] },
+  closed: { label: "Cancelled / refunded", status: "paid", fulfilment: ["cancelled", "refunded"] },
+  unpaid: { label: "Unpaid", unpaid: true },
+} as const satisfies Record<string, { label: string; status?: string; fulfilment?: readonly FulfilmentStatus[]; unpaid?: boolean }>;
+type Tab = keyof typeof TABS;
+
+function inTab(tab: Tab, o: { status: string; fulfilment_status: string }) {
+  const t = TABS[tab] as { status?: string; fulfilment?: readonly string[]; unpaid?: boolean };
+  if (t.unpaid) return o.status !== "paid";
+  if (t.status && o.status !== t.status) return false;
+  return !t.fulfilment || t.fulfilment.includes(o.fulfilment_status);
+}
+
+export default async function OrdersPage({ searchParams }: PageProps<"/admin/orders">) {
+  const { tab: tabParam, q: qParam } = await searchParams;
+  const tab: Tab = typeof tabParam === "string" && tabParam in TABS ? (tabParam as Tab) : "all";
+  // Search box text, stripped of characters that mean something in a PostgREST filter.
+  const q = (typeof qParam === "string" ? qParam : "").replace(/[,()*%\\]/g, " ").trim().slice(0, 50);
   const { supabase, role } = await requireStaff();
   // Pull the latest courier status for shipments on their way (the webhook does this too; this catches misses).
   await syncEasyParcelStatuses();
-  const { data } = await supabase
+  let query = supabase
     .from("orders")
     .select(
-      "id, order_number, created_at, status, customer_email, customer_name, customer_phone, total, fulfilment_status, items, shipping_method, shipping_address, easyparcel_order_number, easyparcel_awb_number, easyparcel_awb_url, easyparcel_tracking_url, easyparcel_status_code, easyparcel_status, lalamove_order_id, lalamove_status, lalamove_share_link, attribution, refunded_amount, code_discount, shipping_cost, courier_cost",
+      "id, order_number, created_at, status, customer_email, customer_name, customer_phone, total, fulfilment_status, items, shipping_method, shipping_address, easyparcel_order_number, easyparcel_awb_number, easyparcel_awb_url, easyparcel_tracking_url, easyparcel_status_code, easyparcel_status, lalamove_order_id, lalamove_status, lalamove_share_link, attribution, refunded_amount, code_discount",
     )
     .eq("is_test", false)
     .order("created_at", { ascending: false })
     .limit(200);
-
-  const orders = (data ?? []) as Order[];
-  // Cost prices are admin-only; staff see orders without the profit line.
-  const costs = new Map<string, number>();
-  if (role === "admin") {
-    const ids = [...new Set(orders.flatMap((o) => o.items.map((i) => i.variant_id)))];
-    const { data: costRows } = ids.length
-      ? await supabase.from("variant_costs").select("variant_id, cost_price").in("variant_id", ids)
-      : { data: [] };
-    for (const c of costRows ?? []) costs.set(c.variant_id as string, Number(c.cost_price));
+  if (q) {
+    const like = `%${q}%`;
+    query = query.or(
+      `order_number.ilike.${like},customer_name.ilike.${like},customer_phone.ilike.${like},customer_email.ilike.${like}`,
+    );
   }
+  const [{ data }, { data: statusRows }] = await Promise.all([
+    query,
+    supabase.from("orders").select("status, fulfilment_status").eq("is_test", false).limit(2000),
+  ]);
+
+  const orders = ((data ?? []) as Order[]).filter((o) => inTab(tab, o));
+  const counts = Object.fromEntries(
+    (Object.keys(TABS) as Tab[]).map((t) => [t, (statusRows ?? []).filter((o) => inTab(t, o)).length]),
+  ) as Record<Tab, number>;
+  const href = (t: Tab) => `/admin/orders?${new URLSearchParams({ ...(t === "all" ? {} : { tab: t }), ...(q ? { q } : {}) })}`;
 
   return (
     <div className="mx-auto grid max-w-4xl gap-6 px-4 py-8">
       <div className="grid gap-1">
         <h1 className="font-display text-3xl font-extrabold tracking-tight">Orders</h1>
-        <p className="text-ink-2">Paid orders come from Stripe checkout. Pending ones never completed payment.</p>
+        <p className="text-ink-2">Paid orders come from Stripe checkout. Unpaid ones never completed payment.</p>
         <AutoRefresh seconds={60} />
+      </div>
+
+      <div className="grid gap-3">
+        <nav aria-label="Order status" className="flex flex-wrap gap-1.5">
+          {(Object.keys(TABS) as Tab[]).map((t) => (
+            <Link
+              key={t}
+              href={href(t)}
+              aria-current={t === tab ? "page" : undefined}
+              className={`rounded-full px-3 py-1.5 text-sm font-semibold ${t === tab ? "bg-ink text-ground" : "border border-line bg-surface text-ink-2"}`}
+            >
+              {TABS[t].label} <span className="tabular-nums opacity-70">{counts[t]}</span>
+            </Link>
+          ))}
+        </nav>
+        <form action="/admin/orders" className="flex gap-2">
+          {tab !== "all" && <input type="hidden" name="tab" value={tab} />}
+          <label className="sr-only" htmlFor="order-search">Search orders</label>
+          <input
+            id="order-search"
+            name="q"
+            type="search"
+            defaultValue={q}
+            placeholder="Order number, name, phone or email"
+            className="min-w-0 flex-1 rounded-xl border-2 border-line bg-surface px-3 py-2 text-sm"
+          />
+          <button type="submit" className="btn-chunk bg-surface px-4 py-2 text-sm">Search</button>
+          {q && (
+            <Link href={href(tab).replace(/[?&]q=[^&]*/, "")} className="self-center text-sm text-ink-2 underline">
+              Clear
+            </Link>
+          )}
+        </form>
       </div>
 
       {orders.length === 0 ? (
         <p className="rounded-[var(--radius-chunk)] border-2 border-ink bg-surface p-5 text-ink-2">
-          No orders yet.
+          {q ? `No orders match "${q}".` : "No orders here."}
         </p>
       ) : (
         <ul className="grid gap-3">
@@ -176,11 +232,6 @@ export default async function OrdersPage() {
                 </span>
                 <span className="font-display text-lg font-extrabold">{formatMyr(order.total)}</span>
               </div>
-              {role === "admin" && order.status === "paid" && <OrderProfit
-                  orderId={order.id}
-                  p={orderProfit(order, costs)}
-                  booked={Boolean(order.easyparcel_order_number || order.lalamove_order_id)}
-                />}
               {role === "admin" && order.status === "paid" && nextStep[order.fulfilment_status] && (
                 <form action={setFulfilmentStatus} className="flex flex-wrap gap-2">
                   <input type="hidden" name="order_id" value={order.id} />
