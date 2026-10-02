@@ -75,6 +75,8 @@ export async function getEasyParcelQuote(
   receiverPostcode: string,
   receiverState: string,
   weightKg: number,
+  /** Price this exact service (the one booked) instead of the cheapest. */
+  serviceId?: string,
 ): Promise<{ price: number; courierName: string; serviceId: string } | null> {
   const token = await getValidAccessToken("easyparcel", refreshToken);
   if (!token) return null;
@@ -102,7 +104,9 @@ export async function getEasyParcelQuote(
 
   const data = (await res.json()) as EasyParcelResponse;
   const quotations = data.data?.[0]?.quotations ?? [];
-  const cheapest = [...quotations].sort((a, b) => a.pricing.total_amount - b.pricing.total_amount)[0];
+  const cheapest = serviceId
+    ? quotations.find((q) => q.courier.service_id === serviceId)
+    : [...quotations].sort((a, b) => a.pricing.total_amount - b.pricing.total_amount)[0];
   return cheapest
     ? { price: cheapest.pricing.total_amount, courierName: cheapest.courier.courier_name, serviceId: cheapest.courier.service_id }
     : null;

@@ -61,6 +61,49 @@ export function safePrice(cost: number, discount: number, floor = 0.05) {
   return Math.ceil(Math.round(raw * 1000) / 100 - 1e-9) / 10;
 }
 
+export type ProfitOrder = FinanceOrder & {
+  shipping_method: string | null;
+  courier_cost: number | null;
+  refunded_amount: number | null;
+};
+
+/**
+ * One order's money: what came in, what it cost, what's left. Courier cost is the real booked price when known;
+ * before booking it's assumed equal to what the customer paid for delivery (`courierEstimated`).
+ */
+export function orderProfit(o: ProfitOrder, costs: Map<string, number>) {
+  const codes = Number(o.code_discount ?? 0);
+  const refunded = Number(o.refunded_amount ?? 0);
+  const paid = Number(o.total) - codes;
+  const deliveryCharged = Number(o.shipping_cost ?? 0);
+  const goods = paid - deliveryCharged;
+  let productCost = 0;
+  let costMissing = 0;
+  for (const it of o.items) {
+    const cost = costs.get(it.variant_id);
+    if (cost === undefined) costMissing += it.qty;
+    else productCost += cost * it.qty;
+  }
+  const pickup = o.shipping_method === "pickup";
+  const courierEstimated = !pickup && o.courier_cost == null;
+  const courier = pickup ? 0 : courierEstimated ? deliveryCharged : Number(o.courier_cost);
+  const fee = paid > 0 ? paid * STRIPE_FEE.rate + STRIPE_FEE.fixed : 0;
+  return {
+    goods: round2(goods),
+    deliveryCharged: round2(deliveryCharged),
+    paid: round2(paid),
+    refunded: round2(refunded),
+    productCost: round2(productCost),
+    courier: round2(courier),
+    /** Delivery the shop paid on top of what the customer paid (the free-delivery allowance). */
+    deliveryCovered: round2(Math.max(0, courier - deliveryCharged)),
+    fee: round2(fee),
+    profit: round2(paid - refunded - productCost - courier - fee),
+    courierEstimated,
+    costMissing,
+  };
+}
+
 /** Where the money went over a set of paid orders. Older orders didn't record list prices, so they're counted separately. */
 export function moneySummary(orders: FinanceOrder[], costs: Map<string, number>) {
   const discounts = { "short-dated": 0, bundle: 0, sale: 0 };

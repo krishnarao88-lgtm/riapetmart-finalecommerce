@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { orderProfit, type ProfitOrder } from "@/lib/finance";
 import { formatMyr } from "@/lib/pricing";
 import { site } from "@/lib/site";
 import { createServiceClient } from "@/lib/supabase/service";
@@ -26,7 +27,8 @@ export async function GET(req: Request) {
   const kl = new Date(Date.now() + 8 * 3_600_000);
   const since = new Date(Date.UTC(kl.getUTCFullYear(), kl.getUTCMonth(), kl.getUTCDate()) - 8 * 3_600_000).toISOString();
 
-  const [orders, pending, accounts, signups, hotel, carts, views, adds] = await Promise.all([
+  const weekAgo = new Date(Date.now() - 7 * 86_400_000).toISOString();
+  const [orders, pending, accounts, signups, hotel, carts, views, adds, week] = await Promise.all([
     supabase.from("orders").select("order_number, customer_name, total").eq("status", "paid").gte("created_at", since),
     supabase.from("orders").select("id", { count: "exact", head: true }).eq("status", "pending").gte("created_at", since),
     supabase.from("profiles").select("email").eq("role", "customer").gte("created_at", since),
@@ -35,7 +37,24 @@ export async function GET(req: Request) {
     supabase.from("abandoned_carts").select("subtotal").eq("recovered", false).gte("created_at", since),
     supabase.from("product_views").select("product_id, products(name)").gte("viewed_at", since),
     supabase.from("cart_adds").select("product_id, products(name)").gte("created_at", since),
+    supabase
+      .from("orders")
+      .select("created_at, total, shipping_cost, code_discount, refunded_amount, shipping_method, courier_cost, items")
+      .eq("status", "paid")
+      .gte("created_at", weekAgo),
   ]);
+
+  // Per-order profit (Admin → Orders shows the breakdown): today's total, and delivery covered over 7 days.
+  const weekOrders = (week.data ?? []) as unknown as (ProfitOrder & { created_at: string })[];
+  const variantIds = [...new Set(weekOrders.flatMap((o) => o.items.map((i) => i.variant_id)))];
+  const { data: costRows } = variantIds.length
+    ? await supabase.from("variant_costs").select("variant_id, cost_price").in("variant_id", variantIds)
+    : { data: [] };
+  const costs = new Map((costRows ?? []).map((c) => [c.variant_id as string, Number(c.cost_price)]));
+  const profits = weekOrders.map((o) => ({ today: o.created_at >= since, ...orderProfit(o, costs) }));
+  const todayProfit = profits.filter((p) => p.today).reduce((s, p) => s + p.profit, 0);
+  const weekCovered = profits.reduce((s, p) => s + p.deliveryCovered, 0);
+  const estimated = profits.some((p) => p.today && (p.courierEstimated || p.costMissing > 0));
 
   const paid = orders.data ?? [];
   const revenue = paid.reduce((s, o) => s + Number(o.total), 0);
@@ -50,6 +69,8 @@ export async function GET(req: Request) {
       "",
       `🛒 <b>Orders paid:</b> ${paid.length} · ${tg(formatMyr(revenue))}`,
       ...paid.map((o) => `  ${tg(o.order_number)} · ${tg(o.customer_name)} · ${tg(formatMyr(Number(o.total)))}`),
+      `💰 <b>Profit today:</b> ${tg(formatMyr(todayProfit))}${estimated ? " (estimate — some couriers not booked yet)" : ""}`,
+      `🚚 Delivery you covered, last 7 days: ${tg(formatMyr(weekCovered))}`,
       `⏳ Checkouts started but not paid: ${pending.count ?? 0}`,
       `🧺 Carts left with an email: ${(carts.data ?? []).length} (${tg(formatMyr(cartValue))})`,
       "",

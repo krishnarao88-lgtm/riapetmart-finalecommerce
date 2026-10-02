@@ -3,7 +3,7 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { revalidatePath } from "next/cache";
 import { requireAdmin } from "@/lib/auth";
-import { isSandboxAwb, submitEasyParcelOrder } from "@/lib/shipping/easyparcel";
+import { getEasyParcelQuote, isSandboxAwb, submitEasyParcelOrder } from "@/lib/shipping/easyparcel";
 import { EP_CANCELLED } from "@/lib/shipping/easyparcel-status";
 import { bookLalamoveOrder } from "@/lib/shipping/lalamove";
 import { LALAMOVE_REBOOKABLE, toE164MY } from "@/lib/shipping/lalamove-rules";
@@ -96,10 +96,12 @@ export async function bookEasyParcelShipment(_prev: ActionState, formData: FormD
       p_awb_url: result.awbUrl,
       p_tracking_url: result.trackingUrl,
     });
+    // EasyParcel's booking reply has no price; ask for this exact service's price for the per-order profit.
+    const priced = await getEasyParcelQuote(address.postcode, address.state, weightKg, order.shipping_service_id).catch(() => null);
     // New waybill: forget the old shipment's courier status so the badge starts fresh.
     await supabase
       .from("orders")
-      .update({ easyparcel_status_code: null, easyparcel_status: null, easyparcel_status_at: null })
+      .update({ easyparcel_status_code: null, easyparcel_status: null, easyparcel_status_at: null, courier_cost: priced?.price ?? null })
       .eq("id", orderId);
     revalidatePath("/admin/orders");
     return { ok: `Booked with ${result.courierName}. Refresh to see the waybill link.` };
@@ -144,7 +146,12 @@ export async function bookLalamoveRider(_prev: ActionState, formData: FormData):
     });
     const { error } = await supabase
       .from("orders")
-      .update({ lalamove_order_id: booked.orderId, lalamove_status: booked.status, lalamove_share_link: booked.shareLink })
+      .update({
+        lalamove_order_id: booked.orderId,
+        lalamove_status: booked.status,
+        lalamove_share_link: booked.shareLink,
+        courier_cost: Number(booked.price) || null,
+      })
       .eq("id", orderId);
     if (error) return { error: `Rider booked (Lalamove ${booked.orderId}) but saving failed: ${error.message}. Don't book again.` };
 

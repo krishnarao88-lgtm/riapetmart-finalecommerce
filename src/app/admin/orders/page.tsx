@@ -6,6 +6,8 @@ import { formatMyr } from "@/lib/pricing";
 import { requireStaff } from "@/lib/auth";
 import { AutoRefresh } from "@/components/admin/auto-refresh";
 import { OrderMoneyActions } from "@/components/admin/order-money-actions";
+import { OrderProfit } from "@/components/admin/order-profit";
+import { orderProfit } from "@/lib/finance";
 import { isSandboxAwb } from "@/lib/shipping/easyparcel";
 import { EP_CANCELLED, EP_PROBLEM, EP_STATUS } from "@/lib/shipping/easyparcel-status";
 import { syncEasyParcelStatuses } from "@/lib/shipping/easyparcel-sync";
@@ -41,6 +43,8 @@ type Order = {
   lalamove_status: string | null;
   lalamove_share_link: string | null;
   attribution: Attribution | null;
+  shipping_cost: number | null;
+  courier_cost: number | null;
 };
 
 const statusStyle: Record<Order["status"], string> = {
@@ -81,12 +85,21 @@ export default async function OrdersPage() {
   const { data } = await supabase
     .from("orders")
     .select(
-      "id, order_number, created_at, status, customer_email, customer_name, customer_phone, total, fulfilment_status, items, shipping_method, shipping_address, easyparcel_order_number, easyparcel_awb_number, easyparcel_awb_url, easyparcel_tracking_url, easyparcel_status_code, easyparcel_status, lalamove_order_id, lalamove_status, lalamove_share_link, attribution, refunded_amount, code_discount",
+      "id, order_number, created_at, status, customer_email, customer_name, customer_phone, total, fulfilment_status, items, shipping_method, shipping_address, easyparcel_order_number, easyparcel_awb_number, easyparcel_awb_url, easyparcel_tracking_url, easyparcel_status_code, easyparcel_status, lalamove_order_id, lalamove_status, lalamove_share_link, attribution, refunded_amount, code_discount, shipping_cost, courier_cost",
     )
     .order("created_at", { ascending: false })
     .limit(200);
 
   const orders = (data ?? []) as Order[];
+  // Cost prices are admin-only; staff see orders without the profit line.
+  const costs = new Map<string, number>();
+  if (role === "admin") {
+    const ids = [...new Set(orders.flatMap((o) => o.items.map((i) => i.variant_id)))];
+    const { data: costRows } = ids.length
+      ? await supabase.from("variant_costs").select("variant_id, cost_price").in("variant_id", ids)
+      : { data: [] };
+    for (const c of costRows ?? []) costs.set(c.variant_id as string, Number(c.cost_price));
+  }
 
   return (
     <div className="mx-auto grid max-w-4xl gap-6 px-4 py-8">
@@ -162,6 +175,7 @@ export default async function OrdersPage() {
                 </span>
                 <span className="font-display text-lg font-extrabold">{formatMyr(order.total)}</span>
               </div>
+              {role === "admin" && order.status === "paid" && <OrderProfit p={orderProfit(order, costs)} />}
               {role === "admin" && order.status === "paid" && nextStep[order.fulfilment_status] && (
                 <form action={setFulfilmentStatus} className="flex flex-wrap gap-2">
                   <input type="hidden" name="order_id" value={order.id} />

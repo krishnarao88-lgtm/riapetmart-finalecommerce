@@ -1,6 +1,27 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
-import { moneySummary, productScenarios, safePrice, unitProfit } from "../src/lib/finance.ts";
+import { moneySummary, orderProfit, productScenarios, safePrice, unitProfit } from "../src/lib/finance.ts";
+
+test("orderProfit: 18kg bag over RM150, courier booked at RM15.60, customer paid RM0.60 delivery", () => {
+  const costs = new Map([["v18", 138.6]]);
+  const order = { total: 193.1, shipping_cost: 0.6, code_discount: 0, refunded_amount: 0, shipping_method: "easyparcel", courier_cost: 15.6, items: [{ variant_id: "v18", qty: 1, price: 192.5 }] };
+  const p = orderProfit(order, costs);
+  assert.equal(p.goods, 192.5);
+  assert.equal(p.deliveryCovered, 15);
+  assert.equal(p.fee, 6.79);
+  assert.equal(p.profit, 32.11);
+  assert.equal(p.courierEstimated, false);
+  // Before the courier is booked: delivery assumed to cost what the customer paid.
+  const unbooked = orderProfit({ ...order, courier_cost: null }, costs);
+  assert.equal(unbooked.courierEstimated, true);
+  assert.equal(unbooked.courier, 0.6);
+  // Store pickup: no courier, refunds come off, missing cost prices are counted.
+  const pickup = orderProfit({ ...order, shipping_method: "pickup", shipping_cost: 0, total: 192.5, courier_cost: null, refunded_amount: 10 }, new Map());
+  assert.equal(pickup.courier, 0);
+  assert.equal(pickup.costMissing, 1);
+  assert.equal(pickup.profit, round(192.5 - 10 - (192.5 * 0.03 + 1)));
+});
+const round = (n: number) => Math.round(n * 100) / 100;
 
 test("unitProfit takes the 3% card fee off the price", () => {
   // IQ Dog 15 kg: RM74.30 at cost RM58.76 → 72.07 kept → RM13.31
