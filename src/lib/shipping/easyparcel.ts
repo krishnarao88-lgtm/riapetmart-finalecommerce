@@ -64,7 +64,8 @@ export async function isEasyParcelConnected(): Promise<boolean> {
 }
 
 type EasyParcelQuotation = {
-  courier: { courier_name: string; service_id: string };
+  // is_pickup: the courier collects from the shop. Owner (7 Oct 2026): pickup only, never drop-off services.
+  courier: { courier_name: string; service_id: string; is_pickup?: boolean; is_dropoff?: boolean };
   pricing: { total_amount: number; currency: string };
 };
 type EasyParcelResponse = {
@@ -104,9 +105,13 @@ export async function getEasyParcelQuote(
 
   const data = (await res.json()) as EasyParcelResponse;
   const quotations = data.data?.[0]?.quotations ?? [];
+  // Only services where the courier picks up from the shop; the cheapest ones are often drop-off only.
   const cheapest = serviceId
     ? quotations.find((q) => q.courier.service_id === serviceId)
-    : [...quotations].sort((a, b) => a.pricing.total_amount - b.pricing.total_amount)[0];
+    : quotations
+        .filter((q) => q.courier.is_pickup === true)
+        .sort((a, b) => Number(a.pricing.total_amount) - Number(b.pricing.total_amount))[0];
+  if (!cheapest && quotations.length) console.error(`EasyParcel: no pickup service to ${receiverPostcode} (${quotations.length} drop-off only)`);
   return cheapest
     ? { price: cheapest.pricing.total_amount, courierName: cheapest.courier.courier_name, serviceId: cheapest.courier.service_id }
     : null;
@@ -244,8 +249,11 @@ export async function submitEasyParcelOrder(
   const receiverCode = MY_STATE_CODES[receiver.state];
   if (!receiverCode) throw new Error(`Unknown state: ${receiver.state}`);
 
-  const collectionDate = new Date().toISOString().slice(0, 10);
-  const res = await fetch(`${API_BASE}/shipment/submit_orders`, {
+  // Malaysia's date: before 8am MYT the UTC date is still yesterday, which isn't a valid collection day.
+  const collectionDate = new Date(Date.now() + 8 * 3_600_000).toISOString().slice(0, 10);
+  // Owner wants the courier to collect from the shop, never drop-off. If EasyParcel ever rejects the
+  // collection_method field, the booking is sent once more without it (the pickup-only service still applies).
+  const submit = (askPickup: boolean) => fetch(`${API_BASE}/shipment/submit_orders`, {
     method: "POST",
     headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
     body: JSON.stringify({
@@ -254,6 +262,7 @@ export async function submitEasyParcelOrder(
           reference,
           service_id: serviceId,
           collection_date: collectionDate,
+          ...(askPickup ? { collection_method: "pickup" } : {}),
           weight: weightKg,
           // ponytail: real parcel dimensions aren't tracked per order; a small-parcel
           // default works for this shop's typical items, revisit if bulky items ship.
@@ -288,7 +297,14 @@ export async function submitEasyParcelOrder(
     }),
   });
 
-  const body = (await res.json()) as {
+  let res = await submit(true);
+  let raw = await res.text();
+  if (/collection_method/i.test(raw) && !/"status"\s*:\s*"success"/.test(raw)) {
+    console.error("EasyParcel refused collection_method, retrying without it:", raw.slice(0, 300));
+    res = await submit(false);
+    raw = await res.text();
+  }
+  const body = JSON.parse(raw || "{}") as {
     status_code: number;
     message: string;
     data?: {
