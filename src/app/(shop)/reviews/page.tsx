@@ -8,6 +8,8 @@ import { createClient } from "@/lib/supabase/server";
 export const metadata: Metadata = {
   title: "Customer reviews",
   description: "What Malaysian pet parents say about Ria Pet Mart — real, moderated customer reviews.",
+  // Without this the layout's canonical ("/") applies and Google treats this page as a copy of the homepage.
+  alternates: { canonical: "/reviews" },
 };
 
 type Review = {
