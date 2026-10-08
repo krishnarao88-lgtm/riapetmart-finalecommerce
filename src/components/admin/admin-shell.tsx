@@ -18,6 +18,7 @@ import {
   UserCog,
   X,
   type LucideIcon,
+  Users,
 } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -34,6 +35,7 @@ const GROUPS: { title: string; links: NavLink[] }[] = [
       { href: "/admin/orders", label: "Orders", Icon: Receipt, adminOnly: false },
       { href: "/admin/products", label: "Products", Icon: Boxes, adminOnly: true },
       { href: "/admin/finance", label: "Finance", Icon: ChartNoAxesCombined, adminOnly: true },
+      { href: "/admin/customers", label: "Customers & follow-ups", Icon: Users, adminOnly: true },
       { href: "/admin/pricing", label: "Price suggestions", Icon: Tags, adminOnly: true },
       { href: "/admin/promotions", label: "Offers & sales", Icon: BadgePercent, adminOnly: true },
       { href: "/admin/info-check", label: "Info check", Icon: BadgeCheck, adminOnly: true },
