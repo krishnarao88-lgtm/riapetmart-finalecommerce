@@ -1,10 +1,34 @@
 import { Play } from "lucide-react";
+import { InstagramEmbeds } from "@/components/instagram-embeds";
 import { getLatestInstagramPosts } from "@/lib/instagram";
+import { site } from "@/lib/site";
+
+// Latest posts on @riapetmart_express (13 Oct 2026). Swap these links to feature different posts or new Reels.
+const FEATURED_POSTS = [
+  "https://www.instagram.com/reel/DeCbuSnz60t/",
+  "https://www.instagram.com/p/DcrwAx4EXH7/",
+  "https://www.instagram.com/p/Dcn_rFelVpd/",
+  "https://www.instagram.com/p/DcnPj5TEUPa/",
+  "https://www.instagram.com/p/DckxsWlFR2s/",
+];
 
 /** Latest real posts and Reels from the connected Instagram account. Renders nothing until connected. */
 export async function InstagramFeed() {
   const posts = (await getLatestInstagramPosts(6).catch(() => [])).filter((p) => p.thumbnail_url ?? p.media_url);
-  if (posts.length === 0) return null;
+  if (posts.length === 0) {
+    // Not connected to the Instagram API: show the latest 5 posts through Instagram's own embed instead.
+    return (
+      <section aria-labelledby="instagram-heading" className="mx-auto max-w-6xl px-4 pt-10">
+        <h2 id="instagram-heading" className="font-bubble text-2xl font-extrabold text-choc">
+          Follow us on Instagram{" "}
+          <a href={site.social.instagram} target="_blank" rel="noopener noreferrer" className="text-base text-rust underline">
+            @riapetmart_express
+          </a>
+        </h2>
+        <InstagramEmbeds urls={FEATURED_POSTS} />
+      </section>
+    );
+  }
 
   return (
     <section aria-labelledby="instagram-heading" className="mx-auto max-w-6xl px-4 pt-10">
