@@ -13,7 +13,7 @@ export default function ReturnsPage() {
 
       <div className="mt-6 grid gap-4 text-choc-2">
         <p>
-          Unopened and unused items can be returned or exchanged within 7 days of purchase with your receipt
+          Unopened and unused items can be returned or exchanged within 14 days of purchase with your receipt
           or order confirmation.
         </p>
         <p>

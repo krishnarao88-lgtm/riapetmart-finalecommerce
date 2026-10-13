@@ -223,12 +223,12 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
                 ? "https://schema.org/InStock"
                 : "https://schema.org/OutOfStock",
           url: `${site.url}/shop/${slug}`,
-          // Same policy as /returns: unopened items, 7 days, back to the shop or by courier pickup.
+          // Same policy as /returns: unopened items, 14 days, back to the shop or by courier pickup.
           hasMerchantReturnPolicy: {
             "@type": "MerchantReturnPolicy",
             applicableCountry: "MY",
             returnPolicyCategory: "https://schema.org/MerchantReturnFiniteReturnWindow",
-            merchantReturnDays: 7,
+            merchantReturnDays: 14,
             returnMethod: ["https://schema.org/ReturnInStore", "https://schema.org/ReturnByMail"],
             url: `${site.url}/returns`,
           },

@@ -120,6 +120,6 @@ export async function orderStatus(orderNumber: string, email: string) {
 
 export const SHOP_FACTS = `Shop: ${site.name}, ${site.address.street}, ${site.address.city}. Open Monday–Saturday 10:00–19:00, closed Sunday. WhatsApp ${site.phone}.
 Delivery: same-day Lalamove in the Klang Valley, courier (EasyParcel) nationwide, or free pickup at the shop.
-Returns & refunds: unopened, unused items can be returned or exchanged within 7 days with the order confirmation. Opened food, treats and health products are final sale unless defective or expired on arrival. Wrong, damaged or defective items are replaced or refunded in full. Returns start on WhatsApp.
+Returns & refunds: unopened, unused items can be returned or exchanged within 14 days with the order confirmation. Opened food, treats and health products are final sale unless defective or expired on arrival. Wrong, damaged or defective items are replaced or refunded in full. Returns start on WhatsApp.
 Payment: FPX online banking, cards, Apple Pay and Google Pay.
 Own brands: Aniamor (vet-grade supplements), Robust (natural treats) and Phyto Specialities (herbal syrups), all DVS approved. Some own-brand items are discounted when bought together with a matching product (e.g. a medicated shampoo plus Aniamor Skin & Coat Syrup); the cart shows the exact price. Short-dated stock is discounted. Customers get the single best discount; they never stack.`;
