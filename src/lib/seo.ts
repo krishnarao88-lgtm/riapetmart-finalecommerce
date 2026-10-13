@@ -282,6 +282,14 @@ export const petSeo: Record<string, LandingSeo> = {
 
 /** Site-wide keywords (meta keywords is minor for Google, but other engines and tools read it). */
 export const siteKeywords = [
+  // Google Trends MY top searches (Oct 2026)
+  "pet shop near me",
+  "pet store near me",
+  "klinik haiwan near me",
+  "vet near me Rawang",
+  "pet clinic near me",
+  "veterinary clinic Bukit Beruntung",
+  "pet grooming near me",
   "pet shop Rawang",
   "pet store Rawang",
   "pet shop Bukit Beruntung",

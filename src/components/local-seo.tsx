@@ -16,7 +16,7 @@ export function LocalSeo() {
       <div className="grid gap-6 rounded-3xl card-soft bg-surface p-6 sm:p-8 md:grid-cols-[1.6fr_1fr]">
         <div className="grid content-start gap-3">
           <h2 id="local-heading" className="font-bubble text-2xl font-extrabold text-choc">
-            Your pet shop in Rawang &amp; Bukit Beruntung
+            The pet shop near you in Rawang &amp; Bukit Beruntung
           </h2>
           <p className="text-choc-2">
             {site.name} is at {a.street}, {a.postcode} {a.city}. Order cat food, dog food and treats online for same-day
@@ -24,8 +24,11 @@ export function LocalSeo() {
             at the shop. Prefer to chat? Order on WhatsApp.
           </p>
           <p className="text-choc-2">
-            At the shop you&apos;ll also find pet grooming, our Cat Hotel, and our panel clinic, All Animal Health
-            Clinic. Open {site.hours.days}, {site.hours.opens}–{site.hours.closes}.
+            At the shop you&apos;ll also find pet grooming and our Cat Hotel, and our partner vet,{" "}
+            <Link href="/vets#partner-clinic" className="font-semibold text-rust underline">
+              Animal Health Clinic (Klinik Kesihatan Haiwan)
+            </Link>
+            , is a short walk away. Open {site.hours.days}, {site.hours.opens}–{site.hours.closes}.
           </p>
           <p lang="ms" className="text-sm text-choc-2">
             Kedai haiwan peliharaan di Rawang: makanan kucing, makanan anjing, pasir kucing dan barang keperluan

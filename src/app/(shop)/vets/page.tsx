@@ -1,12 +1,14 @@
 import { MapPin, Stethoscope, TriangleAlert } from "lucide-react";
 import Link from "next/link";
+import { PartnerClinic, partnerClinicJsonLd } from "@/components/partner-clinic";
 import { VetFinderButton } from "@/components/vet-finder-button";
 import { whatsappLink } from "@/lib/site";
 
 export const metadata = {
-  title: "Find a vet near you: Rawang, Selangor & KL",
+  // Google Trends MY (Oct 2026): "klinik haiwan near me", "vet near me", "veterinary clinic near me", "pet clinic near me".
+  title: "Vet & Klinik Haiwan Near Me: Rawang & Bukit Beruntung",
   description:
-    "Find vet clinics near you in Rawang, Bukit Beruntung, Selayang, Kepong and across the Klang Valley. One tap opens Google Maps with clinics, ratings, opening hours and directions.",
+    "Our partner vet, Animal Health Clinic (Klinik Kesihatan Haiwan) in Bukit Beruntung, rated 4.5 on Google. Plus vet clinics near you in Rawang, Selayang, Kepong and the Klang Valley, one tap to Google Maps.",
   alternates: { canonical: "/vets" },
 };
 
@@ -40,6 +42,9 @@ export default function VetsPage() {
         </p>
         <VetFinderButton className="w-fit" />
       </header>
+
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(partnerClinicJsonLd()) }} />
+      <PartnerClinic />
 
       <section aria-labelledby="urgent-heading" className="grid gap-2 rounded-2xl bg-bad-bg p-4 text-bad-fg">
         <h2 id="urgent-heading" className="flex items-center gap-2 font-bold">
