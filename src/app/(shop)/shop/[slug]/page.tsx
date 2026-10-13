@@ -223,6 +223,25 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
                 ? "https://schema.org/InStock"
                 : "https://schema.org/OutOfStock",
           url: `${site.url}/shop/${slug}`,
+          // Same policy as /returns: unopened items, 7 days, back to the shop or by courier pickup.
+          hasMerchantReturnPolicy: {
+            "@type": "MerchantReturnPolicy",
+            applicableCountry: "MY",
+            returnPolicyCategory: "https://schema.org/MerchantReturnFiniteReturnWindow",
+            merchantReturnDays: 7,
+            returnMethod: ["https://schema.org/ReturnInStore", "https://schema.org/ReturnByMail"],
+            url: `${site.url}/returns`,
+          },
+          // Delivery within Malaysia. The price is quoted live per address and weight, so no fixed rate is claimed.
+          shippingDetails: {
+            "@type": "OfferShippingDetails",
+            shippingDestination: { "@type": "DefinedRegion", addressCountry: "MY" },
+            deliveryTime: {
+              "@type": "ShippingDeliveryTime",
+              handlingTime: { "@type": "QuantitativeValue", minValue: 0, maxValue: 1, unitCode: "DAY" },
+              transitTime: { "@type": "QuantitativeValue", minValue: 0, maxValue: 3, unitCode: "DAY" },
+            },
+          },
         }))
       : undefined,
     aggregateRating: ratings.length

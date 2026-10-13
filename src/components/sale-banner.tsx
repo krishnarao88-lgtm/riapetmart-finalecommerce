@@ -51,7 +51,7 @@ export async function SaleBanner() {
   const strip = "flex flex-wrap items-center justify-center gap-x-3 gap-y-1 px-4 py-2 text-center text-sm font-bold";
   if (sale) {
     return (
-      <Link href="/shop?deal=sale" className={`${strip} bg-terracotta text-cream hover:bg-rust`}>
+      <Link href="/shop?deal=sale" className={`${strip} bg-rust text-cream hover:bg-choc`}>
         <span className="inline-flex items-center gap-2">
           <PartyPopper className="size-4 shrink-0 motion-safe:animate-bounce" aria-hidden />
           {sale.banner ?? `${sale.name}: ${pct(sale.discount)}`}

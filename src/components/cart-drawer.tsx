@@ -19,6 +19,8 @@ export function CartDrawer({
     <div
       className={`fixed inset-0 z-50 transition-opacity ${isOpen ? "pointer-events-auto opacity-100" : "pointer-events-none opacity-0"}`}
       aria-hidden={!isOpen}
+      // Closed drawer: keyboard users can't tab into its hidden buttons (PageSpeed "aria-hidden contains focusable").
+      inert={!isOpen}
     >
       <button
         type="button"
