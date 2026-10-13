@@ -25,6 +25,12 @@ export const site = {
   // The owner's exact pinned Google Maps listing (real Place ID) — opens the installed
   // Google Maps app on Android/iOS, falling back to the Maps website otherwise.
   // The owner's own marketplace stores, listed as the same business in structured data.
+  // Social profiles (owner, 13 Oct 2026). Linked in the footer and in the shop's structured data (sameAs).
+  social: {
+    instagram: "https://www.instagram.com/riapetmart_express/",
+    tiktok: "https://www.tiktok.com/@riapetmart",
+    facebook: "https://www.facebook.com/101707822794853",
+  },
   marketplaces: {
     shopee: "https://shopee.com.my/riapetmartexpress",
     lazada: "https://www.lazada.com.my/ria-pet-mart-express/",

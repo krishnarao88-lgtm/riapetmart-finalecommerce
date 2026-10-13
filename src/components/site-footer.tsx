@@ -49,6 +49,12 @@ export function SiteFooter() {
             <MessageCircle className="size-4" aria-hidden />
             WhatsApp {site.phone}
           </a>
+          <p className="flex flex-wrap gap-3 text-cream/85">
+            Follow us:
+            <a href={site.social.instagram} target="_blank" rel="noopener noreferrer" className="underline hover:text-peach">Instagram</a>
+            <a href={site.social.tiktok} target="_blank" rel="noopener noreferrer" className="underline hover:text-peach">TikTok</a>
+            <a href={site.social.facebook} target="_blank" rel="noopener noreferrer" className="underline hover:text-peach">Facebook</a>
+          </p>
         </div>
 
         {COLUMNS.map((col) => (

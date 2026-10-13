@@ -31,7 +31,7 @@ const storeJsonLd = {
   url: site.url,
   description: site.description,
   telephone: site.phone,
-  sameAs: [site.marketplaces.shopee, site.marketplaces.lazada, site.mapsUrl],
+  sameAs: [...Object.values(site.social), site.marketplaces.shopee, site.marketplaces.lazada, site.mapsUrl],
   address: {
     "@type": "PostalAddress",
     streetAddress: site.address.street,
