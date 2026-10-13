@@ -1,3 +1,5 @@
+import { moreGuides } from "./guides-more.ts";
+
 export type Guide = {
   slug: string;
   title: string;
@@ -7,7 +9,7 @@ export type Guide = {
   shopLinks: { label: string; href: string }[];
 };
 
-export const guides: Guide[] = [
+const baseGuides: Guide[] = [
   {
     slug: "choosing-dog-food-malaysia",
     title: "How to Choose the Right Dog Food in Malaysia",
@@ -147,6 +149,8 @@ export const guides: Guide[] = [
     ],
   },
 ];
+
+export const guides: Guide[] = [...baseGuides, ...moreGuides];
 
 export function getGuide(slug: string) {
   return guides.find((g) => g.slug === slug);

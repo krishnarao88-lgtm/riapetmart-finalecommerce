@@ -38,6 +38,8 @@ const nextConfig: NextConfig = {
       { source: "/category/pasir-kucing", destination: "/shop?category=cat-litter", permanent: true },
       { source: "/category/:slug*", destination: "/shop", permanent: true },
       { source: "/pet-care-guides/choose-cat-food-indoor", destination: "/guides/cat-food-wet-vs-dry", permanent: true },
+      { source: "/pet-care-guides/why-cat-not-eating", destination: "/guides/why-cat-not-eating", permanent: true },
+      { source: "/pet-care-guides/dog-skin-coat-issues", destination: "/guides/dog-itchy-skin-hair-loss", permanent: true },
       { source: "/pet-care-guides/:slug*", destination: "/guides", permanent: true },
       { source: "/pet-care-guides", destination: "/guides", permanent: true },
       { source: "/return-refund-policy", destination: "/returns", permanent: true },

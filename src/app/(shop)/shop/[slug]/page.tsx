@@ -15,7 +15,7 @@ import { discountedPrice, getExpiryBadge, type ExpirySettings } from "@/lib/expi
 import { formatMyr } from "@/lib/pricing";
 import { TrackViewItem } from "@/components/track-view-item";
 import { productSeo } from "@/lib/feed-enrich";
-import { productTitle, titleCase } from "@/lib/seo";
+import { categorySeo, productTitle, titleCase } from "@/lib/seo";
 import { RefillReminder } from "@/components/refill-reminder";
 import { TrustLine } from "@/components/trust-line";
 import { site, whatsappLink } from "@/lib/site";
@@ -347,6 +347,21 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
             </span>
           </a>
           <RefillReminder productId={product.id} monthlyDose={/nexgard/i.test(name)} />
+          {(() => {
+            // Product → matching care guide: helps shoppers, and gives Google a crawl path into the guides.
+            const guide =
+              (categoryRow?.slug ? categorySeo[categoryRow.slug]?.guide : undefined) ??
+              (product.pet_type === "cat"
+                ? { slug: "makanan-kucing-terbaik-malaysia", label: "Cara pilih makanan kucing terbaik" }
+                : product.pet_type === "dog"
+                  ? { slug: "choosing-dog-food-malaysia", label: "How to choose the right dog food" }
+                  : undefined);
+            return guide ? (
+              <Link href={`/guides/${guide.slug}`} className="w-fit text-sm font-semibold text-rust underline">
+                Helpful guide: {guide.label}
+              </Link>
+            ) : null;
+          })()}
 
           {product.is_regulated && (
             <p className="rounded-xl bg-warn-bg px-3 py-2 text-sm text-warn-fg">

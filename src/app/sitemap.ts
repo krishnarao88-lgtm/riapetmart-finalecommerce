@@ -8,15 +8,17 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const supabase = await createClient();
   const { data: products } = await supabase
     .from("products")
-    .select("slug, pet_type, categories(slug), brands(slug)")
+    .select("slug, pet_type, updated_at, categories(slug), brands(slug)")
     .eq("status", "published");
 
   const staticPages = ["", "/shop", "/about", "/contact", "/returns", "/privacy", "/terms", "/reviews", "/guides", "/cat-hotel", "/vets", "/flea-tick"].map((path) => ({
     url: `${site.url}${path}`,
     changeFrequency: (path === "/shop" ? "daily" : "monthly") as "daily" | "monthly",
   }));
+  // lastModified tells Google which product pages changed (price, stock, wording) so it re-crawls those first.
   const productPages = (products ?? []).map((p) => ({
     url: `${site.url}/shop/${p.slug}`,
+    lastModified: p.updated_at ? new Date(p.updated_at as string) : undefined,
     changeFrequency: "weekly" as const,
   }));
   const guidePages = guides.map((g) => ({
