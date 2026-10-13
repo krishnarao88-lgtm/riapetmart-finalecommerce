@@ -15,6 +15,7 @@ import { Testimonial } from "@/components/testimonial";
 import { TikTokFeed } from "@/components/tiktok-feed";
 import { TRUST_POINTS } from "@/components/trust-line";
 import { TrustStats } from "@/components/trust-stats";
+import { VideoStrip } from "@/components/video-strip";
 import { createPublicClient } from "@/lib/supabase/public";
 
 // Served from a cached copy rebuilt at most once a minute; product pages, cart and checkout stay live.
@@ -42,6 +43,7 @@ export default async function Home() {
       <CategoryQuickLinks />
       <PromoBanner />
       <ShortDatedDeals />
+      <VideoStrip />
       <section aria-label="Flea and tick protection" className="mx-auto max-w-6xl px-4 pt-8">
         <Link
           href="/flea-tick"
