@@ -26,14 +26,21 @@ export function WelcomeOfferButton({ className, children }: { className?: string
 export function WelcomePopup({ percent, delaySeconds }: { percent: number; delaySeconds: number }) {
   const dialogRef = useRef<HTMLDialogElement>(null);
   const pathname = usePathname();
-  const suppressed = pathname === "/cart" || pathname.startsWith("/shop/");
+  // Most visitors land on a product page from Google, so the offer shows there too; never mid-checkout.
+  const suppressed = pathname === "/cart" || pathname.startsWith("/order");
   const [email, setEmail] = useState("");
   const [code, setCode] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
-    if (suppressed || delaySeconds <= 0) return;
+    if (suppressed) return;
+    // ?offer=1 (the in-store counter card QR) opens the offer straight away.
+    if (new URLSearchParams(window.location.search).has("offer")) {
+      if (!dialogRef.current?.open) dialogRef.current?.showModal();
+      return;
+    }
+    if (delaySeconds <= 0) return;
     try {
       if (!localStorage.getItem(STORAGE_KEY)) {
         const timer = setTimeout(() => {
