@@ -1,0 +1,23 @@
+# Ria Pet Mart
+
+> Pet shop in Bandar Bukit Beruntung, Rawang, Selangor, Malaysia (since 2016). Cat food, dog food, treats, cat litter, supplements and NexGard flea & tick protection, with same-day delivery in Selangor, Kuala Lumpur and Putrajaya (order by 1pm, Monday to Saturday), nationwide courier delivery, and free store pickup. Online shop: https://www.riapetmart.com
+
+## Shop facts
+- Address: 57, Jalan Jenjarum 3B, Bandar Bukit Beruntung, 48300 Rawang, Selangor, Malaysia
+- Hours: Monday to Saturday, 10:00 to 19:00 (closed Sunday)
+- Phone / WhatsApp: +60 19-611 2848
+- Payment: FPX online banking, GrabPay, cards, Apple Pay, Google Pay
+- Also at the shop: pet grooming and a Cat Hotel (cat boarding)
+- Partner vet: Animal Health Clinic (Klinik Kesihatan Haiwan), G9, Jalan Trompet 14, Seksyen BB7, Bukit Beruntung, open Monday to Saturday 9:30 to 18:00, +60 18-232 2014
+
+## Main pages
+- [Shop all products](https://www.riapetmart.com/shop)
+- [Cat food and supplies](https://www.riapetmart.com/shop?pet=cat)
+- [Dog food and supplies](https://www.riapetmart.com/shop?pet=dog)
+- [NexGard flea & tick, size by weight](https://www.riapetmart.com/flea-tick)
+- [Partner vet clinic and vets near you](https://www.riapetmart.com/vets)
+- [Cat Hotel](https://www.riapetmart.com/cat-hotel)
+- [Pet care guides](https://www.riapetmart.com/guides)
+- [Customer reviews](https://www.riapetmart.com/reviews)
+- [Delivery, returns and refunds](https://www.riapetmart.com/returns)
+- [Contact](https://www.riapetmart.com/contact)
