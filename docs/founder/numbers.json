@@ -1,0 +1,19 @@
+{
+  "business": "Ria Pet Mart website (riapetmart.com) - online orders only, store sales excluded",
+  "unit": "order",
+  "price": 133.72,
+  "variable": [
+    {"label": "Products at cost (72% of RM131.80 basket, median gross margin 28.1%)", "cost": 94.77},
+    {"label": "Courier (EasyParcel/Lalamove, real avg of 3 orders)", "cost": 6.08},
+    {"label": "Stripe fee (real avg of 3 orders)", "cost": 5.01},
+    {"label": "Box, tape, filler (estimate)", "cost": 1.00}
+  ],
+  "fixed_monthly": [
+    {"label": "Meta ads (owner budget)", "cost": 200},
+    {"label": "Vercel + Supabase + email (estimate)", "cost": 205}
+  ],
+  "startup": [],
+  "days_per_month": 30,
+  "plan_per_day": 10,
+  "ramp_per_day": [0.5, 2, 4, 4, 5, 6, 7, 8, 8, 9, 10, 10]
+}
