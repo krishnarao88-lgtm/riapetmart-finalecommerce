@@ -7,6 +7,8 @@ const COLUMNS = [
     title: "Shop",
     links: [
       ["/shop", "Shop all"],
+      ["/shop?pet=cat", "Cat food & care"],
+      ["/shop?pet=dog", "Dog food & care"],
       ["/cat-hotel", "Cat hotel"],
       ["/flea-tick", "Flea & tick (NexGard)"],
       ["/guides", "Buying guides"],
@@ -18,6 +20,7 @@ const COLUMNS = [
     links: [
       ["/account", "My orders"],
       ["/contact", "Contact us"],
+      ["/delivery", "Same-day delivery"],
       ["/vets", "Find a vet near you"],
       ["/returns", "Returns & refunds"],
       ["/about", "About us"],
