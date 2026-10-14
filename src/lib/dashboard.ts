@@ -41,7 +41,57 @@ export function periodRange(period: Period, from?: string, to?: string, now = ne
   return { start: klMidnight(startDay), end: new Date(klMidnight(endDay).getTime() + DAY), days };
 }
 
-export type DashItem = { variant_id: string; name: string; title: string; qty: number; price: number };
+/** Malaysia midnight starting `ym` ("YYYY-MM") shifted by `add` months. */
+export function monthStart(ym: string, add = 0) {
+  const [y, m] = ym.split("-").map(Number);
+  return new Date(Date.UTC(y, m - 1 + add, 1) - KL);
+}
+
+/** The last `n` Malaysia months as "YYYY-MM", oldest first, ending with the current one. */
+export function lastMonths(n: number, now = new Date()) {
+  const ym = klDate(now).slice(0, 7);
+  return Array.from({ length: n }, (_, i) => klDate(monthStart(ym, i - n + 1)).slice(0, 7));
+}
+
+/** Key points in Malaysia time for today-vs-yesterday and month-to-date-vs-last-month comparisons. */
+export function dashMarks(now = new Date()) {
+  const today = klDate(now);
+  const ym = today.slice(0, 7);
+  const todayStart = klMidnight(today);
+  const thisMonth = monthStart(ym);
+  const lastMonth = monthStart(ym, -1);
+  // Same point in last month (e.g. the 14th 10:00), clamped so 31 Mar doesn't spill into March.
+  const lastToDate = new Date(Math.min(lastMonth.getTime() + (now.getTime() - thisMonth.getTime()), thisMonth.getTime()));
+  return { ym, todayStart, yesterdayStart: new Date(todayStart.getTime() - DAY), thisMonth, lastMonth, lastToDate };
+}
+
+/** Percent change, or null when there's nothing to compare against. */
+export function pctChange(current: number, before: number) {
+  return before ? Math.round(((current - before) / before) * 1000) / 10 : null;
+}
+
+/** Revenue and order count per "YYYY-MM" month. */
+export function byMonth(orders: { created_at: string; total: number }[], months: string[]) {
+  const map = new Map(months.map((m) => [m, { month: m, revenue: 0, orders: 0 }]));
+  for (const o of orders) {
+    const row = map.get(klDate(new Date(o.created_at)).slice(0, 7));
+    if (!row) continue;
+    row.revenue = Math.round((row.revenue + Number(o.total)) * 100) / 100;
+    row.orders += 1;
+  }
+  return [...map.values()];
+}
+
+/** "just now", "5 min ago", "3 h ago", "2 d ago". */
+export function timeAgo(iso: string, now = new Date()) {
+  const mins = Math.floor((now.getTime() - new Date(iso).getTime()) / 60000);
+  if (mins < 1) return "just now";
+  if (mins < 60) return `${mins} min ago`;
+  if (mins < 1440) return `${Math.floor(mins / 60)} h ago`;
+  return `${Math.floor(mins / 1440)} d ago`;
+}
+
+export type DashItem ={ variant_id: string; name: string; title: string; qty: number; price: number };
 export type DashOrder = {
   created_at: string;
   total: number;
