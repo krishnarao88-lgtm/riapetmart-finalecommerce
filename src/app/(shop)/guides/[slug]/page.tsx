@@ -2,7 +2,34 @@ import { ArrowRight } from "lucide-react";
 import Link from "next/link";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import { getGuide, guides } from "@/lib/guides";
+import { getGuide, guides, type Guide } from "@/lib/guides";
+import { createPublicClient } from "@/lib/supabase/public";
+
+export const revalidate = 3600;
+
+/**
+ * Real product pages for the guide's shop links (pet/category filters, NexGard for /flea-tick). Guides are already
+ * indexed, so these links are how Google finds product pages it has "discovered" but not yet crawled.
+ */
+async function guideProducts(links: Guide["shopLinks"]) {
+  const db = createPublicClient();
+  const picks = new Map<string, string>();
+  for (const { href } of links) {
+    const url = new URL(href, "https://x");
+    const pet = url.searchParams.get("pet");
+    const category = url.searchParams.get("category");
+    const brand = url.pathname === "/flea-tick" ? "nexgard" : null;
+    if (!pet && !category && !brand) continue;
+    const select = ["slug, name", category && "categories!inner(slug)", brand && "brands!inner(slug)"].filter(Boolean).join(", ");
+    let q = db.from("products").select(select).eq("status", "published").limit(4);
+    if (pet) q = q.in("pet_type", [pet, "dog_cat"]);
+    if (category) q = q.eq("categories.slug", category);
+    if (brand) q = q.eq("brands.slug", brand);
+    const { data } = await q;
+    for (const p of (data ?? []) as unknown as { slug: string; name: string }[]) picks.set(p.slug, p.name);
+  }
+  return [...picks].slice(0, 8);
+}
 
 export function generateStaticParams() {
   return guides.map((g) => ({ slug: g.slug }));
@@ -19,6 +46,7 @@ export default async function GuidePage({ params }: PageProps<"/guides/[slug]">)
   const { slug } = await params;
   const guide = getGuide(slug);
   if (!guide) notFound();
+  const products = await guideProducts(guide.shopLinks).catch(() => []);
 
   return (
     <div className="mx-auto max-w-2xl px-4 py-10">
@@ -50,6 +78,17 @@ export default async function GuidePage({ params }: PageProps<"/guides/[slug]">)
             </Link>
           ))}
         </div>
+        {products.length > 0 && (
+          <ul className="mt-2 grid gap-1 text-sm sm:grid-cols-2">
+            {products.map(([slug, name]) => (
+              <li key={slug}>
+                <Link href={`/shop/${slug}`} className="font-semibold text-rust underline">
+                  {name}
+                </Link>
+              </li>
+            ))}
+          </ul>
+        )}
       </div>
     </div>
   );

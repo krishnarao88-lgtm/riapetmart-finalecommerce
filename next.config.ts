@@ -47,6 +47,8 @@ const nextConfig: NextConfig = {
       { source: "/partner-clinic", destination: "/vets", permanent: true },
       { source: "/deals", destination: "/shop?deal=short-dated", permanent: true },
       { source: "/login", destination: "/account", permanent: true },
+      { source: "/privacy-policy", destination: "/privacy", permanent: true },
+      { source: "/terms-and-conditions", destination: "/terms", permanent: true },
     ];
   },
   async headers() {
