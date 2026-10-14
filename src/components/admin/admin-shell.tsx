@@ -13,6 +13,7 @@ import {
   LayoutDashboard,
   LogOut,
   Menu,
+  PawPrint,
   MessageSquareQuote,
   Receipt,
   Search,
@@ -84,10 +85,10 @@ export function AdminShell({
   }, [pathname]);
 
   const nav = (
-    <nav aria-label="Admin" className="grid gap-6">
+    <nav aria-label="Admin" className="relative grid gap-6">
       {groups.map((g) => (
         <div key={g.title} className="grid gap-1">
-          <p className="px-3 text-[11px] font-bold uppercase tracking-widest text-cream/45">{g.title}</p>
+          <p className="px-3 pb-1 text-[11px] font-bold uppercase tracking-[0.18em] text-peach/80">{g.title}</p>
           {g.links.map(({ href, label, Icon }) => {
             const active = isActive(pathname, href);
             return (
@@ -95,11 +96,19 @@ export function AdminShell({
                 key={href}
                 href={href}
                 aria-current={active ? "page" : undefined}
-                className={`flex min-h-11 items-center gap-3 rounded-xl px-3 text-sm font-semibold transition-colors ${
-                  active ? "bg-terracotta text-white shadow-sm" : "text-cream/80 hover:bg-white/10 hover:text-cream"
+                className={`group/link flex min-h-11 items-center gap-3 rounded-xl px-2 text-sm font-semibold transition-colors ${
+                  active
+                    ? "bg-linear-to-r from-rust to-terracotta-deep text-white shadow-[0_8px_20px_-10px_rgb(168_69_43/0.8)]"
+                    : "text-cream/85 hover:bg-white/10 hover:text-white"
                 }`}
               >
-                <Icon className="size-[18px] shrink-0" aria-hidden />
+                <span
+                  className={`grid size-8 shrink-0 place-items-center rounded-lg transition-colors ${
+                    active ? "bg-white/20" : "bg-white/5 group-hover/link:bg-white/10"
+                  }`}
+                >
+                  <Icon className="size-[18px]" aria-hidden />
+                </span>
                 {label}
               </Link>
             );
@@ -110,16 +119,22 @@ export function AdminShell({
   );
 
   const brand = (
-    <Link href="/admin" className="grid leading-none">
-      <span className="font-bubble text-xl font-extrabold text-cream">Ria Pet Mart</span>
-      <span className="mt-1 text-[10px] font-bold uppercase tracking-[0.2em] text-peach">Staff portal</span>
+    <Link href="/admin" className="relative flex items-center gap-3 rounded-xl">
+      <span className="grid size-10 shrink-0 place-items-center rounded-xl bg-linear-to-br from-terracotta to-rust text-white shadow-[0_8px_20px_-10px_rgb(168_69_43/0.9)]">
+        <PawPrint className="size-5" aria-hidden />
+      </span>
+      <span className="grid leading-none">
+        <span className="font-bubble text-xl font-extrabold text-cream">Ria Pet Mart</span>
+        <span className="mt-1 text-[10px] font-bold uppercase tracking-[0.2em] text-peach">Staff portal</span>
+      </span>
     </Link>
   );
 
   return (
     <div className="admin-theme flex min-h-dvh flex-1 bg-ground text-ink">
       {/* Desktop sidebar */}
-      <aside className="sticky top-0 hidden h-dvh w-64 shrink-0 flex-col gap-8 overflow-y-auto bg-choc px-4 py-6 lg:flex">
+      <aside className="sticky top-0 hidden h-dvh w-64 shrink-0 flex-col gap-8 overflow-x-hidden overflow-y-auto bg-choc px-4 py-6 lg:flex">
+        <span aria-hidden className="pointer-events-none absolute -top-20 -left-16 size-56 rounded-full bg-terracotta/15 blur-3xl" />
         {brand}
         {nav}
       </aside>
@@ -128,10 +143,11 @@ export function AdminShell({
       {open && (
         <div className="fixed inset-0 z-50 lg:hidden">
           <button type="button" aria-label="Close menu" className="absolute inset-0 bg-choc/50" onClick={() => setOpen(false)} />
-          <aside className="relative flex h-full w-72 max-w-[85vw] flex-col gap-8 overflow-y-auto bg-choc px-4 py-6">
-            <div className="flex items-start justify-between">
+          <aside className="relative flex h-full w-72 max-w-[85vw] flex-col gap-8 overflow-x-hidden overflow-y-auto bg-choc px-4 py-6">
+            <span aria-hidden className="pointer-events-none absolute -top-20 -left-16 size-56 rounded-full bg-terracotta/15 blur-3xl" />
+            <div className="relative flex items-center justify-between">
               {brand}
-              <button type="button" onClick={() => setOpen(false)} aria-label="Close menu" className="p-1 text-cream">
+              <button type="button" onClick={() => setOpen(false)} aria-label="Close menu" className="grid size-10 place-items-center rounded-full text-cream hover:bg-white/10">
                 <X className="size-6" aria-hidden />
               </button>
             </div>
@@ -142,12 +158,12 @@ export function AdminShell({
 
       <div className="flex min-w-0 flex-1 flex-col">
         <header className="sticky top-0 z-40 flex min-h-16 items-center gap-3 border-b border-line bg-surface/95 px-4 backdrop-blur sm:px-6">
-          <button type="button" onClick={() => setOpen(true)} aria-label="Open menu" className="-ml-1 p-1 lg:hidden">
+          <button type="button" onClick={() => setOpen(true)} aria-label="Open menu" className="-ml-1 grid size-10 place-items-center rounded-full text-choc hover:bg-sunk lg:hidden">
             <Menu className="size-6" aria-hidden />
           </button>
           <div className="grid min-w-0 leading-tight">
             <span className="text-[11px] font-bold uppercase tracking-widest text-ink-3">Admin</span>
-            <span className="truncate font-bold">{current?.label ?? "Admin"}</span>
+            <span className="truncate font-bubble text-lg font-extrabold text-choc">{current?.label ?? "Admin"}</span>
           </div>
           <form action="/admin/orders" role="search" className="ml-auto hidden w-full max-w-xs md:block">
             <label htmlFor="admin-search" className="sr-only">
@@ -160,7 +176,7 @@ export function AdminShell({
                 name="q"
                 type="search"
                 placeholder="Search orders, customers, phone…"
-                className="min-h-10 w-full rounded-full border border-line bg-ground pr-3 pl-9 text-sm placeholder:text-ink-3"
+                className="min-h-10 w-full rounded-full border border-line bg-ground pr-3 pl-9 text-sm transition-colors placeholder:text-ink-3 hover:border-peach"
               />
             </span>
           </form>
@@ -169,7 +185,7 @@ export function AdminShell({
               <span className="max-w-56 truncate text-sm font-semibold">{email}</span>
               <span className="text-[11px] font-bold uppercase tracking-wider text-terracotta-deep">{role}</span>
             </div>
-            <span className="grid size-9 place-items-center rounded-full bg-terracotta font-bold uppercase text-white" aria-hidden>
+            <span className="grid size-9 place-items-center rounded-full bg-linear-to-br from-terracotta-deep to-rust font-bold uppercase text-white" aria-hidden>
               {email[0]}
             </span>
             <form action={signOut}>
