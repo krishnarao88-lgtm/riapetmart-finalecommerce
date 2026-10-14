@@ -184,6 +184,7 @@ export function reviewRequest(link: string): Email {
       heading: "How is your pet enjoying it?",
       paragraphs: [
         "We hope your last order went down well. If you have a minute, an honest review helps other pet owners in Malaysia choose the right food and care.",
+        `Got another minute? A Google review helps local pet owners find us: ${site.google.url}`,
       ],
       cta: { label: "Write a quick review", url: link },
       note: "It takes about a minute. Thank you!",
