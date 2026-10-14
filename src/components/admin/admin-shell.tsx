@@ -15,6 +15,7 @@ import {
   Menu,
   MessageSquareQuote,
   Receipt,
+  Search,
   Settings,
   ShieldCheck,
   UserCog,
@@ -148,7 +149,22 @@ export function AdminShell({
             <span className="text-[11px] font-bold uppercase tracking-widest text-ink-3">Admin</span>
             <span className="truncate font-bold">{current?.label ?? "Admin"}</span>
           </div>
-          <div className="ml-auto flex items-center gap-3">
+          <form action="/admin/orders" role="search" className="ml-auto hidden w-full max-w-xs md:block">
+            <label htmlFor="admin-search" className="sr-only">
+              Search orders
+            </label>
+            <span className="relative block">
+              <Search className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-ink-3" aria-hidden />
+              <input
+                id="admin-search"
+                name="q"
+                type="search"
+                placeholder="Search orders, customers, phone…"
+                className="min-h-10 w-full rounded-full border border-line bg-ground pr-3 pl-9 text-sm placeholder:text-ink-3"
+              />
+            </span>
+          </form>
+          <div className="ml-auto flex items-center gap-3 md:ml-0">
             <div className="hidden text-right leading-tight sm:grid">
               <span className="max-w-56 truncate text-sm font-semibold">{email}</span>
               <span className="text-[11px] font-bold uppercase tracking-wider text-terracotta-deep">{role}</span>
