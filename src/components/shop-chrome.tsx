@@ -25,7 +25,11 @@ export async function ShopChrome({ children }: { children: React.ReactNode }) {
       <FloatingWhatsApp />
       <ActivityToast />
       {process.env.ANTHROPIC_API_KEY && <AssistantWidget />}
-      <CartDrawer freeDeliveryMin={freeDeliveryMin(delivery)} freeDeliveryCap={freeDeliveryCap(delivery)} />
+      <CartDrawer
+        freeDeliveryMin={freeDeliveryMin(delivery)}
+        freeDeliveryCap={freeDeliveryCap(delivery)}
+        welcomePercent={offer.enabled ? offer.percent : null}
+      />
     </CartProvider>
   );
 }

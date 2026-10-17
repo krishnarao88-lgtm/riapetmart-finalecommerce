@@ -1,17 +1,21 @@
 "use client";
 
-import { Minus, Plus, ShoppingBag, X } from "lucide-react";
+import { MessageCircle, Minus, Plus, ShoppingBag, X } from "lucide-react";
 import Link from "next/link";
+import { CartEmailCapture } from "@/components/cart-email-capture";
 import { FreeShippingProgress } from "@/components/free-shipping-progress";
 import { useCart } from "@/lib/cart-context";
 import { formatMyr } from "@/lib/pricing";
+import { whatsappLink } from "@/lib/site";
 
 export function CartDrawer({
   freeDeliveryMin,
   freeDeliveryCap,
+  welcomePercent,
 }: {
   freeDeliveryMin: number | null;
   freeDeliveryCap: number | null;
+  welcomePercent: number | null;
 }) {
   const { lines, subtotal, isOpen, closeCart, setQty } = useCart();
 
@@ -85,6 +89,7 @@ export function CartDrawer({
 
         {lines.length > 0 && (
           <div className="border-t-2 border-choc/15 p-4">
+            <CartEmailCapture percent={welcomePercent} />
             <FreeShippingProgress subtotal={subtotal} threshold={freeDeliveryMin} cap={freeDeliveryCap} />
             <div className="mt-3 flex items-center justify-between font-bold text-choc">
               <span>Subtotal</span>
@@ -97,6 +102,17 @@ export function CartDrawer({
             >
               Go to checkout
             </Link>
+            <a
+              href={whatsappLink(
+                `Hi Ria Pet Mart, I need help with my order:\n${lines.map((l) => `- ${l.qty} x ${l.productName} (${l.variantTitle})`).join("\n")}\nSubtotal ${formatMyr(subtotal)}`,
+              )}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="mt-2 flex w-full items-center justify-center gap-2 rounded-full border-2 border-choc/20 px-6 py-2.5 text-sm font-bold text-choc hover:bg-peach/40"
+            >
+              <MessageCircle className="size-4 text-rust" aria-hidden />
+              Questions? Order help on WhatsApp
+            </a>
           </div>
         )}
       </aside>
