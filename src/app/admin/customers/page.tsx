@@ -1,4 +1,7 @@
+import { Check, Eye, MailPlus, ShoppingBasket, ShoppingCart, TriangleAlert } from "lucide-react";
 import type { Metadata } from "next";
+import { Panel } from "@/components/admin/dashboard-parts";
+import { CountTile, PageHeader, Pill } from "@/components/admin/list-parts";
 import { requireAdmin } from "@/lib/auth";
 import { formatMyr } from "@/lib/pricing";
 import { createServiceClient } from "@/lib/supabase/service";
@@ -14,15 +17,9 @@ type Signup = { id: string; email: string; created_at: string; welcome2_sent_at:
 type Cart = { email: string; items: { name: string; title: string; qty: number }[]; subtotal: number; created_at: string; reminded_at: string | null; recovered: boolean };
 type Event = { product_id: string; products: { name: string } | null };
 
-function Tile({ label, value, note }: { label: string; value: string | number; note?: string }) {
-  return (
-    <div className="grid gap-0.5 rounded-2xl border-2 border-line bg-surface p-4">
-      <span className="text-xs font-bold uppercase tracking-wide text-ink-2">{label}</span>
-      <span className="text-2xl font-extrabold tabular-nums">{value}</span>
-      {note && <span className="text-xs text-ink-2">{note}</span>}
-    </div>
-  );
-}
+/** Text colour for a follow-up status string from followUp(). */
+const followTone = (v: string) =>
+  v.startsWith("Sent") ? "text-ok-fg" : v.startsWith("Due,") || v.startsWith("Not sent") ? "text-bad-fg" : "text-ink-2";
 
 /** Follow-up status for a welcome email due `days` after sign-up: sent, skipped (already a customer), due, or waiting. */
 function followUp(sentAt: string | null, signedUp: string, days: number, isCustomer: boolean) {
@@ -58,112 +55,131 @@ export default async function CustomersPage() {
   const followUpsOn = Boolean(process.env.CRON_SECRET);
 
   return (
-    <div className="mx-auto grid max-w-5xl gap-8 px-4 py-8">
-      <div className="grid gap-1">
-        <h1 className="font-display text-3xl font-extrabold tracking-tight">Customers &amp; follow-ups</h1>
-        <p className="text-ink-2">Who signed up, who left a cart, and whether our automatic emails have followed them up.</p>
-      </div>
+    <div className="mx-auto grid max-w-7xl gap-5 px-4 py-6 sm:px-6">
+      <PageHeader title="Customers & follow-ups" sub="Who signed up, who left a cart, and whether our automatic emails have followed them up." />
 
       {!followUpsOn && (
-        <p className="rounded-2xl bg-bad-bg px-4 py-3 text-sm font-semibold text-bad-fg">
-          Automatic follow-ups are OFF: CRON_SECRET isn&apos;t set in Vercel, so cart reminders, welcome emails 2 &amp; 3, and the
-          9pm Telegram summary don&apos;t run. Add CRON_SECRET in Vercel → Settings → Environment Variables, then redeploy.
+        <p role="alert" className="flex gap-2 rounded-2xl bg-bad-bg px-4 py-3 text-sm font-semibold text-bad-fg">
+          <TriangleAlert className="mt-0.5 size-4 shrink-0" aria-hidden />
+          <span>
+            Automatic follow-ups are OFF: CRON_SECRET isn&apos;t set in Vercel, so cart reminders, welcome emails 2 &amp; 3, and the
+            9pm Telegram summary don&apos;t run. Add CRON_SECRET in Vercel → Settings → Environment Variables, then redeploy.
+          </span>
         </p>
       )}
 
-      <section aria-label="Last 7 days" className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-        <Tile label="Product views" value={viewRows.length} note="Last 7 days" />
-        <Tile label="Added to cart" value={addRows.length} note="Last 7 days" />
-        <Tile label="Newsletter sign-ups" value={signupRows.filter((s) => s.created_at >= weekAgo).length} note={`${signupRows.length} in total`} />
-        <Tile
-          label="Carts left with an email"
-          value={cartRows.filter((c) => c.created_at >= weekAgo).length}
-          note={`${cartRows.filter((c) => c.recovered).length} of ${cartRows.length} came back and ordered`}
-        />
+      <section aria-label="Last 7 days">
+        <ul className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4">
+          <CountTile label="Product views" value={viewRows.length} note="Last 7 days" Icon={Eye} chip="bg-sunk text-terracotta-deep" />
+          <CountTile label="Added to cart" value={addRows.length} note="Last 7 days" Icon={ShoppingCart} chip="bg-peach/60 text-rust" />
+          <CountTile
+            label="Newsletter sign-ups"
+            value={signupRows.filter((s) => s.created_at >= weekAgo).length}
+            note={`${signupRows.length} in total`}
+            Icon={MailPlus}
+            chip="bg-ok-bg text-ok-fg"
+          />
+          <CountTile
+            label="Carts left with an email"
+            value={cartRows.filter((c) => c.created_at >= weekAgo).length}
+            note={`${cartRows.filter((c) => c.recovered).length} of ${cartRows.length} came back and ordered`}
+            Icon={ShoppingBasket}
+            chip="bg-warn-bg text-warn-fg"
+          />
+        </ul>
       </section>
 
-      <section aria-labelledby="carts-heading" className="grid gap-3">
-        <h2 id="carts-heading" className="font-display text-xl font-extrabold">Carts left with an email</h2>
-        <p className="text-sm text-ink-2">
+      <Panel id="carts" title="Carts left with an email" Icon={ShoppingBasket}>
+        <p className="-mt-2 text-sm text-ink-2">
           The reminder email goes out between 1 and 48 hours after they leave (daily at 11am). Reply personally to big carts.
         </p>
-        <div className="overflow-x-auto rounded-2xl border-2 border-line">
-          <table className="w-full min-w-[640px] text-sm">
-            <thead className="bg-ground text-left text-xs uppercase tracking-wide text-ink-2">
-              <tr><th className="p-3">When</th><th className="p-3">Email</th><th className="p-3">Items</th><th className="p-3 text-right">Value</th><th className="p-3">Follow-up</th></tr>
-            </thead>
-            <tbody>
-              {cartRows.length === 0 && <tr><td colSpan={5} className="p-3 text-ink-2">No carts yet.</td></tr>}
-              {cartRows.map((c) => (
-                <tr key={`${c.email}-${c.created_at}`} className="border-t border-line align-top">
-                  <td className="p-3 whitespace-nowrap">{dateTime(c.created_at)}</td>
-                  <td className="p-3"><a href={`mailto:${c.email}`} className="text-grape underline">{c.email}</a></td>
-                  <td className="p-3">{c.items.map((i) => `${i.name} (${i.title}) × ${i.qty}`).join(", ")}</td>
-                  <td className="p-3 text-right tabular-nums">{formatMyr(Number(c.subtotal))}</td>
-                  <td className="p-3 whitespace-nowrap">
-                    {c.recovered ? (
-                      <span className="font-semibold text-ok-fg">Ordered ✓</span>
-                    ) : c.reminded_at ? (
-                      `Reminder sent ${date(c.reminded_at)}`
-                    ) : Date.now() - new Date(c.created_at).getTime() > 2 * DAY ? (
-                      <span className="text-bad-fg">No reminder sent</span>
-                    ) : (
-                      "Reminder due"
-                    )}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      </section>
+        {cartRows.length === 0 ? (
+          <p className="text-sm text-ink-2">No carts yet.</p>
+        ) : (
+          <ul className="grid divide-y divide-line">
+            {cartRows.map((c) => (
+              <li key={`${c.email}-${c.created_at}`} className="grid gap-2 py-3 first:pt-0 last:pb-0 md:grid-cols-[9rem_1fr_auto] md:items-start md:gap-4">
+                <span className="text-xs font-semibold text-ink-3 md:pt-0.5">{dateTime(c.created_at)}</span>
+                <div className="grid min-w-0 gap-1">
+                  <a href={`mailto:${c.email}`} className="break-all font-semibold text-terracotta-deep underline underline-offset-2">
+                    {c.email}
+                  </a>
+                  <p className="text-sm text-ink-2">{c.items.map((i) => `${i.name} (${i.title}) × ${i.qty}`).join(", ")}</p>
+                </div>
+                <div className="flex flex-wrap items-center gap-2 md:justify-end">
+                  <span className="font-bubble text-lg font-extrabold tabular-nums text-choc">{formatMyr(Number(c.subtotal))}</span>
+                  {c.recovered ? (
+                    <Pill tone="ok"><Check className="size-3.5" aria-hidden />Ordered</Pill>
+                  ) : c.reminded_at ? (
+                    <Pill tone="muted">Reminder sent {date(c.reminded_at)}</Pill>
+                  ) : Date.now() - new Date(c.created_at).getTime() > 2 * DAY ? (
+                    <Pill tone="bad">No reminder sent</Pill>
+                  ) : (
+                    <Pill tone="warn">Reminder due</Pill>
+                  )}
+                </div>
+              </li>
+            ))}
+          </ul>
+        )}
+      </Panel>
 
-      <section aria-labelledby="signups-heading" className="grid gap-3">
-        <h2 id="signups-heading" className="font-display text-xl font-extrabold">Newsletter sign-ups</h2>
-        <p className="text-sm text-ink-2">
+      <Panel id="signups" title="Newsletter sign-ups" Icon={MailPlus}>
+        <p className="-mt-2 text-sm text-ink-2">
           Email 1 (their discount code) goes instantly. Email 2 (food tips) on day 3 and email 3 (best sellers) on day 7, skipped
           once they&apos;ve ordered.
         </p>
-        <div className="overflow-x-auto rounded-2xl border-2 border-line">
-          <table className="w-full min-w-[640px] text-sm">
-            <thead className="bg-ground text-left text-xs uppercase tracking-wide text-ink-2">
-              <tr><th className="p-3">Signed up</th><th className="p-3">Email</th><th className="p-3">Ordered?</th><th className="p-3">Email 2 (day 3)</th><th className="p-3">Email 3 (day 7)</th></tr>
-            </thead>
-            <tbody>
-              {signupRows.length === 0 && <tr><td colSpan={5} className="p-3 text-ink-2">No sign-ups yet.</td></tr>}
-              {signupRows.map((s) => {
-                const isCustomer = customers.has(s.email.toLowerCase());
-                return (
-                  <tr key={s.id} className="border-t border-line">
-                    <td className="p-3 whitespace-nowrap">{date(s.created_at)}</td>
-                    <td className="p-3"><a href={`mailto:${s.email}`} className="text-grape underline">{s.email}</a></td>
-                    <td className="p-3">{isCustomer ? <span className="font-semibold text-ok-fg">Yes ✓</span> : "Not yet"}</td>
-                    <td className="p-3 whitespace-nowrap">{followUp(s.welcome2_sent_at, s.created_at, 3, isCustomer)}</td>
-                    <td className="p-3 whitespace-nowrap">{followUp(s.welcome3_sent_at, s.created_at, 7, isCustomer)}</td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
-        </div>
-      </section>
+        {signupRows.length === 0 ? (
+          <p className="text-sm text-ink-2">No sign-ups yet.</p>
+        ) : (
+          <ul className="grid divide-y divide-line">
+            {signupRows.map((s) => {
+              const isCustomer = customers.has(s.email.toLowerCase());
+              const e2 = followUp(s.welcome2_sent_at, s.created_at, 3, isCustomer);
+              const e3 = followUp(s.welcome3_sent_at, s.created_at, 7, isCustomer);
+              return (
+                <li key={s.id} className="grid gap-2 py-3 first:pt-0 last:pb-0 md:grid-cols-[9rem_1fr_auto] md:items-center md:gap-4">
+                  <span className="text-xs font-semibold text-ink-3">Signed up {date(s.created_at)}</span>
+                  <div className="flex min-w-0 flex-wrap items-center gap-2">
+                    <a href={`mailto:${s.email}`} className="break-all font-semibold text-terracotta-deep underline underline-offset-2">
+                      {s.email}
+                    </a>
+                    {isCustomer ? <Pill tone="ok"><Check className="size-3.5" aria-hidden />Ordered</Pill> : <Pill tone="muted">Not ordered yet</Pill>}
+                  </div>
+                  <dl className="flex flex-wrap gap-2 text-xs md:justify-end">
+                    {([["Email 2 (day 3)", e2], ["Email 3 (day 7)", e3]] as const).map(([k, v]) => (
+                      <div key={k} className="grid gap-0.5 rounded-xl bg-cream px-3 py-1.5">
+                        <dt className="font-semibold text-ink-3">{k}</dt>
+                        <dd className={`font-bold ${followTone(v)}`}>{v}</dd>
+                      </div>
+                    ))}
+                  </dl>
+                </li>
+              );
+            })}
+          </ul>
+        )}
+      </Panel>
 
-      <section aria-label="Popular products" className="grid gap-4 sm:grid-cols-2">
-        {([["Most viewed (7 days)", top(viewRows)], ["Most added to cart (7 days)", top(addRows)]] as const).map(([title, rows]) => (
-          <div key={title} className="grid gap-2 rounded-2xl border-2 border-line bg-surface p-4">
-            <h2 className="font-display text-lg font-extrabold">{title}</h2>
+      <div className="grid gap-5 md:grid-cols-2">
+        {([["Most viewed (7 days)", top(viewRows), Eye], ["Most added to cart (7 days)", top(addRows), ShoppingCart]] as const).map(([title, rows, Icon]) => (
+          <Panel key={title} title={title} Icon={Icon}>
             {rows.length === 0 ? (
               <p className="text-sm text-ink-2">Nothing yet.</p>
             ) : (
-              <ol className="grid gap-1 text-sm">
-                {rows.map(([name, n]) => (
-                  <li key={name} className="flex justify-between gap-2"><span>{name}</span><span className="tabular-nums text-ink-2">{n}×</span></li>
+              <ol className="grid gap-2 text-sm">
+                {rows.map(([name, n], i) => (
+                  <li key={name} className="flex items-center gap-3">
+                    <span className="grid size-7 shrink-0 place-items-center rounded-full bg-sunk text-xs font-bold tabular-nums text-ink-2">{i + 1}</span>
+                    <span className="min-w-0 flex-1 text-choc">{name}</span>
+                    <span className="font-bold tabular-nums text-ink-2">{n}×</span>
+                  </li>
                 ))}
               </ol>
             )}
-          </div>
+          </Panel>
         ))}
-      </section>
+      </div>
     </div>
   );
 }

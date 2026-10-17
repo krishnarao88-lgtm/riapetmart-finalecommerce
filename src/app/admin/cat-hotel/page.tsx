@@ -1,4 +1,6 @@
+import { ArrowRight, CalendarCheck, Cat, Check, Clock, Mail, Phone, X } from "lucide-react";
 import type { Metadata } from "next";
+import { actionBtn, CountTile, EmptyState, PageHeader, Pill, TONE } from "@/components/admin/list-parts";
 import { requireStaff } from "@/lib/auth";
 import { updateCatHotelBookingStatus } from "../actions";
 
@@ -18,12 +20,7 @@ type Booking = {
   created_at: string;
 };
 
-const statusStyle: Record<Booking["status"], string> = {
-  pending: "bg-warn-bg text-warn-fg",
-  confirmed: "bg-ok-bg text-ok-fg",
-  declined: "bg-bad-bg text-bad-fg",
-  completed: "bg-sunk text-ink-2",
-};
+const statusTone = { pending: "warn", confirmed: "ok", declined: "bad", completed: "muted" } as const satisfies Record<Booking["status"], keyof typeof TONE>;
 
 export default async function AdminCatHotelPage() {
   const { supabase } = await requireStaff();
@@ -32,55 +29,78 @@ export default async function AdminCatHotelPage() {
     .select("id, customer_name, customer_email, customer_phone, cat_name, pet_count, check_in, check_out, notes, status, created_at")
     .order("check_in", { ascending: true });
   const bookings = (data ?? []) as Booking[];
+  const count = (s: Booking["status"]) => bookings.filter((b) => b.status === s).length;
 
   return (
-    <div className="mx-auto grid max-w-4xl gap-6 px-4 py-8">
-      <div className="grid gap-1">
-        <h1 className="font-display text-3xl font-extrabold tracking-tight">Cat Hotel bookings</h1>
-        <p className="text-ink-2">Confirm or decline requests after checking real availability.</p>
-      </div>
+    <div className="mx-auto grid max-w-7xl gap-5 px-4 py-6 sm:px-6">
+      <PageHeader title="Cat Hotel bookings" sub="Confirm or decline requests after checking real availability." />
+
+      <ul className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+        <CountTile label="Pending" value={count("pending")} note="Needs a reply" Icon={Clock} chip={TONE.warn} />
+        <CountTile label="Confirmed" value={count("confirmed")} note="Booked in" Icon={CalendarCheck} chip={TONE.ok} />
+        <CountTile label="Completed" value={count("completed")} note="Stay finished" Icon={Check} chip={TONE.muted} />
+        <CountTile label="Declined" value={count("declined")} note="Not taken" Icon={X} chip={TONE.bad} />
+      </ul>
 
       {bookings.length === 0 ? (
-        <p className="rounded-2xl border-2 border-line bg-surface p-6 text-ink-2">No booking requests yet.</p>
+        <EmptyState Icon={Cat}>No booking requests yet.</EmptyState>
       ) : (
-        <ul className="grid gap-3">
+        <ul className="grid gap-3 lg:grid-cols-2">
           {bookings.map((b) => (
-            <li key={b.id} className="grid gap-2 rounded-2xl border-2 border-line bg-surface p-4">
-              <div className="flex flex-wrap items-center justify-between gap-2">
-                <span className="font-bold">
-                  {b.check_in} → {b.check_out} · {b.pet_count} cat{b.pet_count > 1 ? "s" : ""}
-                  {b.cat_name && ` (${b.cat_name})`}
-                </span>
-                <span className={`rounded-full px-2.5 py-1 text-xs font-bold ${statusStyle[b.status]}`}>{b.status}</span>
+            <li key={b.id} className="grid content-start gap-4 rounded-2xl border border-line bg-surface p-5 shadow-[var(--shadow-chunk)]">
+              <div className="flex flex-wrap items-start justify-between gap-2">
+                <div className="grid gap-0.5">
+                  <span className="font-bubble text-lg font-extrabold text-choc">
+                    {b.pet_count} cat{b.pet_count > 1 ? "s" : ""}
+                    {b.cat_name && ` (${b.cat_name})`}
+                  </span>
+                  <span className="text-sm font-semibold text-ink-2">{b.customer_name}</span>
+                </div>
+                <Pill tone={statusTone[b.status]}>{b.status}</Pill>
               </div>
-              <p className="text-sm text-ink-2">
-                {b.customer_name} · {b.customer_phone} · {b.customer_email}
-              </p>
-              {b.notes && <p className="text-sm text-ink-2">Notes: {b.notes}</p>}
+
+              <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-2 rounded-xl bg-cream p-3">
+                <div className="grid">
+                  <span className="text-xs font-semibold text-ink-3">Check-in</span>
+                  <span className="font-bold tabular-nums text-choc">{b.check_in}</span>
+                </div>
+                <ArrowRight className="size-4 text-rust" aria-hidden />
+                <div className="grid text-right">
+                  <span className="text-xs font-semibold text-ink-3">Check-out</span>
+                  <span className="font-bold tabular-nums text-choc">{b.check_out}</span>
+                </div>
+              </div>
+
+              <div className="grid gap-1 text-sm text-ink-2">
+                <span className="flex items-center gap-2"><Phone className="size-4 shrink-0 text-ink-3" aria-hidden />{b.customer_phone}</span>
+                <span className="flex items-center gap-2 break-all"><Mail className="size-4 shrink-0 text-ink-3" aria-hidden />{b.customer_email}</span>
+                {b.notes && <p className="mt-1 rounded-xl bg-sunk px-3 py-2">Notes: {b.notes}</p>}
+              </div>
+
               {b.status === "pending" && (
-                <div className="flex gap-2">
+                <div className="flex flex-wrap gap-2 border-t border-line pt-3">
                   <form action={updateCatHotelBookingStatus}>
                     <input type="hidden" name="id" value={b.id} />
                     <input type="hidden" name="status" value="confirmed" />
-                    <button type="submit" className="min-h-9 rounded-full bg-ok-bg px-3 text-sm font-semibold text-ok-fg">
-                      Confirm
+                    <button type="submit" className={actionBtn.yes}>
+                      <Check className="size-4" aria-hidden /> Confirm
                     </button>
                   </form>
                   <form action={updateCatHotelBookingStatus}>
                     <input type="hidden" name="id" value={b.id} />
                     <input type="hidden" name="status" value="declined" />
-                    <button type="submit" className="min-h-9 rounded-full bg-bad-bg px-3 text-sm font-semibold text-bad-fg">
-                      Decline
+                    <button type="submit" className={actionBtn.no}>
+                      <X className="size-4" aria-hidden /> Decline
                     </button>
                   </form>
                 </div>
               )}
               {b.status === "confirmed" && (
-                <form action={updateCatHotelBookingStatus} className="w-fit">
+                <form action={updateCatHotelBookingStatus} className="border-t border-line pt-3">
                   <input type="hidden" name="id" value={b.id} />
                   <input type="hidden" name="status" value="completed" />
-                  <button type="submit" className="min-h-9 rounded-full bg-sunk px-3 text-sm font-semibold text-ink-2">
-                    Mark completed
+                  <button type="submit" className={actionBtn.quiet}>
+                    <CalendarCheck className="size-4" aria-hidden /> Mark completed
                   </button>
                 </form>
               )}
