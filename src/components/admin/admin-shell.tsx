@@ -133,7 +133,7 @@ export function AdminShell({
   return (
     <div className="admin-theme flex min-h-dvh flex-1 bg-ground text-ink">
       {/* Desktop sidebar */}
-      <aside className="sticky top-0 hidden h-dvh w-64 shrink-0 flex-col gap-8 overflow-x-hidden overflow-y-auto bg-choc px-4 py-6 lg:flex">
+      <aside className="sticky top-0 hidden print:hidden h-dvh w-64 shrink-0 flex-col gap-8 overflow-x-hidden overflow-y-auto bg-choc px-4 py-6 lg:flex">
         <span aria-hidden className="pointer-events-none absolute -top-20 -left-16 size-56 rounded-full bg-terracotta/15 blur-3xl" />
         {brand}
         {nav}
@@ -157,7 +157,7 @@ export function AdminShell({
       )}
 
       <div className="flex min-w-0 flex-1 flex-col">
-        <header className="sticky top-0 z-40 flex min-h-16 items-center gap-3 border-b border-line bg-surface/95 px-4 backdrop-blur sm:px-6">
+        <header className="sticky top-0 z-40 flex print:hidden min-h-16 items-center gap-3 border-b border-line bg-surface/95 px-4 backdrop-blur sm:px-6">
           <button type="button" onClick={() => setOpen(true)} aria-label="Open menu" className="-ml-1 grid size-10 place-items-center rounded-full text-choc hover:bg-sunk lg:hidden">
             <Menu className="size-6" aria-hidden />
           </button>
