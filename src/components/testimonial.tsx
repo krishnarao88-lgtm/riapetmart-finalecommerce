@@ -7,7 +7,7 @@ import { createPublicClient } from "@/lib/supabase/public";
 type Review = {
   id: string;
   customer_name: string;
-  rating: number;
+  rating: number | null;
   body: string;
   order_id: string | null;
   source: string;

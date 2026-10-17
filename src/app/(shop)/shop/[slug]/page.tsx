@@ -9,6 +9,7 @@ import { PaymentBadges } from "@/components/payment-badges";
 import { promoFor, promoLabel } from "@/lib/promotions";
 import { getRunningPromotions } from "@/lib/promotions-server";
 import { CompleteTheCare } from "@/components/complete-the-care";
+import { ProductReviews } from "@/components/product-reviews";
 import { ProductTags, SizePills } from "@/components/product-tags";
 import { getVariantStock } from "@/components/product-card";
 import { discountedPrice, getExpiryBadge, type ExpirySettings } from "@/lib/expiry";
@@ -438,6 +439,8 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
           )}
         </div>
       </div>
+
+      <ProductReviews productId={product.id} />
 
       <CompleteTheCare
         product={{

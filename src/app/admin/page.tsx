@@ -163,7 +163,7 @@ export default async function AdminDashboard({ searchParams }: PageProps<"/admin
     ...(reviewLatest.data ?? []).map((v) => ({
       at: v.created_at,
       Icon: MessageSquareQuote,
-      text: `New ${v.rating}-star review`,
+      text: v.rating ? `New ${v.rating}-star review` : "New review",
       sub: `${v.customer_name} · ${v.status}`,
       href: "/admin/reviews",
     })),

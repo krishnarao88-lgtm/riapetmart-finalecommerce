@@ -6,5 +6,6 @@ export const reviewImageUrl = (path: string) => `${supabaseUrl}/storage/v1/objec
 export function verifiedLabel(source: string, orderId: string | null): string | null {
   if (source === "tiktok") return "Verified TikTok Shop purchase";
   if (source === "shopee") return "Verified Shopee purchase";
+  if (source === "lazada") return "Verified Lazada purchase";
   return orderId ? "Verified purchase" : null;
 }

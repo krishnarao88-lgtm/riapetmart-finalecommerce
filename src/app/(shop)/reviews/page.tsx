@@ -15,7 +15,7 @@ export const metadata: Metadata = {
 type Review = {
   id: string;
   customer_name: string;
-  rating: number;
+  rating: number | null;
   body: string;
   created_at: string;
   order_id: string | null;
@@ -39,7 +39,7 @@ export default async function ReviewsPage({
       .order("created_at", { ascending: false })
       .limit(100),
     // Every approved rating, star-only ones included, so the average isn't cherry-picked.
-    supabase.from("reviews").select("rating").eq("status", "approved"),
+    supabase.from("reviews").select("rating").eq("status", "approved").not("rating", "is", null),
   ]);
   const reviews = (data ?? []) as unknown as Review[];
   const ratings = (allRatings ?? []).map((r) => r.rating as number);

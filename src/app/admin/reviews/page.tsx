@@ -12,8 +12,8 @@ export const metadata: Metadata = { title: "Reviews", robots: { index: false } }
 type Review = {
   id: string;
   customer_name: string;
-  source: "website" | "tiktok" | "shopee";
-  rating: number;
+  source: "website" | "tiktok" | "shopee" | "lazada";
+  rating: number | null;
   body: string;
   status: "pending" | "approved" | "rejected";
   created_at: string;
@@ -21,7 +21,7 @@ type Review = {
   review_images: { path: string }[];
 };
 
-const SOURCE_LABEL = { website: "Website", tiktok: "TikTok Shop", shopee: "Shopee" } as const;
+const SOURCE_LABEL = { website: "Website", tiktok: "TikTok Shop", shopee: "Shopee", lazada: "Lazada" } as const;
 
 const statusTone = { pending: "warn", approved: "ok", rejected: "bad" } as const satisfies Record<Review["status"], keyof typeof TONE>;
 
@@ -54,7 +54,7 @@ export default async function AdminReviewsPage() {
       <ImportReviews />
       <p className="text-sm text-ink-2">
         On file: {bySource("website")} from this website, {bySource("tiktok")} from TikTok Shop, {bySource("shopee")} from
-        Shopee. Star-only ratings are counted in the average but not listed below.
+        Shopee, {bySource("lazada")} from Lazada. Star-only ratings are counted in the average but not listed below.
       </p>
 
       {reviews.length === 0 ? (
@@ -66,7 +66,7 @@ export default async function AdminReviewsPage() {
               <div className="flex flex-wrap items-center justify-between gap-2">
                 <div className="flex items-center gap-2">
                   <Stars rating={r.rating} className="text-terracotta-deep" />
-                  <span className="text-sm font-bold tabular-nums text-choc">{r.rating}/5</span>
+                  <span className="text-sm font-bold tabular-nums text-choc">{r.rating === null ? `${r.source} review, no star rating` : `${r.rating}/5`}</span>
                 </div>
                 <Pill tone={statusTone[r.status]}>{r.status}</Pill>
               </div>
