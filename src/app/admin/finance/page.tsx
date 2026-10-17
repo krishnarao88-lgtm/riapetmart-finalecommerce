@@ -1,7 +1,9 @@
+import { Banknote, Coins, CreditCard, Gift, Package, Percent, Receipt, Wrench } from "lucide-react";
 import type { Metadata } from "next";
-import Link from "next/link";
 import { requireAdmin } from "@/lib/auth";
 import { AutoRefresh } from "@/components/admin/auto-refresh";
+import { Panel } from "@/components/admin/dashboard-parts";
+import { FigureCard, PillLink } from "@/components/admin/finance-parts";
 import { OrderProfit } from "@/components/admin/order-profit";
 import { moneySummary, orderProfit, productScenarios, safePrice, type ProfitOrder, type Scenario } from "@/lib/finance";
 import { syncOrderCosts } from "@/lib/order-costs-sync";
@@ -35,17 +37,6 @@ function periodStart(days: number) {
     since: new Date(now - days * 86_400_000).toISOString(),
     today: new Date(now + 8 * 3_600_000).toISOString().slice(0, 10),
   };
-}
-
-function Tile({ label, value, tone, note }: { label: string; value: number; tone?: "bad" | "ok"; note?: string }) {
-  const color = tone === "bad" ? "text-bad-fg" : tone === "ok" ? "text-ok-fg" : "text-ink";
-  return (
-    <div className="grid gap-0.5 rounded-2xl border-2 border-line bg-surface p-4">
-      <span className="text-xs font-bold uppercase tracking-wide text-ink-2">{label}</span>
-      <span className={`text-xl font-extrabold tabular-nums ${color}`}>{formatMyr(value)}</span>
-      {note && <span className="text-xs text-ink-2">{note}</span>}
-    </div>
-  );
 }
 
 export default async function FinancePage({ searchParams }: PageProps<"/admin/finance">) {
@@ -181,186 +172,202 @@ export default async function FinancePage({ searchParams }: PageProps<"/admin/fi
     )}`;
 
   return (
-    <div className="mx-auto grid max-w-6xl gap-8 px-4 py-8">
-      <div className="grid gap-1">
-        <h1 className="font-display text-3xl font-extrabold tracking-tight">Finance</h1>
-        <p className="text-ink-2">
-          What the shop is making and what discounts cost you. Order profits use real Stripe fees and courier charges;
-          the item margins below assume the 3% + RM1 card fee.
-        </p>
+    <div className="mx-auto grid max-w-7xl gap-5 px-4 py-6 sm:px-6">
+      <div className="flex flex-wrap items-end justify-between gap-2">
+        <div className="grid max-w-[70ch] gap-0.5">
+          <h1 className="font-bubble text-3xl font-extrabold text-choc">Finance</h1>
+          <p className="text-sm text-ink-2">
+            What the shop is making and what discounts cost you. Order profits use real Stripe fees and courier charges;
+            the item margins below assume the 3% + RM1 card fee.
+          </p>
+        </div>
         <AutoRefresh seconds={60} />
       </div>
 
       <section aria-labelledby="money-heading" className="grid gap-4">
         <div className="flex flex-wrap items-center justify-between gap-3">
-          <h2 id="money-heading" className="font-display text-xl font-extrabold">
+          <h2 id="money-heading" className="font-bubble text-xl font-extrabold text-choc">
             Money in and out · {money.orders} paid orders
           </h2>
-          <nav aria-label="Period" className="flex flex-wrap gap-1">
+          <nav aria-label="Period" className="flex flex-wrap gap-1.5">
             {PERIODS.map((p) => (
-              <Link
-                key={p.days}
-                href={link({ days: p.days })}
-                className={`rounded-full px-3 py-1.5 text-sm font-semibold ${p.days === days ? "bg-ink text-ground" : "bg-surface text-ink-2"}`}
-              >
+              <PillLink key={p.days} href={link({ days: p.days })} active={p.days === days}>
                 {p.label}
-              </Link>
+              </PillLink>
             ))}
           </nav>
         </div>
-        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-          <Tile label="Collected from customers" value={money.collected} note="Products + delivery, after promo codes" />
-          <Tile
-            label="Product cost"
-            value={money.productCost}
-            note={money.costMissingUnits ? `${money.costMissingUnits} units have no cost price` : "At today's cost prices"}
+        <ul className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+          <FigureCard
+            label="Collected from customers"
+            value={formatMyr(money.collected)}
+            note="Products + delivery, after promo codes"
+            Icon={Banknote}
+            chip="bg-ok-bg text-ok-fg"
           />
-          <Tile label="Payment fees" value={realFees} note={anyEstimate ? "Stripe's real fees, estimated where not settled yet" : "Stripe's real fees"} />
-          <Tile
+          <FigureCard
+            label="Product cost"
+            value={formatMyr(money.productCost)}
+            note={money.costMissingUnits ? `${money.costMissingUnits} units have no cost price` : "At today's cost prices"}
+            Icon={Package}
+            chip="bg-peach/60 text-rust"
+          />
+          <FigureCard
+            label="Payment fees"
+            value={formatMyr(realFees)}
+            note={anyEstimate ? "Stripe's real fees, estimated where not settled yet" : "Stripe's real fees"}
+            Icon={CreditCard}
+            chip="bg-sunk text-terracotta-deep"
+          />
+          <FigureCard
             label="Profit"
-            value={realProfit}
+            value={formatMyr(realProfit)}
             tone={realProfit >= 0 ? "ok" : "bad"}
             note="Collected − cost − fees − courier − refunds"
+            Icon={Coins}
+            chip={realProfit >= 0 ? "bg-ok-bg text-ok-fg" : "bg-bad-bg text-bad-fg"}
           />
-        </div>
-        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
-          <Tile label="Given away: clearance" value={money.discounts.clearance} />
-          <Tile label="Given away: bundles" value={money.discounts.bundle} />
-          <Tile label="Given away: sales" value={money.discounts.sale} />
-          <Tile label="Given away: promo codes" value={money.codes} note="Sign-up and referral codes" />
-          <Tile label="Delivery you covered" value={covered} note={`Courier cost above what customers paid (${formatMyr(money.delivery)} charged)`} />
-        </div>
-        <p className="text-sm text-ink-2">
-          Discounts given in total: <strong>{formatMyr(discountTotal)}</strong>.
-          {money.unknownDiscountOrders > 0 &&
-            ` ${money.unknownDiscountOrders} older orders were placed before discounts were recorded, so their discounts aren't in these figures.`}
-          {cap != null && ` Free delivery covers up to ${formatMyr(Number(cap))} of the courier fee on orders over the minimum.`}
-        </p>
+        </ul>
+        <Panel title="Given away" Icon={Gift}>
+          <ul className="grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
+            <FigureCard compact label="Clearance" value={formatMyr(money.discounts.clearance)} />
+            <FigureCard compact label="Bundles" value={formatMyr(money.discounts.bundle)} />
+            <FigureCard compact label="Sales" value={formatMyr(money.discounts.sale)} />
+            <FigureCard compact label="Promo codes" value={formatMyr(money.codes)} note="Sign-up and referral codes" />
+            <FigureCard
+              compact
+              label="Delivery you covered"
+              value={formatMyr(covered)}
+              note={`Courier cost above what customers paid (${formatMyr(money.delivery)} charged)`}
+            />
+          </ul>
+          <p className="text-sm text-ink-2">
+            Discounts given in total: <strong className="text-choc">{formatMyr(discountTotal)}</strong>.
+            {money.unknownDiscountOrders > 0 &&
+              ` ${money.unknownDiscountOrders} older orders were placed before discounts were recorded, so their discounts aren't in these figures.`}
+            {cap != null && ` Free delivery covers up to ${formatMyr(Number(cap))} of the courier fee on orders over the minimum.`}
+          </p>
+        </Panel>
       </section>
 
-      <section aria-labelledby="order-profit-heading" className="grid gap-3">
-        <div>
-          <h2 id="order-profit-heading" className="font-display text-xl font-extrabold">
-            Profit per order
-          </h2>
-          <p className="text-sm text-ink-2">
-            Courier charges come from EasyParcel and Lalamove, payment fees from Stripe — filled in automatically. Tap an
-            order for the breakdown.
-          </p>
-        </div>
+      <Panel id="order-profit" title="Profit per order" Icon={Receipt}>
+        <p className="-mt-2 text-sm text-ink-2">
+          Courier charges come from EasyParcel and Lalamove, payment fees from Stripe — filled in automatically. Tap an
+          order for the breakdown.
+        </p>
         {perOrder.length === 0 ? (
-          <p className="text-sm text-ink-2">No paid orders in this period.</p>
+          <p className="rounded-xl border border-dashed border-line p-6 text-center text-sm text-ink-2">No paid orders in this period.</p>
         ) : (
           <ul className="grid gap-2">
             {perOrder.map(({ order, p }) => (
-              <li key={order.id} className="grid gap-1 rounded-2xl border-2 border-line bg-surface p-3">
-                <span className="flex flex-wrap justify-between gap-2 text-sm">
-                  <span>
-                    <strong>{order.order_number ?? order.id.slice(0, 8)}</strong>
-                    <span className="ml-2 text-ink-2">
+              <li key={order.id} className="grid gap-2 rounded-xl border border-line bg-ground/60 p-3">
+                <div className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1 text-sm">
+                  <span className="min-w-0">
+                    <strong className="text-choc">{order.order_number ?? order.id.slice(0, 8)}</strong>
+                    <span className="ml-2 text-ink-3">
                       {new Date(order.created_at).toLocaleDateString("en-MY", { timeZone: "Asia/Kuala_Lumpur" })} ·{" "}
                       {order.customer_name ?? "—"} · {order.shipping_method ?? "—"}
                     </span>
                   </span>
-                  <span className="font-semibold tabular-nums">{formatMyr(Number(order.total))}</span>
-                </span>
+                  <span className="font-bold tabular-nums text-choc">{formatMyr(Number(order.total))}</span>
+                </div>
                 <OrderProfit orderId={order.id} p={p} booked={Boolean(order.easyparcel_order_number || order.lalamove_order_id)} />
               </li>
             ))}
           </ul>
         )}
-      </section>
+      </Panel>
 
-      <section aria-labelledby="margin-heading" className="grid gap-4">
-        <div className="flex flex-wrap items-center justify-between gap-3">
-          <div>
-            <h2 id="margin-heading" className="font-display text-xl font-extrabold">
-              Margin on every item, under every discount
-            </h2>
-            <p className="text-sm text-ink-2">
-              {items.length} items with a cost price · average full-price margin {Math.round(avgMargin * 100)}% ·{" "}
-              <strong className={losing.length ? "text-bad-fg" : "text-ok-fg"}>
-                {losing.length} lose money in at least one case
-              </strong>
-            </p>
-          </div>
-          <Link href={link({ all: showAll ? undefined : "1", page: undefined })} className="text-sm font-semibold text-ink underline">
+      <Panel
+        id="margin"
+        title="Margin on every item, under every discount"
+        Icon={Percent}
+        action={
+          <PillLink href={link({ all: showAll ? undefined : "1", page: undefined })}>
             {showAll ? "Show only money-losers" : "Show all items"}
-          </Link>
-        </div>
+          </PillLink>
+        }
+      >
+        <p className="-mt-2 text-sm text-ink-2">
+          {items.length} items with a cost price · average full-price margin {Math.round(avgMargin * 100)}% ·{" "}
+          <strong className={losing.length ? "text-bad-fg" : "text-ok-fg"}>{losing.length} lose money in at least one case</strong>
+        </p>
 
         {(switchFixes > 0 || needRaise.length > 0) && (
-          <div className="grid gap-3 rounded-2xl border-2 border-ink bg-surface p-4">
-            <h3 className="font-display text-lg font-extrabold">Suggested fixes</h3>
+          <div className="grid gap-3 rounded-2xl bg-warn-bg/60 p-4">
+            <h3 className="flex items-center gap-2 font-bubble text-lg font-extrabold text-choc">
+              <Wrench className="size-[18px] text-warn-fg" aria-hidden />
+              Suggested fixes
+            </h3>
             {switchFixes > 0 && (
-              <form action={stopCodeStacking} className="flex flex-wrap items-center justify-between gap-3 rounded-xl bg-ground p-3">
-                <p className="text-sm">
+              <form action={stopCodeStacking} className="flex flex-wrap items-center justify-between gap-3 rounded-xl bg-surface p-3">
+                <p className="max-w-[70ch] text-sm text-ink">
                   <strong>Stop promo codes stacking on discounted prices.</strong> Codes still work on full-price items.
                   Fixes <strong>{switchFixes}</strong> item{switchFixes === 1 ? "" : "s"}.
                 </p>
-                <button type="submit" className="min-h-9 rounded-full bg-ok-bg px-4 text-sm font-semibold text-ok-fg">
+                <button type="submit" className="btn-chunk bg-choc px-5 text-sm text-cream">
                   Approve
                 </button>
               </form>
             )}
             {needRaise.length > 0 && (
-              <form action={raisePrices} className="flex flex-wrap items-center justify-between gap-3 rounded-xl bg-ground p-3">
+              <form action={raisePrices} className="flex flex-wrap items-center justify-between gap-3 rounded-xl bg-surface p-3">
                 {needRaise.map((i) => (
                   <input key={i.id} type="hidden" name="raise" value={`${i.id}:${i.safe}`} />
                 ))}
-                <p className="text-sm">
+                <p className="max-w-[70ch] text-sm text-ink">
                   <strong>Raise {needRaise.length} price{needRaise.length === 1 ? "" : "s"}</strong> so each keeps at least 5%
                   margin even at its deepest discount. The new price is shown on each item below.
                 </p>
-                <button type="submit" className="min-h-9 rounded-full bg-ok-bg px-4 text-sm font-semibold text-ok-fg">
+                <button type="submit" className="btn-chunk bg-choc px-5 text-sm text-cream">
                   Approve all
                 </button>
               </form>
             )}
-            <p className="text-xs text-ink-2">Approved fixes apply to the live shop straight away.</p>
+            <p className="text-xs text-warn-fg">Approved fixes apply to the live shop straight away.</p>
           </div>
         )}
 
         {shown.length === 0 ? (
-          <p className="rounded-2xl border-2 border-line bg-surface p-6 text-ink-2">No item loses money under any discount.</p>
+          <p className="rounded-xl border border-dashed border-line p-6 text-center text-sm text-ink-2">No item loses money under any discount.</p>
         ) : (
-          <div className="overflow-x-auto rounded-2xl border-2 border-line bg-surface">
+          <div className="overflow-x-auto rounded-xl border border-line">
             <table className="w-full min-w-[720px] text-sm">
-              <thead className="bg-ground text-left text-xs uppercase tracking-wide text-ink-2">
+              <thead className="bg-sunk text-left text-xs font-bold text-ink-2">
                 <tr>
-                  <th className="p-3">Item</th>
-                  <th className="p-3 text-right">Cost</th>
-                  <th className="p-3">Profit per unit, by how it&apos;s sold</th>
+                  <th scope="col" className="p-3">Item</th>
+                  <th scope="col" className="p-3 text-right">Cost</th>
+                  <th scope="col" className="p-3">Profit per unit, by how it&apos;s sold</th>
                 </tr>
               </thead>
-              <tbody>
+              <tbody className="divide-y divide-line">
                 {shown.map((i) => (
-                  <tr key={`${i.product}-${i.variant}`} className="border-t border-line align-top">
+                  <tr key={`${i.product}-${i.variant}`} className="align-top hover:bg-ground/60">
                     <td className="p-3">
-                      <span className="font-semibold">{i.product}</span>
-                      <span className="block text-xs text-ink-2">{i.variant}</span>
+                      <span className="font-semibold text-choc">{i.product}</span>
+                      <span className="block text-xs text-ink-3">{i.variant}</span>
                       {i.fixedBySwitch && <span className="mt-1 block text-xs font-semibold text-ok-fg">Fixed by stopping code stacking</span>}
                       {i.safe !== null && (
-                        <form action={raisePrices} className="mt-1 flex flex-wrap items-center gap-2 text-xs">
+                        <form action={raisePrices} className="mt-1.5 flex flex-wrap items-center gap-2 text-xs">
                           <input type="hidden" name="raise" value={`${i.id}:${i.safe}`} />
-                          <span>
-                            Raise {formatMyr(i.price)} → <strong>{formatMyr(i.safe)}</strong> (+
+                          <span className="text-ink-2">
+                            Raise {formatMyr(i.price)} → <strong className="text-choc">{formatMyr(i.safe)}</strong> (+
                             {Math.round((i.safe / i.price - 1) * 100)}%)
                           </span>
-                          <button type="submit" className="rounded-full bg-ok-bg px-2.5 py-0.5 font-semibold text-ok-fg">
+                          <button type="submit" className="btn-chunk min-h-8 bg-choc px-3 text-xs text-cream">
                             Approve
                           </button>
                         </form>
                       )}
                     </td>
-                    <td className="p-3 text-right tabular-nums">{formatMyr(i.cost)}</td>
+                    <td className="p-3 text-right tabular-nums text-ink-2">{formatMyr(i.cost)}</td>
                     <td className="p-3">
                       <ul className="flex flex-wrap gap-1.5">
                         {i.rows.map((r) => (
                           <li
                             key={r.label}
                             title={`Sold at ${formatMyr(r.price)}`}
-                            className={`rounded-lg px-2 py-1 text-xs tabular-nums ${r.profit < 0 ? "bg-bad-bg text-bad-fg" : r.margin < 0.1 ? "bg-warn-bg text-warn-fg" : "bg-ok-bg text-ok-fg"}`}
+                            className={`rounded-full px-2.5 py-1 text-xs tabular-nums ${r.profit < 0 ? "bg-bad-bg text-bad-fg" : r.margin < 0.1 ? "bg-warn-bg text-warn-fg" : "bg-ok-bg text-ok-fg"}`}
                           >
                             {r.label}: <strong>{formatMyr(r.profit)}</strong> ({Math.round(r.margin * 100)}%)
                           </li>
@@ -375,34 +382,22 @@ export default async function FinancePage({ searchParams }: PageProps<"/admin/fi
         )}
         {list.length > 20 && (
           <nav aria-label="Pages" className="flex flex-wrap items-center justify-between gap-3 text-sm">
-            <span className="text-ink-2">
+            <span className="tabular-nums text-ink-2">
               {(page - 1) * per + 1}–{Math.min(page * per, list.length)} of {list.length}
             </span>
-            <span className="flex items-center gap-1">
-              {page > 1 && (
-                <Link href={link({ page: page - 1 })} className="rounded-full bg-surface px-3 py-1.5 font-semibold">
-                  ← Previous
-                </Link>
-              )}
-              <span className="px-2 text-ink-2">
+            <span className="flex items-center gap-1.5">
+              {page > 1 && <PillLink href={link({ page: page - 1 })}>← Previous</PillLink>}
+              <span className="px-2 tabular-nums text-ink-2">
                 Page {page} of {pages}
               </span>
-              {page < pages && (
-                <Link href={link({ page: page + 1 })} className="rounded-full bg-surface px-3 py-1.5 font-semibold">
-                  Next →
-                </Link>
-              )}
+              {page < pages && <PillLink href={link({ page: page + 1 })}>Next →</PillLink>}
             </span>
-            <span className="flex items-center gap-1">
+            <span className="flex items-center gap-1.5">
               <span className="text-ink-2">Per page:</span>
               {[20, 50, 100].map((n) => (
-                <Link
-                  key={n}
-                  href={link({ per: n === 20 ? undefined : n, page: undefined })}
-                  className={`rounded-full px-2.5 py-1 font-semibold ${n === per ? "bg-ink text-ground" : "bg-surface text-ink-2"}`}
-                >
+                <PillLink key={n} href={link({ per: n === 20 ? undefined : n, page: undefined })} active={n === per}>
                   {n}
-                </Link>
+                </PillLink>
               ))}
             </span>
           </nav>
@@ -411,12 +406,12 @@ export default async function FinancePage({ searchParams }: PageProps<"/admin/fi
           Red = sold below cost after the card fee. Amber = under 10% margin. The shop gives only the single biggest
           discount.{" "}
           {stacking
-            ? "Right now a promo code can still come off on top of it at payment: that's the \u201cWorst\u201d case."
+            ? "Right now a promo code can still come off on top of it at payment: that's the “Worst” case."
             : "Promo codes can't be used on discounted prices, so a code only ever comes off a full-price item."}{" "}
           To protect an item, raise its price, leave it out of the sale in Admin → Offers &amp; sales, or lower the
           sign-up discount in Settings.
         </p>
-      </section>
+      </Panel>
     </div>
   );
 }
