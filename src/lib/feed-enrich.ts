@@ -82,6 +82,7 @@ const MALAY: Record<string, string> = {
   "dog:Pet Health / Medication": "ubat kutu anjing",
   "dog_cat:Grooming & Cleaning": "syampu kucing dan anjing",
   "small_pet:Small Animal Food": "makanan hamster",
+  "cat:Cat Litter": "pasir kucing",
 };
 
 /**
