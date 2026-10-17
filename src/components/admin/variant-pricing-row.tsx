@@ -36,7 +36,7 @@ export function VariantPricingRow({ variant, productId }: { variant: VariantPric
   const markup = markupFromPrice(cost, effective);
 
   return (
-    <div className="grid gap-4 rounded-[var(--radius-chunk)] border-2 border-line bg-surface p-4">
+    <div className="grid gap-4 rounded-xl border border-line bg-surface p-4">
       <div className="flex flex-wrap items-end gap-3">
         <form action={detailsAction} className="flex flex-wrap items-end gap-3">
           <input type="hidden" name="variant_id" value={variant.id} />
@@ -59,7 +59,7 @@ export function VariantPricingRow({ variant, productId }: { variant: VariantPric
               className="min-h-11 rounded-xl border-2 border-line bg-ground px-3 font-mono text-xs font-normal"
             />
           </label>
-          <button type="submit" disabled={detailsPending} className="btn-chunk bg-surface text-sm disabled:opacity-60">
+          <button type="submit" disabled={detailsPending} className="btn-chunk bg-surface text-choc text-sm disabled:opacity-60">
             {detailsPending ? "Saving…" : "Save details"}
           </button>
         </form>
@@ -139,14 +139,14 @@ export function VariantPricingRow({ variant, productId }: { variant: VariantPric
 
         <div className="grid gap-1 rounded-xl bg-sunk px-4 py-3 text-sm tabular-nums">
           <span className="text-xs font-bold uppercase tracking-widest text-ink-3">Sells at</span>
-          <span className="font-display text-2xl font-extrabold">{formatMyr(effective)}</span>
+          <span className="font-bubble text-2xl font-extrabold text-choc">{formatMyr(effective)}</span>
           <span className="text-ink-2">Profit {formatMyr(profitPerUnit(cost, effective))} per unit</span>
           <span className="text-ink-3">Currently {formatMyr(variant.price)}</span>
         </div>
       </div>
 
       <div className="flex flex-wrap items-center gap-3">
-        <button type="submit" disabled={pending} className="btn-chunk bg-tangerine text-sm disabled:opacity-60">
+        <button type="submit" disabled={pending} className="btn-chunk bg-choc text-cream text-sm disabled:opacity-60">
           {pending ? "Saving…" : "Save pricing"}
         </button>
         {state?.ok && (

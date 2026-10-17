@@ -1,6 +1,8 @@
-import { ImagePlus, Search } from "lucide-react";
+import { AlertTriangle, Boxes, FileSpreadsheet, ImagePlus, PackageMinus, PackageX, Plus, Search } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
+import { btnPrimary, btnSecondary, Notice, PageHeader, pageWrap } from "@/components/admin/form-parts";
+import { OrderStat } from "@/components/admin/order-card";
 import { type AdminProductRow, LOW_STOCK, ProductTable } from "@/components/admin/product-table";
 import { requireAdmin } from "@/lib/auth";
 import { formatMyr, marginFromPrice } from "@/lib/pricing";
@@ -145,47 +147,58 @@ export default async function AdminProducts({ searchParams }: PageProps<"/admin/
     return `/admin/products?${qs}`;
   };
 
-  const select = "min-h-11 rounded-full border-2 border-line bg-surface px-4 text-sm font-semibold";
+  const select = "min-h-11 rounded-xl border border-line bg-ground px-3 text-sm font-semibold text-choc";
+  const outCount = rows.filter((r) => r.stock === 0).length;
+  const lowCount = rows.filter((r) => r.stock > 0 && r.stock <= LOW_STOCK).length;
+  const reviewCount = rows.filter((r) => r.needsReview).length;
 
   return (
-    <div className="mx-auto grid max-w-6xl gap-6 px-4 py-8">
-
-      <div className="flex flex-wrap items-end justify-between gap-4">
-        <div>
-          <h1 className="font-display text-3xl font-extrabold tracking-tight">Products &amp; stock</h1>
-          <p className="text-sm text-ink-2">
+    <div className={pageWrap}>
+      <PageHeader
+        title="Products & stock"
+        description={
+          <>
             {total} {total === 1 ? "product" : "products"}
             {filtered ? " match these filters" : ""}
-          </p>
-        </div>
-        <div className="flex flex-wrap gap-2">
-          <Link href="/admin/products/new" className="btn-chunk bg-lagoon text-sm">
-            + Add product
-          </Link>
-          <Link href="/admin/products/photos" className="btn-chunk bg-tangerine text-sm">
-            <ImagePlus className="size-4" aria-hidden /> Bulk photo upload
-          </Link>
-          <Link href="/admin/import" className="btn-chunk bg-sunshine text-sm">
-            Bulk import / export (Excel)
-          </Link>
-        </div>
-      </div>
+          </>
+        }
+        actions={
+          <>
+            <Link href="/admin/products/new" className={btnPrimary}>
+              <Plus className="size-4" aria-hidden /> Add product
+            </Link>
+            <Link href="/admin/products/photos" className={btnSecondary}>
+              <ImagePlus className="size-4" aria-hidden /> Bulk photo upload
+            </Link>
+            <Link href="/admin/import" className={btnSecondary}>
+              <FileSpreadsheet className="size-4" aria-hidden /> Bulk import / export (Excel)
+            </Link>
+          </>
+        }
+      />
 
-      <form className="grid gap-3" role="search">
-        <div className="flex flex-wrap gap-3">
+      <ul className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+        <OrderStat label="Products" count={total} note={filtered ? "Matching these filters" : "In the catalogue"} href="/admin/products" Icon={Boxes} chip="bg-peach/60 text-rust" />
+        <OrderStat label="Out of stock" count={outCount} note="In this list" href="/admin/products?stock=out" Icon={PackageX} chip="bg-bad-bg text-bad-fg" />
+        <OrderStat label="Low stock" count={lowCount} note={`${LOW_STOCK} or fewer left`} href="/admin/products?stock=low" Icon={PackageMinus} chip="bg-warn-bg text-warn-fg" />
+        <OrderStat label="Needs review" count={reviewCount} note="In this list" href="/admin/products?review=yes" Icon={AlertTriangle} chip="bg-sunk text-terracotta-deep" />
+      </ul>
+
+      <form className="grid gap-3 rounded-2xl border border-line bg-surface p-3 shadow-[var(--shadow-chunk)] sm:p-4" role="search">
+        <div className="flex flex-wrap gap-2">
           <label htmlFor="q" className="sr-only">
             Search products
           </label>
-          <div className="flex min-w-60 flex-1 items-center gap-2 rounded-full border-2 border-line bg-surface px-4">
-            <Search className="size-4 text-ink-3" aria-hidden />
+          <span className="relative min-w-60 flex-1">
+            <Search className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-ink-3" aria-hidden />
             <input
               id="q"
               name="q"
               defaultValue={f.q}
               placeholder="Search by product name"
-              className="min-h-11 flex-1 bg-transparent text-sm outline-none"
+              className="min-h-11 w-full rounded-xl border border-line bg-ground pr-3 pl-9 text-sm placeholder:text-ink-3"
             />
-          </div>
+          </span>
           <select name="sort" defaultValue={f.sort} aria-label="Sort by" className={select}>
             <option value="name">Sort: name A–Z</option>
             <option value="price_asc">Price: low to high</option>
@@ -195,7 +208,7 @@ export default async function AdminProducts({ searchParams }: PageProps<"/admin/
             <option value="updated">Recently updated</option>
           </select>
         </div>
-        <div className="flex flex-wrap gap-2">
+        <div className="grid grid-cols-2 gap-2 sm:flex sm:flex-wrap">
           <select name="status" defaultValue={f.status} aria-label="Status" className={select}>
             <option value="all">All statuses</option>
             <option value="published">Published</option>
@@ -245,11 +258,11 @@ export default async function AdminProducts({ searchParams }: PageProps<"/admin/
             <option value="">Any price</option>
             <option value="zero">Price missing (RM0)</option>
           </select>
-          <button type="submit" className="btn-chunk bg-surface text-sm">
+          <button type="submit" className={btnPrimary}>
             Apply
           </button>
           {filtered && (
-            <Link href="/admin/products" className="btn-chunk bg-surface text-sm">
+            <Link href="/admin/products" className={btnSecondary}>
               Clear filters
             </Link>
           )}
@@ -257,24 +270,22 @@ export default async function AdminProducts({ searchParams }: PageProps<"/admin/
       </form>
 
       {error && (
-        <p role="alert" className="rounded-[var(--radius-chunk)] border-2 border-ink bg-bad-bg p-4 text-bad-fg">
-          Couldn&apos;t load products: {error.message}
-        </p>
+        <Notice tone="bad">Couldn&apos;t load products: {error.message}</Notice>
       )}
 
       {pageRows.length === 0 ? (
-        <p className="rounded-[var(--radius-chunk)] border-2 border-line bg-surface p-6 text-ink-2">
+        <p className="rounded-2xl border border-dashed border-line bg-surface p-8 text-center text-ink-2">
           {filtered ? (
             <>
               No products match these filters.{" "}
-              <Link href="/admin/products" className="underline">
+              <Link href="/admin/products" className="font-semibold text-terracotta-deep underline">
                 Clear filters
               </Link>
             </>
           ) : (
             <>
               No products yet. Use{" "}
-              <Link href="/admin/import" className="underline">
+              <Link href="/admin/import" className="font-semibold text-terracotta-deep underline">
                 Import &amp; export
               </Link>{" "}
               to load your Excel catalogue.
@@ -293,9 +304,9 @@ export default async function AdminProducts({ searchParams }: PageProps<"/admin/
       )}
 
       {lastPage > 1 && (
-        <nav aria-label="Pages" className="flex items-center gap-3 text-sm">
+        <nav aria-label="Pages" className="flex flex-wrap items-center justify-center gap-3 text-sm">
           {page > 1 && (
-            <Link href={href(page - 1)} className="btn-chunk bg-surface text-sm">
+            <Link href={href(page - 1)} className={btnSecondary}>
               Previous
             </Link>
           )}
@@ -303,7 +314,7 @@ export default async function AdminProducts({ searchParams }: PageProps<"/admin/
             Page {page} of {lastPage}
           </span>
           {page < lastPage && (
-            <Link href={href(page + 1)} className="btn-chunk bg-surface text-sm">
+            <Link href={href(page + 1)} className={btnSecondary}>
               Next
             </Link>
           )}

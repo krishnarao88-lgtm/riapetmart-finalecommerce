@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { btnPrimary, btnSecondary, Notice, PageHeader, pageWrap } from "@/components/admin/form-parts";
 import { requireAdmin } from "@/lib/auth";
 import { unitProfit } from "@/lib/finance";
 import { formatMyr } from "@/lib/pricing";
@@ -48,23 +49,18 @@ export default async function PricingPage({ searchParams }: PageProps<"/admin/pr
   const rows = (data ?? []) as unknown as Suggestion[];
 
   return (
-    <div className="mx-auto grid max-w-5xl gap-6 px-4 py-8">
-      <div className="grid gap-1">
-        <h1 className="font-display text-3xl font-extrabold tracking-tight">Price suggestions</h1>
-        <p className="text-ink-2">
-          Prices checked against what other Malaysian shops charge for the same product. Nothing changes until you
-          approve, and a price is never approved below cost plus 5% after the card fee.
-        </p>
-      </div>
+    <div className={pageWrap}>
+      <PageHeader
+        title="Price suggestions"
+        description="Prices checked against what other Malaysian shops charge for the same product. Nothing changes until you approve, and a price is never approved below cost plus 5% after the card fee."
+      />
 
       {error === "floor" && (
-        <p role="alert" className="rounded-xl bg-bad-bg p-3 text-sm font-semibold text-bad-fg">
-          That price would leave less than 5% margin after the card fee, so it wasn&apos;t applied.
-        </p>
+        <Notice tone="bad">That price would leave less than 5% margin after the card fee, so it wasn&apos;t applied.</Notice>
       )}
 
       {rows.length === 0 ? (
-        <p className="rounded-2xl border-2 border-line bg-surface p-6 text-ink-2">No suggestions waiting.</p>
+        <p className="rounded-2xl border border-dashed border-line bg-surface p-8 text-center text-ink-2">No suggestions waiting.</p>
       ) : (
         <ul className="grid gap-4">
           {rows.map((s) => {
@@ -74,9 +70,9 @@ export default async function PricingPage({ searchParams }: PageProps<"/admin/pr
             const next = Number(s.suggested_price);
             const change = Math.round((next / now - 1) * 100);
             return (
-              <li key={s.id} className="grid gap-3 rounded-2xl border-2 border-line bg-surface p-4">
+              <li key={s.id} className="grid gap-4 rounded-2xl border border-line bg-surface p-5 shadow-[var(--shadow-chunk)]">
                 <div className="flex flex-wrap items-baseline justify-between gap-2">
-                  <Link href={`/shop/${v?.products?.slug}`} target="_blank" className="font-bold underline">
+                  <Link href={`/shop/${v?.products?.slug}`} target="_blank" className="font-bold text-choc underline decoration-line underline-offset-2 hover:text-terracotta-deep">
                     {v?.products?.name} <span className="font-normal text-ink-2">· {v?.title}</span>
                   </Link>
                   <span
@@ -87,20 +83,20 @@ export default async function PricingPage({ searchParams }: PageProps<"/admin/pr
                   </span>
                 </div>
 
-                <div className="grid gap-3 text-sm sm:grid-cols-3">
-                  <div className="grid gap-0.5">
-                    <span className="text-xs font-bold uppercase text-ink-2">Now</span>
-                    <span className="text-lg font-extrabold tabular-nums">{formatMyr(now)}</span>
+                <div className="grid gap-2 text-sm sm:grid-cols-3">
+                  <div className="grid gap-0.5 rounded-xl bg-cream p-3">
+                    <span className="text-[11px] font-bold uppercase tracking-wider text-ink-3">Now</span>
+                    <span className="font-bubble text-lg font-extrabold tabular-nums text-choc">{formatMyr(now)}</span>
                     <Margin price={now} cost={cost} />
                   </div>
-                  <div className="grid gap-0.5">
-                    <span className="text-xs font-bold uppercase text-ink-2">Suggested</span>
-                    <span className="text-lg font-extrabold tabular-nums">{formatMyr(next)}</span>
+                  <div className="grid gap-0.5 rounded-xl bg-cream p-3">
+                    <span className="text-[11px] font-bold uppercase tracking-wider text-ink-3">Suggested</span>
+                    <span className="font-bubble text-lg font-extrabold tabular-nums text-choc">{formatMyr(next)}</span>
                     <Margin price={next} cost={cost} />
                   </div>
-                  <div className="grid gap-0.5">
-                    <span className="text-xs font-bold uppercase text-ink-2">Market</span>
-                    <span className="text-lg font-extrabold tabular-nums">
+                  <div className="grid gap-0.5 rounded-xl bg-cream p-3">
+                    <span className="text-[11px] font-bold uppercase tracking-wider text-ink-3">Market</span>
+                    <span className="font-bubble text-lg font-extrabold tabular-nums text-choc">
                       {s.market_low != null && s.market_high != null
                         ? `${formatMyr(Number(s.market_low))} – ${formatMyr(Number(s.market_high))}`
                         : "—"}
@@ -114,7 +110,7 @@ export default async function PricingPage({ searchParams }: PageProps<"/admin/pr
                   <ul className="flex flex-wrap gap-2 text-xs">
                     {s.sources.map((src) => (
                       <li key={src.url}>
-                        <a href={src.url} target="_blank" rel="noopener noreferrer" className="rounded-full bg-ground px-2.5 py-1 underline">
+                        <a href={src.url} target="_blank" rel="noopener noreferrer" className="inline-flex min-h-8 items-center rounded-full bg-sunk px-2.5 text-ink-2 underline hover:bg-peach/50">
                           {src.name}: {formatMyr(Number(src.price))}
                         </a>
                       </li>
@@ -122,14 +118,14 @@ export default async function PricingPage({ searchParams }: PageProps<"/admin/pr
                   </ul>
                 )}
 
-                <div className="flex gap-2">
+                <div className="flex flex-wrap gap-2 border-t border-line pt-3">
                   {(["approve", "reject"] as const).map((d) => (
                     <form key={d} action={decidePriceSuggestion}>
                       <input type="hidden" name="id" value={s.id} />
                       <input type="hidden" name="decision" value={d} />
                       <button
                         type="submit"
-                        className={`min-h-9 rounded-full px-4 text-sm font-semibold ${d === "approve" ? "bg-ok-bg text-ok-fg" : "bg-bad-bg text-bad-fg"}`}
+                        className={d === "approve" ? btnPrimary : btnSecondary}
                       >
                         {d === "approve" ? `Approve ${formatMyr(next)}` : "Keep current price"}
                       </button>

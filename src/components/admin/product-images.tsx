@@ -15,7 +15,7 @@ function UploadButton({ uploading }: { uploading: boolean }) {
   const { pending } = useFormStatus();
   const busy = pending || uploading;
   return (
-    <button type="submit" disabled={busy} className="btn-chunk bg-tangerine text-sm disabled:opacity-60">
+    <button type="submit" disabled={busy} className="btn-chunk bg-choc text-cream text-sm disabled:opacity-60">
       <Upload className="size-4" aria-hidden />
       {busy ? "Uploading…" : "Upload photos"}
     </button>

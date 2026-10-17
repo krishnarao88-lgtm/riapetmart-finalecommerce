@@ -12,7 +12,7 @@ export function ImportForm() {
 
   return (
     <div className="grid gap-5">
-      <form action={action} className="grid gap-4 rounded-[var(--radius-chunk)] border-2 border-ink bg-surface p-5">
+      <form action={action} className="grid gap-4 rounded-2xl border border-line bg-surface shadow-[var(--shadow-chunk)] p-5">
         <label className="grid gap-2 text-sm font-semibold" htmlFor="file">
           Excel (.xlsx) or CSV file
           <span className="text-xs font-normal text-ink-3">
@@ -34,7 +34,7 @@ export function ImportForm() {
             name="mode"
             value="preview"
             disabled={pending}
-            className="btn-chunk bg-sunshine text-sm disabled:opacity-60"
+            className="btn-chunk bg-surface text-choc text-sm disabled:opacity-60"
           >
             <Upload className="size-5" aria-hidden />
             {pending ? "Reading…" : "Check the file"}
@@ -45,7 +45,7 @@ export function ImportForm() {
               name="mode"
               value="apply"
               disabled={pending}
-              className="btn-chunk bg-tangerine text-sm disabled:opacity-60"
+              className="btn-chunk bg-choc text-cream text-sm disabled:opacity-60"
             >
               Import {preview.productCount} products
             </button>
@@ -60,7 +60,7 @@ export function ImportForm() {
       </form>
 
       {preview && (
-        <div className="grid gap-4 rounded-[var(--radius-chunk)] border-2 border-ink bg-surface p-5">
+        <div className="grid gap-4 rounded-2xl border border-line bg-surface shadow-[var(--shadow-chunk)] p-5">
           {preview.mode === "applied" ? (
             <p role="status" className="flex items-center gap-2 font-semibold text-ok-fg">
               <CheckCircle2 className="size-5" aria-hidden /> {preview.message}
@@ -80,7 +80,7 @@ export function ImportForm() {
             ].map(([label, value]) => (
               <div key={String(label)} className="rounded-xl bg-sunk p-3">
                 <dt className="text-xs font-bold uppercase tracking-widest text-ink-3">{label}</dt>
-                <dd className="font-display text-2xl font-extrabold tabular-nums">{value}</dd>
+                <dd className="font-bubble text-2xl font-extrabold text-choc tabular-nums">{value}</dd>
               </div>
             ))}
           </dl>

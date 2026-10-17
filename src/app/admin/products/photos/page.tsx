@@ -1,5 +1,7 @@
 import type { Metadata } from "next";
+import { ArrowLeft } from "lucide-react";
 import Link from "next/link";
+import { Notice, pageWrap } from "@/components/admin/form-parts";
 import { BulkPhotoUpload, type PhotoTarget } from "@/components/admin/bulk-photo-upload";
 import { requireAdmin } from "@/lib/auth";
 
@@ -33,23 +35,21 @@ export default async function BulkPhotosPage() {
   const withoutPhoto = products.filter((p) => p.photos === 0).length;
 
   return (
-    <div className="mx-auto grid max-w-6xl gap-6 px-4 py-8">
-      <div>
-        <Link href="/admin/products" className="text-sm font-semibold underline">
-          ← Products &amp; stock
+    <div className={pageWrap}>
+      <div className="grid gap-1">
+        <Link href="/admin/products" className="inline-flex w-fit items-center gap-1 text-sm font-semibold text-ink-2 hover:text-terracotta-deep">
+          <ArrowLeft className="size-4" aria-hidden /> Products &amp; stock
         </Link>
-        <h1 className="mt-2 font-display text-3xl font-extrabold tracking-tight">Bulk photo upload</h1>
+        <h1 className="font-bubble text-3xl font-extrabold text-choc">Bulk photo upload</h1>
         <p className="text-sm text-ink-2">
           {withoutPhoto} of {products.length} products have no photo yet.{" "}
-          <Link href="/admin/products?photo=none" className="underline">
+          <Link href="/admin/products?photo=none" className="font-semibold text-terracotta-deep underline">
             See which ones
           </Link>
         </p>
       </div>
       {error ? (
-        <p role="alert" className="rounded-[var(--radius-chunk)] border-2 border-ink bg-bad-bg p-4 text-bad-fg">
-          Couldn&apos;t load products: {error.message}
-        </p>
+        <Notice tone="bad">Couldn&apos;t load products: {error.message}</Notice>
       ) : (
         <BulkPhotoUpload products={products} />
       )}

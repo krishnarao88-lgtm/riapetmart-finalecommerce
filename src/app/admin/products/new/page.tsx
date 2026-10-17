@@ -1,13 +1,15 @@
 import type { Metadata } from "next";
+import { ArrowLeft } from "lucide-react";
 import Link from "next/link";
+import { btnPrimary, inputCls, labelCls, Notice, pageWrap } from "@/components/admin/form-parts";
 import { SizeFields } from "@/components/admin/size-fields";
 import { requireAdmin } from "@/lib/auth";
 import { createProduct } from "../create-actions";
 
 export const metadata: Metadata = { title: "Add product", robots: { index: false } };
 
-const field = "min-h-11 w-full rounded-xl border-2 border-line bg-ground px-3 font-normal";
-const label = "grid gap-1 text-sm font-semibold";
+const field = inputCls;
+const label = labelCls;
 
 export default async function NewProduct({ searchParams }: PageProps<"/admin/products/new">) {
   const { supabase } = await requireAdmin();
@@ -18,16 +20,17 @@ export default async function NewProduct({ searchParams }: PageProps<"/admin/pro
   ]);
 
   return (
-    <div className="mx-auto grid max-w-3xl gap-6 px-4 py-8">
+    <div className={pageWrap}>
+      <div className="grid w-full max-w-3xl gap-5">
       <div className="grid gap-1">
-        <Link href="/admin/products" className="text-sm text-ink-2 underline">
-          ← All products
+        <Link href="/admin/products" className="inline-flex w-fit items-center gap-1 text-sm font-semibold text-ink-2 hover:text-terracotta-deep">
+          <ArrowLeft className="size-4" aria-hidden /> All products
         </Link>
-        <h1 className="font-display text-3xl font-extrabold tracking-tight">Add a product</h1>
+        <h1 className="font-bubble text-3xl font-extrabold text-choc">Add a product</h1>
         <p className="text-sm text-ink-2">
           It&apos;s saved as a <strong>draft</strong> (hidden from shoppers). Next you&apos;ll add photos, description and
           more sizes, then set it to Published. Adding lots at once?{" "}
-          <Link href="/admin/import" className="underline">
+          <Link href="/admin/import" className="font-semibold text-terracotta-deep underline">
             Use the Excel import
           </Link>
           .
@@ -35,12 +38,10 @@ export default async function NewProduct({ searchParams }: PageProps<"/admin/pro
       </div>
 
       {error && (
-        <p role="alert" className="rounded-xl bg-bad-bg px-3 py-2 text-sm font-semibold text-bad-fg">
-          {error}
-        </p>
+        <Notice tone="bad">{error}</Notice>
       )}
 
-      <form action={createProduct} className="grid gap-5 rounded-[var(--radius-chunk)] border-2 border-ink bg-surface p-5">
+      <form action={createProduct} className="grid gap-5 rounded-2xl border border-line bg-surface p-5 shadow-[var(--shadow-chunk)]">
         <div className="grid gap-3 sm:grid-cols-2">
           <label className={`${label} sm:col-span-2`}>
             Product name *
@@ -76,20 +77,21 @@ export default async function NewProduct({ searchParams }: PageProps<"/admin/pro
             </select>
           </label>
           <label className={label}>
-            Size shown on the card <span className="font-normal text-ink-2">(optional)</span>
+            Size shown on the card <span className="font-normal text-ink-3">(optional)</span>
             <input name="size_display" placeholder="e.g. 2kg" className={field} />
           </label>
         </div>
 
         <fieldset className="grid gap-3 border-t border-line pt-4">
-          <legend className="font-bold">First size, price &amp; stock</legend>
+          <legend className="font-bubble text-lg font-extrabold text-choc">First size, price &amp; stock</legend>
           <SizeFields />
         </fieldset>
 
-        <button type="submit" className="btn-chunk w-fit bg-sunshine">
+        <button type="submit" className={`${btnPrimary} w-fit`}>
           Save draft &amp; add photos →
         </button>
       </form>
+      </div>
     </div>
   );
 }

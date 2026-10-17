@@ -22,19 +22,19 @@ export default async function AdminLogin({ searchParams }: PageProps<"/admin/log
     <div className="grid min-h-dvh place-items-center px-4 py-12">
       <div className="grid w-full max-w-md gap-6 rounded-3xl border border-line bg-surface p-8 shadow-[var(--shadow-chunk)] sm:p-10">
         <div className="grid justify-items-center gap-1 border-b border-line pb-6 text-center">
-          <span className="grid size-12 place-items-center rounded-full bg-terracotta text-white">
+          <span className="grid size-12 place-items-center rounded-full bg-peach/60 text-rust">
             <PawPrint className="size-6" aria-hidden />
           </span>
-          <h1 className="mt-2 font-display text-3xl font-extrabold tracking-tight">Ria Pet Mart Staff Portal</h1>
+          <h1 className="mt-2 font-bubble text-3xl font-extrabold text-choc">Ria Pet Mart Staff Portal</h1>
           <p className="text-sm text-ink-2">Sign in to manage orders, products and the shop.</p>
         </div>
 
-        <form action={signInWithPassword} className="grid gap-3">
-          <label htmlFor="password-email" className="sr-only">
+        <form action={signInWithPassword} className="grid gap-1.5">
+          <label htmlFor="password-email" className="text-sm font-semibold text-choc">
             Work email
           </label>
           <input id="password-email" name="email" type="email" required autoComplete="email" placeholder="Work email address" className={input} />
-          <label htmlFor="password" className="sr-only">
+          <label htmlFor="password" className="mt-1 text-sm font-semibold text-choc">
             Password
           </label>
           <input
@@ -49,11 +49,11 @@ export default async function AdminLogin({ searchParams }: PageProps<"/admin/log
             className={input}
           />
           {message && (
-            <p id="login-error" role="alert" className="text-sm font-medium text-bad-fg">
+            <p id="login-error" role="alert" className="mt-1 rounded-xl bg-bad-bg px-3 py-2 text-sm font-semibold text-bad-fg">
               {message}
             </p>
           )}
-          <button type="submit" className="mt-2 min-h-12 rounded-xl bg-terracotta-deep font-semibold text-white hover:brightness-95 active:scale-[0.99]">
+          <button type="submit" className="mt-3 min-h-12 rounded-xl bg-choc font-semibold text-cream hover:brightness-110 active:scale-[0.99]">
             Sign in
           </button>
         </form>
@@ -68,7 +68,7 @@ export default async function AdminLogin({ searchParams }: PageProps<"/admin/log
               <Mail className="size-4" aria-hidden /> Forgot your password? Email me a sign-in link
             </summary>
             <form action={sendMagicLink} className="mt-3 grid gap-2">
-              <label htmlFor="email" className="sr-only">
+              <label htmlFor="email" className="text-sm font-semibold text-choc">
                 Work email
               </label>
               <input
@@ -81,7 +81,7 @@ export default async function AdminLogin({ searchParams }: PageProps<"/admin/log
                 aria-invalid={error === "email"}
                 className={input}
               />
-              <button type="submit" className="min-h-11 rounded-xl border border-line font-semibold hover:bg-sunk">
+              <button type="submit" className="min-h-11 rounded-xl border border-line bg-surface font-semibold text-choc hover:bg-sunk">
                 Send sign-in link
               </button>
             </form>

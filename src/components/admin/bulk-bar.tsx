@@ -229,7 +229,7 @@ export function BulkBar({
         <button
           type="submit"
           disabled={!action || pending || (action === "delete" && confirm.trim() !== `DELETE ${count}`)}
-          className={`btn-chunk text-sm disabled:opacity-50 ${action === "delete" ? "bg-bad-bg text-bad-fg" : "bg-grape text-surface"}`}
+          className={`btn-chunk text-sm disabled:opacity-50 ${action === "delete" ? "bg-bad-bg text-bad-fg" : "bg-choc text-cream"}`}
         >
           {pending ? "Working…" : "Apply"}
         </button>

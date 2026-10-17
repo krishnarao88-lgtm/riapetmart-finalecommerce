@@ -10,7 +10,7 @@ export function MfaSetup() {
   const enrolling = state && "factorId" in state;
 
   return (
-    <form action={action} className="grid gap-4 rounded-[var(--radius-chunk)] border-2 border-ink bg-surface p-5 shadow-[var(--shadow-chunk)]">
+    <form action={action} className="grid gap-4 rounded-2xl border border-line bg-surface p-5 shadow-[var(--shadow-chunk)]">
       {enrolling ? (
         <>
           <ol className="grid list-decimal gap-2 pl-5 text-ink-2">
@@ -25,7 +25,7 @@ export function MfaSetup() {
             <code className="break-all rounded-xl border-2 border-line bg-ground px-3 py-2">{state.secret}</code>
           </p>
           <CodeField error={state.error} />
-          <button type="submit" disabled={pending} className="btn-chunk bg-tangerine">
+          <button type="submit" disabled={pending} className="btn-chunk bg-choc text-cream">
             <ShieldCheck className="size-5" aria-hidden /> Turn on 2-step verification
           </button>
         </>
@@ -36,7 +36,7 @@ export function MfaSetup() {
               {state.error}
             </p>
           )}
-          <button type="submit" disabled={pending} className="btn-chunk bg-tangerine">
+          <button type="submit" disabled={pending} className="btn-chunk bg-choc text-cream">
             <ShieldCheck className="size-5" aria-hidden /> Turn on
           </button>
         </>

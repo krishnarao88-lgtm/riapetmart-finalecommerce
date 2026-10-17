@@ -108,7 +108,7 @@ export function PromotionForm({
           <input type="checkbox" name="is_active" defaultChecked={promo?.is_active ?? false} className="size-5" />
           Approved: runs on its dates
         </label>
-        <button type="submit" disabled={pending} className="btn-chunk bg-grape text-sm text-surface disabled:opacity-60">
+        <button type="submit" disabled={pending} className="btn-chunk bg-choc text-sm text-cream disabled:opacity-60">
           {pending ? "Saving…" : promo ? "Save" : "Add sale"}
         </button>
         {state?.ok && <span className="text-sm font-semibold text-ok-fg">{state.ok}</span>}
