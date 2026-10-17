@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 import { uploadProductImage } from "@/app/admin/products/actions";
 import { BulkBar, type Option } from "@/components/admin/bulk-bar";
+import { pillCls, StatusPill } from "@/components/admin/form-parts";
 import { QuickEdit } from "@/components/admin/quick-edit";
 import { formatPercent } from "@/lib/pricing";
 import { shrinkImage } from "@/lib/shrink-image";
@@ -39,9 +40,9 @@ export type AdminProductRow = {
 };
 
 function StockCell({ stock }: { stock: number }) {
-  if (stock === 0) return <span className="font-semibold text-bad-fg">Out of stock</span>;
-  if (stock <= LOW_STOCK) return <span className="font-semibold text-warn-fg">{stock} (low)</span>;
-  return <>{stock}</>;
+  if (stock === 0) return <span className={`${pillCls} bg-bad-bg text-bad-fg`}>Out of stock</span>;
+  if (stock <= LOW_STOCK) return <span className={`${pillCls} bg-warn-bg text-warn-fg`}>{stock} (low)</span>;
+  return <span className={`${pillCls} bg-ok-bg text-ok-fg`}>{stock}</span>;
 }
 
 /** Camera button on each row: pick photos, they're shrunk in the browser and attached to that product. */
@@ -52,7 +53,7 @@ function RowPhotoButton({ row }: { row: AdminProductRow }) {
 
   return (
     <label
-      className="relative grid size-12 shrink-0 cursor-pointer place-items-center overflow-hidden rounded-lg border-2 border-line bg-ground"
+      className="relative grid size-12 shrink-0 cursor-pointer place-items-center overflow-hidden rounded-xl border border-line bg-cream"
       title={error ?? (row.image ? "Add another photo" : "Add a photo")}
     >
       {row.image ? (
@@ -147,12 +148,12 @@ export function ProductTable({
   return (
     <div className="grid gap-3 pb-28">
       <div className="flex flex-wrap items-center gap-2">
-        <div role="group" aria-label="View" className="inline-flex rounded-full border-2 border-line bg-surface p-1">
+        <div role="group" aria-label="View" className="inline-flex gap-1 rounded-full border border-line bg-surface p-1">
           <button
             type="button"
             onClick={() => setMode("list")}
             aria-pressed={mode === "list"}
-            className={`inline-flex min-h-9 items-center gap-1 rounded-full px-3 text-sm font-semibold ${mode === "list" ? "bg-grape text-surface" : ""}`}
+            className={`inline-flex min-h-9 items-center gap-1 rounded-full px-3 text-sm font-semibold ${mode === "list" ? "bg-choc text-cream" : "text-ink-2 hover:bg-peach/50"}`}
           >
             <Table className="size-4" aria-hidden /> List
           </button>
@@ -160,7 +161,7 @@ export function ProductTable({
             type="button"
             onClick={() => setMode("edit")}
             aria-pressed={mode === "edit"}
-            className={`inline-flex min-h-9 items-center gap-1 rounded-full px-3 text-sm font-semibold ${mode === "edit" ? "bg-grape text-surface" : ""}`}
+            className={`inline-flex min-h-9 items-center gap-1 rounded-full px-3 text-sm font-semibold ${mode === "edit" ? "bg-choc text-cream" : "text-ink-2 hover:bg-peach/50"}`}
           >
             <Pencil className="size-4" aria-hidden /> Quick edit
           </button>
@@ -171,18 +172,18 @@ export function ProductTable({
       </div>
 
       {mode === "list" && pageAllSelected && allIds.length > pageIds.length && (
-        <p className="rounded-xl bg-sunk p-3 text-sm">
+        <p className="rounded-xl bg-peach/40 p-3 text-sm text-choc">
           {allMatching ? (
             <>
               All <strong>{allIds.length}</strong> matching products are selected.{" "}
-              <button type="button" onClick={clear} className="font-semibold underline">
+              <button type="button" onClick={clear} className="font-semibold text-choc underline decoration-line underline-offset-2 hover:text-terracotta-deep hover:decoration-terracotta">
                 Clear selection
               </button>
             </>
           ) : (
             <>
               All {pageIds.length} on this page are selected.{" "}
-              <button type="button" onClick={() => setAllMatching(true)} className="font-semibold underline">
+              <button type="button" onClick={() => setAllMatching(true)} className="font-semibold text-choc underline decoration-line underline-offset-2 hover:text-terracotta-deep hover:decoration-terracotta">
                 Select all {allIds.length} matching products
               </button>
             </>
@@ -193,10 +194,11 @@ export function ProductTable({
       {mode === "edit" ? (
         <QuickEdit rows={rows} />
       ) : (
-        <div className="overflow-x-auto rounded-[var(--radius-chunk)] border-2 border-ink bg-surface">
-          <table className="w-full min-w-3xl text-sm">
-            <thead>
-              <tr className="border-b-2 border-line text-left text-xs uppercase tracking-widest text-ink-3">
+        <div className="overflow-x-auto rounded-2xl border border-line bg-surface shadow-[var(--shadow-chunk)]">
+          {/* Below md each row stacks into a card: checkbox, product, then a two-column grid of facts. */}
+          <table className="w-full text-sm max-md:block md:min-w-3xl">
+            <thead className="bg-cream/70 max-md:block">
+              <tr className="border-b border-line text-left text-xs font-bold text-ink-2 max-md:flex max-md:items-center">
                 <th className="w-10 p-3">
                   <input
                     type="checkbox"
@@ -206,21 +208,21 @@ export function ProductTable({
                     className="size-4"
                   />
                 </th>
-                <th className="p-3">Product</th>
-                <th className="p-3">Price</th>
-                <th className="p-3">Margin</th>
-                <th className="p-3">Stock</th>
-                <th className="p-3">Nearest expiry</th>
-                <th className="p-3">Status</th>
+                <th className="p-3 max-md:pl-0">Product</th>
+                <th className="p-3 max-md:hidden">Price</th>
+                <th className="p-3 max-md:hidden">Margin</th>
+                <th className="p-3 max-md:hidden">Stock</th>
+                <th className="p-3 max-md:hidden">Nearest expiry</th>
+                <th className="p-3 max-md:hidden">Status</th>
               </tr>
             </thead>
-            <tbody>
+            <tbody className="max-md:block">
               {rows.map((row) => (
                 <tr
                   key={row.id}
-                  className={`border-b border-line last:border-0 ${allMatching || selected.has(row.id) ? "bg-sunshine/15" : ""}`}
+                  className={`border-b border-line last:border-0 hover:bg-cream/50 max-md:grid max-md:grid-cols-[1.5rem_1fr_1fr] max-md:gap-x-3 max-md:gap-y-2 max-md:p-3 ${allMatching || selected.has(row.id) ? "bg-peach/25" : ""}`}
                 >
-                  <td className="p-3">
+                  <td className="p-3 max-md:row-span-4 max-md:p-0 max-md:pt-1">
                     <input
                       type="checkbox"
                       checked={allMatching || selected.has(row.id)}
@@ -229,11 +231,11 @@ export function ProductTable({
                       className="size-4"
                     />
                   </td>
-                  <td className="p-3">
+                  <td className="p-3 max-md:col-span-2 max-md:p-0">
                     <div className="flex items-center gap-3">
                       <RowPhotoButton row={row} />
                       <div className="min-w-0">
-                        <Link href={`/admin/products/${row.id}`} className="font-semibold underline">
+                        <Link href={`/admin/products/${row.id}`} className="font-semibold text-choc underline decoration-line underline-offset-2 hover:text-terracotta-deep hover:decoration-terracotta">
                           {row.name}
                         </Link>
                         <span className="mt-1 flex flex-wrap items-center gap-2 text-xs text-ink-3">
@@ -254,13 +256,15 @@ export function ProductTable({
                       </div>
                     </div>
                   </td>
-                  <td className="p-3 tabular-nums">{row.priceLabel}</td>
-                  <td className="p-3 tabular-nums">{formatPercent(row.margin)}</td>
-                  <td className="p-3 tabular-nums">
+                  <td data-label="Price" className="p-3 tabular-nums max-md:p-0 max-md:text-xs max-md:before:mr-1.5 max-md:before:text-ink-3 max-md:before:content-[attr(data-label)] font-semibold text-choc">{row.priceLabel}</td>
+                  <td data-label="Margin" className="p-3 tabular-nums max-md:p-0 max-md:text-xs max-md:before:mr-1.5 max-md:before:text-ink-3 max-md:before:content-[attr(data-label)]">{formatPercent(row.margin)}</td>
+                  <td data-label="Stock" className="p-3 tabular-nums max-md:p-0 max-md:text-xs max-md:before:mr-1.5 max-md:before:text-ink-3 max-md:before:content-[attr(data-label)]">
                     <StockCell stock={row.stock} />
                   </td>
-                  <td className="p-3 tabular-nums">{row.nearestExpiry ?? "—"}</td>
-                  <td className="p-3">{row.status}</td>
+                  <td data-label="Expiry" className="p-3 tabular-nums max-md:p-0 max-md:text-xs max-md:before:mr-1.5 max-md:before:text-ink-3 max-md:before:content-[attr(data-label)]">{row.nearestExpiry ?? "—"}</td>
+                  <td data-label="Status" className="p-3 tabular-nums max-md:p-0 max-md:text-xs max-md:before:mr-1.5 max-md:before:text-ink-3 max-md:before:content-[attr(data-label)]">
+                    <StatusPill status={row.status} />
+                  </td>
                 </tr>
               ))}
             </tbody>

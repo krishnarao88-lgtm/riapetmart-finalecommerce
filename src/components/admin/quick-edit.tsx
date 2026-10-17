@@ -121,7 +121,7 @@ export function QuickEdit({ rows }: { rows: AdminProductRow[] }) {
 
   return (
     <div className="grid gap-3">
-      <div className="overflow-x-auto rounded-[var(--radius-chunk)] border-2 border-ink bg-surface">
+      <div className="overflow-x-auto rounded-2xl border border-line bg-surface shadow-[var(--shadow-chunk)]">
         <table className="w-full min-w-[1100px] text-sm">
           <thead>
             <tr className="border-b-2 border-line text-left text-xs uppercase tracking-widest text-ink-3">
@@ -185,7 +185,7 @@ export function QuickEdit({ rows }: { rows: AdminProductRow[] }) {
             type="button"
             onClick={save}
             disabled={!dirty || pending}
-            className="btn-chunk bg-grape text-sm text-surface disabled:opacity-50"
+            className="btn-chunk bg-choc text-sm text-cream disabled:opacity-50"
           >
             {pending ? "Saving…" : "Save changes"}
           </button>
@@ -193,7 +193,7 @@ export function QuickEdit({ rows }: { rows: AdminProductRow[] }) {
             type="button"
             onClick={discard}
             disabled={!dirty || pending}
-            className="btn-chunk bg-surface text-sm disabled:opacity-50"
+            className="btn-chunk bg-surface text-choc text-sm disabled:opacity-50"
           >
             Discard
           </button>

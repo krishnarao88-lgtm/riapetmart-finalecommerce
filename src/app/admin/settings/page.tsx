@@ -1,5 +1,7 @@
-import { CheckCircle2, XCircle } from "lucide-react";
+import { CheckCircle2, Mail, Share2, Truck, XCircle } from "lucide-react";
 import type { Metadata } from "next";
+import { Panel } from "@/components/admin/dashboard-parts";
+import { btnPrimary, btnSecondary, Notice, PageHeader, pageWrap } from "@/components/admin/form-parts";
 import { SettingsForm, type SettingsValues } from "@/components/admin/settings-form";
 import { requireAdmin } from "@/lib/auth";
 import { isEasyParcelConnected } from "@/lib/shipping/easyparcel";
@@ -59,112 +61,92 @@ export default async function SettingsPage({
         : Number(delivery.free_delivery_cap),
   };
 
-  return (
-    <div className="mx-auto grid max-w-4xl gap-6 px-4 py-8">
-      <div className="grid gap-1">
-        <h1 className="font-display text-3xl font-extrabold tracking-tight">Settings</h1>
-        <p className="text-ink-2">These take effect immediately, with no new deployment needed.</p>
-      </div>
-      <div className="grid gap-3 rounded-[var(--radius-chunk)] border-2 border-ink bg-surface p-5">
-        <h2 className="font-display text-xl font-extrabold">Carrier connections</h2>
-        {easyparcel === "connected" && (
-          <p className="rounded-xl bg-ok-bg px-3 py-2 text-sm font-medium text-ok-fg">EasyParcel connected.</p>
-        )}
-        {easyparcel === "error" && (
-          <p className="rounded-xl bg-bad-bg px-3 py-2 text-sm font-medium text-bad-fg">
-            Couldn&apos;t connect EasyParcel. Try again.
-          </p>
-        )}
-        <div className="flex items-center justify-between gap-3">
-          <span className="flex items-center gap-2 font-semibold">
-            {connected ? (
-              <CheckCircle2 className="size-5 text-ok-fg" aria-hidden />
-            ) : (
-              <XCircle className="size-5 text-bad-fg" aria-hidden />
-            )}
-            EasyParcel (nationwide courier rates)
-          </span>
-          <a href="/api/oauth/start?provider=easyparcel" className="btn-chunk bg-tangerine px-4 py-2 text-sm">
-            {connected ? "Reconnect" : "Connect EasyParcel"}
-          </a>
-        </div>
-        <p className="flex items-center gap-2 text-sm text-ink-2">
-          <CheckCircle2 className="size-4 text-ok-fg" aria-hidden />
-          Lalamove (same-day quotes) — connected via API key, no login needed.
-        </p>
-      </div>
+  const status = (on: boolean) =>
+    on ? (
+      <CheckCircle2 className="size-5 shrink-0 text-ok-fg" aria-label="Connected" />
+    ) : (
+      <XCircle className="size-5 shrink-0 text-bad-fg" aria-label="Not connected" />
+    );
+  const row = "flex flex-wrap items-center justify-between gap-3 rounded-xl bg-cream/60 p-3";
 
-      <div className="grid gap-3 rounded-[var(--radius-chunk)] border-2 border-ink bg-surface p-5">
-        <h2 className="font-display text-xl font-extrabold">Social connections</h2>
-        {tiktok === "connected" && (
-          <p className="rounded-xl bg-ok-bg px-3 py-2 text-sm font-medium text-ok-fg">TikTok connected.</p>
-        )}
-        {tiktok === "error" && (
-          <p className="rounded-xl bg-bad-bg px-3 py-2 text-sm font-medium text-bad-fg">
-            Couldn&apos;t connect TikTok. Try again once the app is approved (or added as a sandbox target user).
+  return (
+    <div className={pageWrap}>
+      <PageHeader title="Settings" description="These take effect immediately, with no new deployment needed." />
+      <div className="grid gap-5 lg:grid-cols-2">
+        <Panel title="Carrier connections" Icon={Truck}>
+          {easyparcel === "connected" && <Notice tone="ok">EasyParcel connected.</Notice>}
+          {easyparcel === "error" && <Notice tone="bad">Couldn&apos;t connect EasyParcel. Try again.</Notice>}
+          <div className={row}>
+            <span className="flex items-center gap-2 font-semibold text-choc">
+              {status(connected)}
+              EasyParcel (nationwide courier rates)
+            </span>
+            <a href="/api/oauth/start?provider=easyparcel" className={connected ? btnSecondary : btnPrimary}>
+              {connected ? "Reconnect" : "Connect EasyParcel"}
+            </a>
+          </div>
+          <p className="flex items-center gap-2 text-sm text-ink-2">
+            <CheckCircle2 className="size-4 shrink-0 text-ok-fg" aria-hidden />
+            Lalamove (same-day quotes) — connected via API key, no login needed.
           </p>
-        )}
-        <div className="flex items-center justify-between gap-3">
-          <span className="flex items-center gap-2 font-semibold">
-            {tiktokConnected ? (
-              <CheckCircle2 className="size-5 text-ok-fg" aria-hidden />
-            ) : (
-              <XCircle className="size-5 text-bad-fg" aria-hidden />
-            )}
-            TikTok (latest videos on homepage)
-          </span>
-          <a href="/api/oauth/start?provider=tiktok" className="btn-chunk bg-tangerine px-4 py-2 text-sm">
-            {tiktokConnected ? "Reconnect" : "Connect TikTok"}
-          </a>
-        </div>
-        {instagram === "connected" && (
-          <p className="rounded-xl bg-ok-bg px-3 py-2 text-sm font-medium text-ok-fg">Instagram connected.</p>
-        )}
-        {instagram === "error" && (
-          <p className="rounded-xl bg-bad-bg px-3 py-2 text-sm font-medium text-bad-fg">
-            Couldn&apos;t connect Instagram. It must be a Business or Creator account, and the app&apos;s redirect URL
-            must be https://www.riapetmart.com/api/instagram/callback.
-          </p>
-        )}
-        <div className="flex items-center justify-between gap-3">
-          <span className="flex items-center gap-2 font-semibold">
-            {instagramConnected ? (
-              <CheckCircle2 className="size-5 text-ok-fg" aria-hidden />
-            ) : (
-              <XCircle className="size-5 text-bad-fg" aria-hidden />
-            )}
-            Instagram (latest posts on homepage)
-          </span>
-          <a href="/api/oauth/start?provider=instagram" className="btn-chunk bg-tangerine px-4 py-2 text-sm">
-            {instagramConnected ? "Reconnect" : "Connect Instagram"}
-          </a>
-        </div>
+        </Panel>
+
+        <Panel title="Social connections" Icon={Share2}>
+          {tiktok === "connected" && <Notice tone="ok">TikTok connected.</Notice>}
+          {tiktok === "error" && (
+            <Notice tone="bad">
+              Couldn&apos;t connect TikTok. Try again once the app is approved (or added as a sandbox target user).
+            </Notice>
+          )}
+          <div className={row}>
+            <span className="flex items-center gap-2 font-semibold text-choc">
+              {status(tiktokConnected)}
+              TikTok (latest videos on homepage)
+            </span>
+            <a href="/api/oauth/start?provider=tiktok" className={tiktokConnected ? btnSecondary : btnPrimary}>
+              {tiktokConnected ? "Reconnect" : "Connect TikTok"}
+            </a>
+          </div>
+          {instagram === "connected" && <Notice tone="ok">Instagram connected.</Notice>}
+          {instagram === "error" && (
+            <Notice tone="bad">
+              Couldn&apos;t connect Instagram. It must be a Business or Creator account, and the app&apos;s redirect URL
+              must be https://www.riapetmart.com/api/instagram/callback.
+            </Notice>
+          )}
+          <div className={row}>
+            <span className="flex items-center gap-2 font-semibold text-choc">
+              {status(instagramConnected)}
+              Instagram (latest posts on homepage)
+            </span>
+            <a href="/api/oauth/start?provider=instagram" className={instagramConnected ? btnSecondary : btnPrimary}>
+              {instagramConnected ? "Reconnect" : "Connect Instagram"}
+            </a>
+          </div>
+        </Panel>
       </div>
 
       <SettingsForm values={values} />
 
-      <section className="grid gap-3 rounded-[var(--radius-chunk)] border-2 border-ink bg-surface p-5" aria-labelledby="emailtest-heading">
-        <h2 id="emailtest-heading" className="font-display text-xl font-extrabold">
-          Test customer emails
-        </h2>
-        <p className="text-sm text-ink-2">
+      <Panel id="emailtest" title="Test customer emails" Icon={Mail}>
+        <p className="max-w-[75ch] text-sm text-ink-2">
           Sends one of every customer email (order confirmed, on its way, Cat Hotel, welcome code, referral, cart
           reminder, restock, review request) with sample details, to your own sign-in email only. Subjects start with
           [TEST]. Sign-up and password-reset emails come from the login service: test those by using &ldquo;Forgot your
           password?&rdquo; on the customer log-in page.
         </p>
         {emailtest?.startsWith("sent-") && (
-          <p className="text-sm font-semibold text-ok-fg">Sent {emailtest.slice(5)} test emails. Check your inbox (and spam).</p>
+          <Notice tone="ok">Sent {emailtest.slice(5)} test emails. Check your inbox (and spam).</Notice>
         )}
         {emailtest?.startsWith("failed-") && (
-          <p className="text-sm font-semibold text-bad-fg">{emailtest.slice(7)} emails failed to send. Check the Resend setup.</p>
+          <Notice tone="bad">{emailtest.slice(7)} emails failed to send. Check the Resend setup.</Notice>
         )}
         <form action={sendTestEmails}>
-          <button type="submit" className="btn-chunk bg-tangerine px-4 py-2 text-sm">
-            Send me test emails
+          <button type="submit" className={btnSecondary}>
+            <Mail className="size-4" aria-hidden /> Send me test emails
           </button>
         </form>
-      </section>
+      </Panel>
     </div>
   );
 }

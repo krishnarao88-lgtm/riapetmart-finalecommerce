@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { btnPrimary, btnSecondary, PageHeader, pageWrap } from "@/components/admin/form-parts";
 import { requireAdmin } from "@/lib/auth";
 import { decideInfoCheck } from "./actions";
 
@@ -31,23 +32,25 @@ export default async function InfoCheckPage() {
   const checks = (data ?? []) as unknown as Check[];
 
   return (
-    <div className="mx-auto grid max-w-5xl gap-6 px-4 py-8">
-      <div className="grid gap-1">
-        <h1 className="font-display text-3xl font-extrabold tracking-tight">Info check</h1>
-        <p className="text-ink-2">
-          Corrections found by comparing our product pages with the manufacturer&apos;s own information. Nothing
-          changes on the shop until you approve it. {verified ?? 0} of {total ?? 0} live products verified.
-        </p>
-      </div>
+    <div className={pageWrap}>
+      <PageHeader
+        title="Info check"
+        description={
+          <>
+            Corrections found by comparing our product pages with the manufacturer&apos;s own information. Nothing
+            changes on the shop until you approve it. {verified ?? 0} of {total ?? 0} live products verified.
+          </>
+        }
+      />
 
       {checks.length === 0 ? (
-        <p className="rounded-2xl border-2 border-line bg-surface p-6 text-ink-2">Nothing waiting for review.</p>
+        <p className="rounded-2xl border border-dashed border-line bg-surface p-8 text-center text-ink-2">Nothing waiting for review.</p>
       ) : (
         <ul className="grid gap-4">
           {checks.map((c) => (
-            <li key={c.id} className="grid gap-3 rounded-2xl border-2 border-line bg-surface p-4">
+            <li key={c.id} className="grid gap-4 rounded-2xl border border-line bg-surface p-5 shadow-[var(--shadow-chunk)]">
               <div className="flex flex-wrap items-baseline justify-between gap-2">
-                <Link href={`/shop/${c.products?.slug}`} target="_blank" className="font-bold underline">
+                <Link href={`/shop/${c.products?.slug}`} target="_blank" className="font-bold text-choc underline decoration-line underline-offset-2 hover:text-terracotta-deep">
                   {c.products?.name}
                 </Link>
                 <span className="rounded-full bg-warn-bg px-2.5 py-1 text-xs font-bold text-warn-fg">{FIELD_LABEL[c.field]}</span>
@@ -66,18 +69,18 @@ export default async function InfoCheckPage() {
               </div>
               {c.note && <p className="text-sm text-ink-2">{c.note}</p>}
               {c.source_url && (
-                <a href={c.source_url} target="_blank" rel="noopener noreferrer" className="w-fit text-sm font-semibold text-rust underline">
+                <a href={c.source_url} target="_blank" rel="noopener noreferrer" className="w-fit text-sm font-semibold text-terracotta-deep underline">
                   Source: {new URL(c.source_url).hostname}
                 </a>
               )}
-              <div className="flex gap-2">
+              <div className="flex flex-wrap gap-2 border-t border-line pt-3">
                 {(["approve", "reject"] as const).map((d) => (
                   <form key={d} action={decideInfoCheck}>
                     <input type="hidden" name="id" value={c.id} />
                     <input type="hidden" name="decision" value={d} />
                     <button
                       type="submit"
-                      className={`min-h-9 rounded-full px-4 text-sm font-semibold ${d === "approve" ? "bg-ok-bg text-ok-fg" : "bg-bad-bg text-bad-fg"}`}
+                      className={d === "approve" ? btnPrimary : btnSecondary}
                     >
                       {d === "approve" ? "Approve" : "Reject"}
                     </button>

@@ -71,7 +71,7 @@ export function BatchEditor({
           Batch no. (optional)
           <input id={`batch-${variantId}`} name="batch_no" className={field} />
         </label>
-        <button type="submit" disabled={adding} className="btn-chunk bg-lagoon text-sm disabled:opacity-60">
+        <button type="submit" disabled={adding} className="btn-chunk bg-choc text-cream text-sm disabled:opacity-60">
           {adding ? "Adding…" : "Add stock"}
         </button>
       </form>

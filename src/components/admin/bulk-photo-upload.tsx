@@ -68,7 +68,7 @@ export function BulkPhotoUpload({ products }: { products: PhotoTarget[] }) {
 
   return (
     <div className="grid gap-4">
-      <label className="grid cursor-pointer place-items-center gap-2 rounded-[var(--radius-chunk)] border-2 border-dashed border-ink bg-surface p-8 text-center">
+      <label className="grid cursor-pointer place-items-center gap-2 rounded-[var(--radius-chunk)] border-2 border-dashed border-line hover:border-terracotta bg-surface p-8 text-center">
         <Upload className="size-8 text-ink-3" aria-hidden />
         <span className="font-semibold">Choose photos, or drop them on the button below</span>
         <span className="max-w-xl text-sm text-ink-2">
@@ -97,7 +97,7 @@ export function BulkPhotoUpload({ products }: { products: PhotoTarget[] }) {
 
       {items.length > 0 && (
         <>
-          <div className="overflow-x-auto rounded-[var(--radius-chunk)] border-2 border-ink bg-surface">
+          <div className="overflow-x-auto rounded-2xl border border-line bg-surface shadow-[var(--shadow-chunk)]">
             <table className="w-full min-w-2xl text-sm">
               <thead>
                 <tr className="border-b-2 border-line text-left text-xs uppercase tracking-widest text-ink-3">
@@ -172,7 +172,7 @@ export function BulkPhotoUpload({ products }: { products: PhotoTarget[] }) {
               type="button"
               onClick={upload}
               disabled={!matched || pending}
-              className="btn-chunk bg-grape text-sm text-surface disabled:opacity-50"
+              className="btn-chunk bg-choc text-sm text-cream disabled:opacity-50"
             >
               {pending ? "Uploading…" : `Upload ${matched} ${matched === 1 ? "photo" : "photos"}`}
             </button>

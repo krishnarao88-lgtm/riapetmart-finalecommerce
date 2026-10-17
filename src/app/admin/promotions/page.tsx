@@ -1,4 +1,7 @@
 import type { Metadata } from "next";
+import { CalendarPlus, CalendarRange, History, Package } from "lucide-react";
+import { Panel } from "@/components/admin/dashboard-parts";
+import { btnDanger, PageHeader, pageWrap } from "@/components/admin/form-parts";
 import { BundleOfferRow, type BundleOfferRowData } from "@/components/admin/bundle-offer-row";
 import { PromotionForm, type PromotionRow } from "@/components/admin/promotion-form";
 import { requireAdmin } from "@/lib/auth";
@@ -31,14 +34,25 @@ export default async function PromotionsPage() {
     ]);
   const nameOf = new Map((names ?? []).map((n) => [n.id as string, n.name as string]));
   const offerOf = new Map((offerRows ?? []).map((o) => [o.product_id as string, o]));
-  type HouseRow = { id: string; name: string; variants: { price: number; variant_costs: { cost_price: number } | null }[] };
+  type HouseRow = {
+    id: string;
+    name: string;
+    variants: { price: number; variant_costs: { cost_price: number } | null }[];
+  };
   const bundleRows: BundleOfferRowData[] = ((houseRows ?? []) as unknown as HouseRow[]).map((p) => {
     const offer = offerOf.get(p.id);
     const discount = offer ? Number(offer.discount) : 0.1;
-    const sizes = p.variants.map((v) => ({ price: Number(v.price), cost: v.variant_costs ? Number(v.variant_costs.cost_price) : null }));
+    const sizes = p.variants.map((v) => ({
+      price: Number(v.price),
+      cost: v.variant_costs ? Number(v.variant_costs.cost_price) : null,
+    }));
     const priced = sizes.filter((v) => v.price > 0);
     const range = (vals: number[]) =>
-      vals.length ? (Math.min(...vals) === Math.max(...vals) ? formatMyr(vals[0]) : `${formatMyr(Math.min(...vals))}–${formatMyr(Math.max(...vals))}`) : "—";
+      vals.length
+        ? Math.min(...vals) === Math.max(...vals)
+          ? formatMyr(vals[0])
+          : `${formatMyr(Math.min(...vals))}–${formatMyr(Math.max(...vals))}`
+        : "—";
     return {
       productId: p.id,
       name: p.name,
@@ -55,29 +69,30 @@ export default async function PromotionsPage() {
   const past = promos.filter((p) => p.ends_on < today);
 
   return (
-    <div className="mx-auto grid max-w-5xl gap-6 px-4 py-8">
-      <div>
-        <h1 className="font-display text-3xl font-extrabold tracking-tight">Offers &amp; sales</h1>
-        <p className="text-sm text-ink-2">
-          Nothing is discounted until you approve it here. Every approval is checked against a{" "}
-          {Math.round(MIN_OFFER_MARGIN * 100)}% minimum margin (using your cost prices). Customers always get the single
-          best discount (sale, short-dated or bundle), never more than one. Approved sales switch on and off by
-          themselves on their dates (Malaysia time); Raya dates follow the moon sighting, so check them each year.
-        </p>
-      </div>
+    <div className={pageWrap}>
+      <PageHeader
+        title="Offers & sales"
+        description={
+          <span className="block max-w-[90ch]">
+            Nothing is discounted until you approve it here. Every approval is checked against a{" "}
+            {Math.round(MIN_OFFER_MARGIN * 100)}% minimum margin (using your cost prices). Customers always get the
+            single best discount (sale, short-dated or bundle), never more than one. Approved sales switch on and off by
+            themselves on their dates (Malaysia time); Raya dates follow the moon sighting, so check them each year.
+          </span>
+        }
+      />
 
-      <section className="grid gap-3">
+      <Panel id="bundles" title="Bundle offers (own brands)" Icon={Package}>
         <div>
-          <h2 className="font-display text-xl font-extrabold">Bundle offers (own brands)</h2>
           <p className="text-sm text-ink-2">
             Discount on an own-brand product when it&apos;s bought together with a matching product (e.g. Conaseb
             shampoo + Aniamor Skin &amp; Coat Syrup). &ldquo;Margin after&rdquo; is the lowest across its sizes.
           </p>
         </div>
-        <div className="overflow-x-auto rounded-[var(--radius-chunk)] border-2 border-ink bg-surface">
+        <div className="overflow-x-auto rounded-xl border border-line">
           <table className="w-full min-w-3xl text-sm">
-            <thead>
-              <tr className="border-b-2 border-line text-left text-xs uppercase tracking-widest text-ink-3">
+            <thead className="bg-cream/70">
+              <tr className="border-b border-line text-left text-xs font-bold text-ink-2">
                 <th className="p-3">Product</th>
                 <th className="p-3">Price</th>
                 <th className="p-3">Cost</th>
@@ -93,27 +108,30 @@ export default async function PromotionsPage() {
             </tbody>
           </table>
         </div>
-      </section>
+      </Panel>
 
-      <section className="grid gap-3 rounded-[var(--radius-chunk)] border-2 border-ink bg-surface p-5">
-        <h2 className="font-display text-xl font-extrabold">Add a holiday sale</h2>
+      <Panel id="add-sale" title="Add a holiday sale" Icon={CalendarPlus}>
         <PromotionForm brands={brands ?? []} categories={categories ?? []} />
-      </section>
+      </Panel>
 
-      <section className="grid gap-3">
-        <h2 className="font-display text-xl font-extrabold">Holiday sales: running and upcoming</h2>
+      <Panel id="upcoming" title="Holiday sales: running and upcoming" Icon={CalendarRange}>
         {upcoming.length === 0 && <p className="text-sm text-ink-2">Nothing scheduled.</p>}
         {upcoming.map((p) => (
-          <details key={p.id} className="rounded-[var(--radius-chunk)] border-2 border-line bg-surface p-4">
+          <details
+            key={p.id}
+            className="group rounded-xl border border-line bg-ground p-4 open:bg-surface open:ring-1 open:ring-peach"
+          >
             <summary className="flex cursor-pointer flex-wrap items-center gap-3">
-              <strong>{p.name}</strong>
+              <strong className="font-bubble font-extrabold text-choc">{p.name}</strong>
               <span className="text-sm text-ink-2">
                 {fmt(p.starts_on)} – {fmt(p.ends_on)} · {Math.round(p.discount * 100)}% off
               </span>
               {!p.is_active ? (
-                <span className="rounded-full bg-sunk px-2 py-0.5 text-xs font-bold">Pending approval</span>
+                <span className="rounded-full bg-warn-bg px-2.5 py-0.5 text-xs font-bold text-warn-fg">
+                  Pending approval
+                </span>
               ) : isRunning(p, today) ? (
-                <span className="rounded-full bg-ok-bg px-2 py-0.5 text-xs font-bold text-ok-fg">Running now</span>
+                <span className="rounded-full bg-ok-bg px-2.5 py-0.5 text-xs font-bold text-ok-fg">Running now</span>
               ) : null}
             </summary>
             <div className="mt-4 grid gap-3">
@@ -126,18 +144,17 @@ export default async function PromotionsPage() {
               <PromotionForm promo={p} brands={brands ?? []} categories={categories ?? []} />
               <form action={deletePromotion}>
                 <input type="hidden" name="id" value={p.id} />
-                <button type="submit" className="text-sm font-semibold text-bad-fg underline">
+                <button type="submit" className={btnDanger}>
                   Delete this sale
                 </button>
               </form>
             </div>
           </details>
         ))}
-      </section>
+      </Panel>
 
       {past.length > 0 && (
-        <section className="grid gap-2">
-          <h2 className="font-display text-xl font-extrabold">Past</h2>
+        <Panel id="past" title="Past" Icon={History}>
           <ul className="grid gap-1 text-sm text-ink-2">
             {past.map((p) => (
               <li key={p.id}>
@@ -145,7 +162,7 @@ export default async function PromotionsPage() {
               </li>
             ))}
           </ul>
-        </section>
+        </Panel>
       )}
     </div>
   );
