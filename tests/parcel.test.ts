@@ -1,6 +1,18 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
-import { lalamoveVehicle, lineGrams, parcelKg } from "../src/lib/shipping/parcel.ts";
+import { lalamoveVehicle, lineGrams, lineVolumetricGrams, parcelKg } from "../src/lib/shipping/parcel.ts";
+
+test("bulky light boxes declare the volumetric weight", () => {
+  // 40×30×30cm litter box at 2kg: volumetric 7.2kg beats the packed 2.4kg.
+  const vol = lineVolumetricGrams(400, 300, 300, 1);
+  assert.equal(vol, 7200);
+  assert.equal(parcelKg(lineGrams(2000, 1, "Litter"), vol), 7.2);
+  // Heavy small box: packed weight still wins.
+  assert.equal(parcelKg(lineGrams(15000, 1, "Dry Food"), lineVolumetricGrams(300, 200, 100, 1)), 16.1);
+  // Any missing size means no volumetric weight.
+  assert.equal(lineVolumetricGrams(400, null, 300, 2), 0);
+  assert.equal(lineVolumetricGrams(100, 100, 100, 3), 600);
+});
 
 test("declared parcel weight covers cans, bags and the box", () => {
   // 24 × 400g cans: label says 9.6kg, the real carton is ~11.7kg.

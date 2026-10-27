@@ -65,6 +65,11 @@ const nextConfig: NextConfig = {
           { key: "Content-Security-Policy", value: csp },
         ],
       },
+      // Admin only: the barcode scanner (Products → Weights & barcodes) needs the camera. Later entries override earlier ones.
+      {
+        source: "/admin/:path*",
+        headers: [{ key: "Permissions-Policy", value: "camera=(self), microphone=(), geolocation=(self)" }],
+      },
     ];
   },
 };
