@@ -21,7 +21,8 @@ const LEVERS = [
 
 export default async function GoalPage() {
   const { supabase } = await requireAdmin();
-  const since30 = new Date(Date.now() - 30 * DAY).toISOString();
+  const now = new Date().getTime(); // per-request server render: one clock reading for the whole page
+  const since30 = new Date(now - 30 * DAY).toISOString();
   const [{ data: orders }, { count: views }, { count: carts }] = await Promise.all([
     supabase.from("orders").select("total, refunded_amount, created_at").eq("status", "paid").eq("is_test", false).limit(20000),
     supabase.from("product_views").select("id", { count: "exact", head: true }).gte("viewed_at", since30),
@@ -29,13 +30,12 @@ export default async function GoalPage() {
   ]);
   const rows = (orders ?? []).map((o) => ({ total: Number(o.total), refunded: Number(o.refunded_amount ?? 0), created_at: o.created_at }));
   const p = goalPace(rows);
-  const orders30 = rows.filter((o) => Date.now() - new Date(o.created_at).getTime() < 30 * DAY).length;
+  const orders30 = rows.filter((o) => now - new Date(o.created_at).getTime() < 30 * DAY).length;
   const viewToOrder = views ? orders30 / views : 0;
   const viewsNeeded = viewToOrder && p.needOrdersPerDay ? Math.ceil(p.needOrdersPerDay / viewToOrder) : null;
   const pct = (n: number) => `${(n * 100).toFixed(1)}%`;
 
   // Straight-line checkpoints from today to the goal, so each month-end has a number to beat.
-  const now = Date.now();
   const checkpoints = ["2026-10-31", "2026-11-30", "2026-12-31"]
     .map((d) => ({ d, at: new Date(`${d}T23:59:59+08:00`).getTime() }))
     .filter((c) => c.at > now)

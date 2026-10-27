@@ -39,7 +39,8 @@ export default async function CustomersPage() {
   await requireAdmin();
   // Customer emails are admin-only; read with the service client after the admin check.
   const db = createServiceClient();
-  const weekAgo = new Date(Date.now() - 7 * DAY).toISOString();
+  const now = new Date().getTime(); // per-request server render: one clock reading for the whole page
+  const weekAgo = new Date(now - 7 * DAY).toISOString();
   const [{ data: signups }, { data: carts }, { data: views }, { data: adds }, { data: buyers }] = await Promise.all([
     db.from("newsletter_signups").select("id, email, created_at, welcome2_sent_at, welcome3_sent_at").order("created_at", { ascending: false }).limit(200),
     db.from("abandoned_carts").select("email, items, subtotal, created_at, reminded_at, recovered").order("created_at", { ascending: false }).limit(200),
@@ -112,7 +113,7 @@ export default async function CustomersPage() {
                     <Pill tone="ok"><Check className="size-3.5" aria-hidden />Ordered</Pill>
                   ) : c.reminded_at ? (
                     <Pill tone="muted">Reminder sent {date(c.reminded_at)}</Pill>
-                  ) : Date.now() - new Date(c.created_at).getTime() > 2 * DAY ? (
+                  ) : now - new Date(c.created_at).getTime() > 2 * DAY ? (
                     <Pill tone="bad">No reminder sent</Pill>
                   ) : (
                     <Pill tone="warn">Reminder due</Pill>

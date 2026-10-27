@@ -20,6 +20,8 @@ export function CartEmailCapture({ percent }: { percent: number | null }) {
 
   useEffect(() => {
     try {
+      // localStorage only exists after mount, so this has to run in an effect (same as the cart's saved details).
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setState(localStorage.getItem(SAVED_KEY) ? "hidden" : "idle");
     } catch {
       setState("idle");
