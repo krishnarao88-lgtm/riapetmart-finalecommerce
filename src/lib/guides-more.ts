@@ -4,13 +4,59 @@ import type { Guide } from "./guides.ts";
 // only: every health topic tells owners when to see a vet, and none of it is a diagnosis.
 export const moreGuides: Guide[] = [
   {
+    slug: "makanan-kucing-murah",
+    title: "Makanan Kucing Murah di Malaysia: Beg Besar 7–15kg, Harga Sekilo",
+    description:
+      "Makanan kucing murah tapi berkualiti: senarai beg besar 7kg ke atas paling jimat ikut harga sekilo, dikemas kini ikut stok. Hantar hari sama sekitar Rawang, Selangor & KL.",
+    intro:
+      "Ada ramai kucing di rumah, atau kucing makan banyak? Beli beg besar ialah cara paling mudah untuk jimat. Senarai di bawah menunjukkan makanan kucing kering 7kg ke atas yang ada stok di Ria Pet Mart, disusun ikut harga sekilo (paling murah dahulu). Harga dan stok dikemas kini secara automatik.",
+    table: { pet: "cat", minKg: 7, maxPerKg: 20 },
+    sections: [
+      {
+        heading: "Kira harga sekilo, bukan harga beg",
+        body: "Beg 7–15kg nampak mahal, tapi harga sekilo selalunya lebih rendah daripada beg 1.5–2kg. Bahagikan harga beg dengan berat (contoh: RM68 ÷ 8kg = RM8.50 sekilo) untuk bandingkan dengan adil.",
+      },
+      {
+        heading: "Murah tapi masih sesuai untuk kucing",
+        body: "Pilih makanan lengkap (complete food) untuk peringkat umur kucing anda: kitten atau adult. Kucing perlu taurine, jadi pastikan ia tersenarai dalam ramuan. Letakkan air bersih sentiasa, terutama kalau kucing makan makanan kering sahaja.",
+      },
+      {
+        heading: "Simpan beg besar supaya kekal rangup",
+        body: "Lepas buka, pindahkan ke bekas kedap udara dan simpan di tempat sejuk dan kering. Makanan yang lembap atau berbau kurang disukai kucing. Ikut tarikh luput pada beg. Kami tunjukkan tarikh 'best before' untuk setiap produk sebelum anda beli.",
+      },
+      {
+        heading: "Tukar makanan perlahan-lahan",
+        body: "Kucing cerewet dengan perubahan. Campur makanan baru sedikit demi sedikit selama kira-kira 7 hari supaya perut tidak terganggu dan kucing tidak mogok makan.",
+      },
+    ],
+    faq: [
+      {
+        q: "Makanan kucing apa yang paling murah di Ria Pet Mart?",
+        a: "Senarai di atas menunjukkan beg 7kg ke atas yang ada stok, disusun ikut harga sekilo. Ia dikemas kini secara automatik bila harga atau stok berubah.",
+      },
+      {
+        q: "Beg 8kg boleh tahan berapa lama untuk seekor kucing?",
+        a: "Ikut panduan pemakanan pada beg. Kucing dewasa biasanya makan sekitar 50–70 gram makanan kering sehari, jadi beg 8kg boleh tahan beberapa bulan untuk seekor kucing, atau lebih cepat habis kalau ada ramai kucing.",
+      },
+      {
+        q: "Boleh hantar beg besar ke rumah?",
+        a: "Boleh. Lalamove hari yang sama sekitar Rawang, Selangor dan KL (pesan sebelum 1 petang, Isnin–Sabtu), kurier ke seluruh Malaysia, atau ambil percuma di kedai kami di Bandar Bukit Beruntung.",
+      },
+    ],
+    shopLinks: [
+      { label: "Semua makanan kucing kering", href: "/shop?pet=cat&category=dry-food" },
+      { label: "Makanan kucing basah", href: "/shop?pet=cat&category=wet-food" },
+      { label: "Clearance (harga istimewa)", href: "/shop?deal=short-dated" },
+    ],
+  },
+  {
     slug: "makanan-anjing-murah",
     title: "Makanan Anjing Murah di Malaysia: Beg Besar 15–20kg, Harga Sekilo",
     description:
       "Makanan anjing murah tapi berkualiti: senarai beg besar 15–20kg paling jimat ikut harga sekilo, dikemas kini ikut stok. Hantar hari sama sekitar Rawang, Selangor & KL.",
     intro:
       "Cara paling mudah untuk jimat makanan anjing ialah beli beg besar. Senarai di bawah menunjukkan makanan anjing kering 10kg ke atas yang ada stok di Ria Pet Mart, disusun ikut harga sekilo (paling murah dahulu). Harga dan stok dikemas kini secara automatik.",
-    table: "budget-dog-food",
+    table: { pet: "dog", minKg: 10 },
     sections: [
       {
         heading: "Kira harga sekilo, bukan harga beg",

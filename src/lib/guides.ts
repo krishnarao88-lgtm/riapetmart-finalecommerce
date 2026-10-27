@@ -8,7 +8,7 @@ export type Guide = {
   sections: { heading: string; body: string }[];
   shopLinks: { label: string; href: string }[];
   /** Live product table shown under the intro (built from the catalogue, so it never goes stale). */
-  table?: "budget-dog-food";
+  table?: { pet: "dog" | "cat"; minKg: number; maxPerKg?: number };
   /** Short questions and answers, also published as FAQ structured data for Google and AI answers. */
   faq?: { q: string; a: string }[];
 };
@@ -151,6 +151,7 @@ const baseGuides: Guide[] = [
       { label: "Makanan kucing kering", href: "/shop?pet=cat&category=dry-food" },
       { label: "Makanan kucing basah", href: "/shop?pet=cat&category=wet-food" },
       { label: "Tawaran pelepasan (clearance)", href: "/shop?deal=short-dated" },
+      { label: "Makanan kucing murah: beg besar ikut harga sekilo", href: "/guides/makanan-kucing-murah" },
     ],
   },
 ];

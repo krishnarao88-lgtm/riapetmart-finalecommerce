@@ -4,7 +4,7 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { getGuide, guides, type Guide } from "@/lib/guides";
 import { createPublicClient } from "@/lib/supabase/public";
-import { cheapestBigBags } from "@/lib/budget-dog-food";
+import { cheapestBigBags } from "@/lib/budget-food";
 import { titleCase } from "@/lib/seo";
 
 export const revalidate = 3600;
@@ -33,20 +33,23 @@ async function guideProducts(links: Guide["shopLinks"]) {
   return [...picks].slice(0, 8);
 }
 
-/** In-stock dog dry food, 10 kg bags and up, cheapest per kg first (makanan-anjing-murah guide). */
-async function budgetDogFood() {
+/** In-stock dry food in big bags, cheapest per kg first (makanan anjing / kucing murah guides). */
+async function budgetFood({ pet, minKg, maxPerKg }: NonNullable<Guide["table"]>) {
   const db = createPublicClient();
   const { data } = await db
     .from("variants")
     .select("id, title, price, products!inner(slug, name, status, pet_type, categories!inner(slug))")
     .eq("products.status", "published")
     .eq("products.categories.slug", "dry-food")
-    .in("products.pet_type", ["dog", "dog_cat"]);
+    .in("products.pet_type", [pet, "dog_cat"]);
   const rows = (data ?? []) as unknown as { id: string; title: string; price: number; products: { slug: string; name: string } }[];
   const { data: stock } = await db.rpc("variant_stock", { p_variant_ids: rows.map((r) => r.id) });
   const available = new Map(((stock ?? []) as { variant_id: string; available: number }[]).map((s) => [s.variant_id, s.available]));
   return cheapestBigBags(
     rows.map((r) => ({ slug: r.products.slug, name: r.products.name, title: r.title, price: Number(r.price), available: available.get(r.id) ?? 0 })),
+    minKg,
+    6,
+    maxPerKg,
   );
 }
 
@@ -66,7 +69,7 @@ export default async function GuidePage({ params }: PageProps<"/guides/[slug]">)
   const guide = getGuide(slug);
   if (!guide) notFound();
   const products = await guideProducts(guide.shopLinks).catch(() => []);
-  const bags = guide.table === "budget-dog-food" ? await budgetDogFood().catch(() => []) : [];
+  const bags = guide.table ? await budgetFood(guide.table).catch(() => []) : [];
   const faqLd = guide.faq && {
     "@context": "https://schema.org",
     "@type": "FAQPage",

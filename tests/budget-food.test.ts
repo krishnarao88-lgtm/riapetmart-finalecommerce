@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
-import { cheapestBigBags, kgOf } from "../src/lib/budget-dog-food.ts";
+import { cheapestBigBags, kgOf } from "../src/lib/budget-food.ts";
 
 test("bag size from size option or product name", () => {
   assert.equal(kgOf("15 kg", "Alps"), 15);
