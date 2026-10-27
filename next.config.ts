@@ -9,10 +9,11 @@ const csp = [
   "style-src 'self' 'unsafe-inline'",
   "img-src 'self' data: blob: https:",
   "font-src 'self'",
-  `connect-src 'self' ${supabase} https://*.google-analytics.com https://*.analytics.google.com https://*.googletagmanager.com https://*.google.com https://www.googleadservices.com https://*.doubleclick.net https://www.merchant-center-analytics.goog https://www.facebook.com https://connect.facebook.net https://*.clarity.ms`,
+  `connect-src 'self' ${supabase} https://*.google-analytics.com https://*.analytics.google.com https://*.googletagmanager.com https://*.google.com https://www.google.com.my https://www.googleadservices.com https://*.doubleclick.net https://www.merchant-center-analytics.goog https://www.facebook.com https://connect.facebook.net https://*.clarity.ms`,
   // The Meta Pixel posts events that carry product data (ViewContent, AddToCart, Purchase) through a hidden
   // form + iframe to facebook.com/tr; without these two it only gets bare PageViews.
   // apis.google.com: Google Customer Reviews opt-in dialog on the order success page.
+  // google.com.my (connect-src): Google Ads sends Malaysian visitors' conversion pings to the local Google domain.
   "frame-src https://js.stripe.com https://www.google.com https://apis.google.com https://www.instagram.com https://td.doubleclick.net https://www.facebook.com",
   "object-src 'none'",
   "base-uri 'self'",
