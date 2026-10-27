@@ -125,19 +125,35 @@ export async function POST(req: Request) {
     promotionCodeId = promo.id;
   }
 
-  const session = await getStripe().checkout.sessions.create({
-    mode: "payment",
-    line_items: lineItems,
-    ...(promotionCodeId ? { discounts: [{ promotion_code: promotionCodeId }] } : { allow_promotion_codes: codesAllowed }),
-    customer_email: EMAIL.test(email) ? email : undefined,
-    metadata: { customer_phone: customerPhone, delivery_method: method },
-    success_url: `${origin}/order/success?session_id={CHECKOUT_SESSION_ID}`,
-    cancel_url: `${origin}/cart`,
-    // Unpaid checkouts close after 2 hours (Stripe's minimum is 30 min, default 24 h) so the "complete your
-    // order" email goes out the same day, with Stripe's link that reopens this exact checkout.
-    expires_at: Math.floor(Date.now() / 1000) + 2 * 60 * 60,
-    after_expiration: { recovery: { enabled: true, allow_promotion_codes: codesAllowed } },
-  });
+  let session: Stripe.Checkout.Session;
+  try {
+    session = await getStripe().checkout.sessions.create({
+      mode: "payment",
+      line_items: lineItems,
+      ...(promotionCodeId ? { discounts: [{ promotion_code: promotionCodeId }] } : { allow_promotion_codes: codesAllowed }),
+      customer_email: EMAIL.test(email) ? email : undefined,
+      metadata: { customer_phone: customerPhone, delivery_method: method },
+      success_url: `${origin}/order/success?session_id={CHECKOUT_SESSION_ID}`,
+      cancel_url: `${origin}/cart`,
+      // Unpaid checkouts close after 2 hours (Stripe's minimum is 30 min, default 24 h) so the "complete your
+      // order" email goes out the same day, with Stripe's link that reopens this exact checkout.
+      expires_at: Math.floor(Date.now() / 1000) + 2 * 60 * 60,
+      // Stripe can't allow promotion codes on the recovered session when this one already carries a code
+      // (`discounts`); asking for both failed every checkout with a typed code. The recovered session keeps the code.
+      after_expiration: { recovery: { enabled: true, allow_promotion_codes: codesAllowed && !promotionCodeId } },
+    });
+  } catch (err) {
+    // Never answer with an empty 500: the cart shows this message and the owner hears about it straight away.
+    console.error("Stripe checkout session failed:", err);
+    await notifyTelegram(
+      `⚠️ <b>Checkout failed</b> — ${tg(customerName)} · ${tg(customerPhone)}\n` +
+        `${tg(err instanceof Error ? err.message : String(err))}`,
+    );
+    return NextResponse.json(
+      { error: "We couldn't open the payment page. Please try again, or tap “Order via WhatsApp” and we'll help." },
+      { status: 502 },
+    );
+  }
 
   const shippingAddress = isPickup
     ? null

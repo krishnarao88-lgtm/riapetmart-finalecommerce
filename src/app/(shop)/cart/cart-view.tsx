@@ -221,8 +221,11 @@ export function CartView({
           })(),
         }),
       });
-      const data = await res.json();
-      if (!res.ok || !data.url) throw new Error(data.error ?? "Checkout failed");
+      // A crashed or timed-out server can answer with an empty or HTML body; show a plain message, not a parser error.
+      const data = (await res.json().catch(() => ({}))) as { url?: string; error?: string };
+      if (!res.ok || !data.url) {
+        throw new Error(data.error ?? "We couldn't open the payment page. Please try again, or order via WhatsApp.");
+      }
       try {
         localStorage.setItem(DETAILS_KEY, JSON.stringify({ name, phone, email, address }));
       } catch {}
