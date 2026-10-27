@@ -7,6 +7,10 @@ export type Guide = {
   intro: string;
   sections: { heading: string; body: string }[];
   shopLinks: { label: string; href: string }[];
+  /** Live product table shown under the intro (built from the catalogue, so it never goes stale). */
+  table?: "budget-dog-food";
+  /** Short questions and answers, also published as FAQ structured data for Google and AI answers. */
+  faq?: { q: string; a: string }[];
 };
 
 const baseGuides: Guide[] = [
@@ -38,6 +42,7 @@ const baseGuides: Guide[] = [
     shopLinks: [
       { label: "Shop dog dry food", href: "/shop?pet=dog&category=dry-food" },
       { label: "Shop dog wet food", href: "/shop?pet=dog&category=wet-food" },
+      { label: "Makanan anjing murah: big bags by price per kg", href: "/guides/makanan-anjing-murah" },
       { label: "Shop clearance", href: "/shop?deal=short-dated" },
     ],
   },

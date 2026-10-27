@@ -4,6 +4,51 @@ import type { Guide } from "./guides.ts";
 // only: every health topic tells owners when to see a vet, and none of it is a diagnosis.
 export const moreGuides: Guide[] = [
   {
+    slug: "makanan-anjing-murah",
+    title: "Makanan Anjing Murah di Malaysia: Beg Besar 15–20kg, Harga Sekilo",
+    description:
+      "Makanan anjing murah tapi berkualiti: senarai beg besar 15–20kg paling jimat ikut harga sekilo, dikemas kini ikut stok. Hantar hari sama sekitar Rawang, Selangor & KL.",
+    intro:
+      "Cara paling mudah untuk jimat makanan anjing ialah beli beg besar. Senarai di bawah menunjukkan makanan anjing kering 10kg ke atas yang ada stok di Ria Pet Mart, disusun ikut harga sekilo (paling murah dahulu). Harga dan stok dikemas kini secara automatik.",
+    table: "budget-dog-food",
+    sections: [
+      {
+        heading: "Kira harga sekilo, bukan harga beg",
+        body: "Beg 15–20kg nampak mahal, tapi harga sekilo selalunya jauh lebih rendah daripada beg 2–4kg jenama yang sama. Bahagikan harga beg dengan berat (contoh: RM90 ÷ 15kg = RM6 sekilo) untuk bandingkan dengan adil.",
+      },
+      {
+        heading: "Murah tapi masih berkhasiat",
+        body: "Semak bahan pertama dalam senarai ramuan (contoh: lamb, salmon, chicken) dan pastikan makanan itu untuk peringkat umur anjing anda: puppy atau adult. Makanan lengkap (complete food) sudah cukup untuk keperluan harian anjing dewasa yang sihat.",
+      },
+      {
+        heading: "Simpan beg besar supaya tak rosak",
+        body: "Lepas buka, simpan dalam bekas kedap udara di tempat sejuk dan kering, jauh dari cahaya matahari. Ikut tarikh luput pada beg. Kami tunjukkan tarikh 'best before' untuk setiap produk sebelum anda beli.",
+      },
+      {
+        heading: "Tukar makanan perlahan-lahan",
+        body: "Kalau tukar jenama, campur makanan baru sedikit demi sedikit selama kira-kira 7 hari supaya perut anjing tidak terganggu.",
+      },
+    ],
+    faq: [
+      {
+        q: "Makanan anjing apa yang paling murah di Ria Pet Mart?",
+        a: "Senarai di atas menunjukkan beg 10kg ke atas yang ada stok, disusun ikut harga sekilo. Ia dikemas kini secara automatik bila harga atau stok berubah.",
+      },
+      {
+        q: "Beg 15kg boleh tahan berapa lama?",
+        a: "Bergantung pada berat anjing. Ikut panduan pemakanan pada beg: anjing dewasa sederhana biasanya makan beberapa ratus gram sehari, jadi beg 15kg selalunya tahan lebih sebulan.",
+      },
+      {
+        q: "Boleh hantar beg besar ke rumah?",
+        a: "Boleh. Lalamove hari yang sama sekitar Rawang, Selangor dan KL (pesan sebelum 1 petang, Isnin–Sabtu), kurier ke seluruh Malaysia, atau ambil percuma di kedai kami di Bandar Bukit Beruntung.",
+      },
+    ],
+    shopLinks: [
+      { label: "Semua makanan anjing kering", href: "/shop?pet=dog&category=dry-food" },
+      { label: "Clearance (harga istimewa)", href: "/shop?deal=short-dated" },
+    ],
+  },
+  {
     slug: "why-cat-not-eating",
     title: "Kucing Tak Mahu Makan? Why Your Cat Isn't Eating and What to Do",
     description:
