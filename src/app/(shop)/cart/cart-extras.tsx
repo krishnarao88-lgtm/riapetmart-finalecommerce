@@ -79,7 +79,7 @@ export function CartSuggestions({ suggestions }: { suggestions: CartSuggestion[]
             <div className="size-12 shrink-0 overflow-hidden rounded-lg bg-peach/40">
               {s.image && (
                 // eslint-disable-next-line @next/next/no-img-element
-                <img src={s.image} alt="" className="size-full object-contain" />
+                <img src={s.image} alt="" className="size-full object-contain mix-blend-multiply" />
               )}
             </div>
             <div className="min-w-0 flex-1">

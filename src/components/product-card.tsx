@@ -94,7 +94,7 @@ export function ProductCard({
       <div className="relative flex aspect-square items-center justify-center overflow-hidden bg-peach/40">
         {image ? (
           // eslint-disable-next-line @next/next/no-img-element
-          <img src={image.path} alt={titleCase(image.alt || p.name)} className={`absolute inset-0 size-full object-contain transition-transform duration-500 ease-out motion-safe:group-hover:scale-105 ${soldOut ? "opacity-60" : ""}`} />
+          <img src={image.path} alt={titleCase(image.alt || p.name)} className={`absolute inset-0 size-full object-contain mix-blend-multiply transition-transform duration-500 ease-out motion-safe:group-hover:scale-105 ${soldOut ? "opacity-60" : ""}`} />
         ) : (
           <span className="grid justify-items-center gap-2 text-rust/70">
             <span className="grid size-14 place-items-center rounded-full bg-cream/80 ring-1 ring-rust/15">
