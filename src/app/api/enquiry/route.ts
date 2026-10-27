@@ -1,9 +1,13 @@
+import { allow, clientIp } from "@/lib/rate-limit";
 import { NextResponse } from "next/server";
 import { getResend } from "@/lib/resend";
 import { site } from "@/lib/site";
 import { notifyTelegram, tg } from "@/lib/telegram";
 
 export async function POST(req: Request) {
+  if (!allow(`enquiry:${clientIp(req)}`, 5)) {
+    return NextResponse.json({ error: "Too many messages. Please try again in a few minutes, or WhatsApp us." }, { status: 429 });
+  }
   const { name, email, message } = (await req.json()) as { name?: string; email?: string; message?: string };
   if (!name || !email || !message || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
     return NextResponse.json({ error: "Fill in your name, a valid email, and a message" }, { status: 400 });

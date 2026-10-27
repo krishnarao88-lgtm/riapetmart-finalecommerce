@@ -21,6 +21,8 @@ const csp = [
 ].join("; ");
 
 const nextConfig: NextConfig = {
+  // Don't advertise the framework/version in every response header.
+  poweredByHeader: false,
   images: {
     remotePatterns: [{ protocol: "https", hostname: "fveawvyiyqezrrkdwmpw.supabase.co", pathname: "/storage/v1/object/public/**" }],
   },

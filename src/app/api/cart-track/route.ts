@@ -1,8 +1,12 @@
+import { allow, clientIp } from "@/lib/rate-limit";
 import { NextResponse } from "next/server";
 import { createServiceClient } from "@/lib/supabase/service";
 import { notifyTelegram, tg } from "@/lib/telegram";
 
 export async function POST(req: Request) {
+  if (!allow(`cart:${clientIp(req)}`, 15)) {
+    return NextResponse.json({ error: "Too many requests. Please try again in a few minutes." }, { status: 429 });
+  }
   const { email, items, subtotal } = (await req.json()) as {
     email?: string;
     items?: unknown;

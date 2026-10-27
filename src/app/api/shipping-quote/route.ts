@@ -1,3 +1,4 @@
+import { allow, clientIp } from "@/lib/rate-limit";
 import { NextResponse } from "next/server";
 import { parcelKg } from "@/lib/shipping/parcel";
 import { parseLines, priceCart } from "@/lib/cart-pricing";
@@ -18,6 +19,9 @@ type ShippingOption = {
 
 // Store pickup is offered directly by the cart (no address or quote needed), so only delivery is quoted here.
 export async function POST(req: Request) {
+  if (!allow(`quote:${clientIp(req)}`, 40)) {
+    return NextResponse.json({ error: "Too many delivery checks. Please wait a few minutes and try again." }, { status: 429 });
+  }
   const body = (await req.json()) as {
     lines?: unknown;
     addressLine?: string;

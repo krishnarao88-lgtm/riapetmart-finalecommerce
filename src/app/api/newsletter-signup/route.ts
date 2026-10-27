@@ -1,3 +1,4 @@
+import { allow, clientIp } from "@/lib/rate-limit";
 import { randomBytes } from "node:crypto";
 import { NextResponse } from "next/server";
 import { sendTemplate } from "@/lib/resend";
@@ -20,6 +21,9 @@ async function welcomeCoupon(percent: number): Promise<string> {
 }
 
 export async function POST(req: Request) {
+  if (!allow(`signup:${clientIp(req)}`, 5)) {
+    return NextResponse.json({ error: "Too many sign-ups from this connection. Please try again in a few minutes." }, { status: 429 });
+  }
   const { email } = (await req.json()) as { email?: string };
   if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
     return NextResponse.json({ error: "Enter a valid email address" }, { status: 400 });

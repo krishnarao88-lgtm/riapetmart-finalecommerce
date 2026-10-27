@@ -1,3 +1,4 @@
+import { allow, clientIp } from "@/lib/rate-limit";
 import { NextResponse } from "next/server";
 import { type AssistantProduct, orderStatus, SHOP_FACTS, searchProducts } from "@/lib/assistant-tools";
 import { getRunningPromotions } from "@/lib/promotions-server";
@@ -7,20 +8,6 @@ const MODEL = "claude-haiku-4-5";
 const MAX_TURNS = 12;
 const MAX_CHARS = 800;
 const MAX_TOOL_ROUNDS = 4;
-
-// ponytail: per-instance memory limit, so a visitor hitting several serverless instances gets a bit more.
-// Move to a Supabase counter if abuse shows up; the Anthropic console spend limit is the hard cap.
-const hits = new Map<string, { count: number; reset: number }>();
-function allowed(ip: string) {
-  const now = Date.now();
-  const h = hits.get(ip);
-  if (!h || h.reset < now) {
-    hits.set(ip, { count: 1, reset: now + 10 * 60_000 });
-    return true;
-  }
-  h.count += 1;
-  return h.count <= 25;
-}
 
 const tools = [
   {
@@ -55,8 +42,7 @@ export async function POST(request: Request) {
   const key = process.env.ANTHROPIC_API_KEY;
   if (!key) return NextResponse.json({ error: "The assistant isn't switched on yet." }, { status: 503 });
 
-  const ip = request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || "unknown";
-  if (!allowed(ip)) {
+  if (!allow(`assistant:${clientIp(request)}`, 25)) {
     return NextResponse.json({ error: "Lots of questions! Please try again in a few minutes, or ask us on WhatsApp." }, { status: 429 });
   }
 
