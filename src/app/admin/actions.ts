@@ -3,6 +3,9 @@
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import { requireStaff } from "@/lib/auth";
+import { catHotelReply } from "@/lib/emails";
+import { sendTemplate } from "@/lib/resend";
 
 export async function sendMagicLink(formData: FormData) {
   const email = String(formData.get("email") ?? "").trim().toLowerCase();
@@ -67,8 +70,22 @@ export async function updateCatHotelBookingStatus(formData: FormData) {
   const status = String(formData.get("status"));
   if (!["confirmed", "declined", "completed"].includes(status)) return;
 
-  const supabase = await createClient();
-  await supabase.from("cat_hotel_bookings").update({ status }).eq("id", id);
+  const { supabase } = await requireStaff();
+  const { data: b } = await supabase
+    .from("cat_hotel_bookings")
+    .update({ status })
+    .eq("id", id)
+    .select("customer_name, customer_email, cat_name, pet_count, check_in, check_out")
+    .single();
+
+  // Confirm/decline used to change the status only, so customers never heard back.
+  if (b && status !== "completed") {
+    const petLabel = `${b.pet_count} cat${b.pet_count > 1 ? "s" : ""}${b.cat_name ? ` (${b.cat_name})` : ""}`;
+    await sendTemplate(
+      b.customer_email,
+      catHotelReply({ customerName: b.customer_name, petLabel, checkIn: b.check_in, checkOut: b.check_out }, status === "confirmed"),
+    ).catch((err) => console.error("Cat Hotel reply email failed:", err)); // the status change stands either way
+  }
   redirect("/admin/cat-hotel");
 }
 

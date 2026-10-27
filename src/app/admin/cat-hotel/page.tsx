@@ -1,4 +1,4 @@
-import { ArrowRight, CalendarCheck, Cat, Check, Clock, Mail, Phone, X } from "lucide-react";
+import { ArrowRight, CalendarCheck, Cat, Check, Clock, Mail, MessageCircle, Phone, X } from "lucide-react";
 import type { Metadata } from "next";
 import { actionBtn, CountTile, EmptyState, PageHeader, Pill, TONE } from "@/components/admin/list-parts";
 import { requireStaff } from "@/lib/auth";
@@ -20,7 +20,20 @@ type Booking = {
   created_at: string;
 };
 
-const statusTone = { pending: "warn", confirmed: "ok", declined: "bad", completed: "muted" } as const satisfies Record<Booking["status"], keyof typeof TONE>;
+/** Opens WhatsApp to the customer (Malaysian 01x… → 601x…) with a reply that matches the booking's status. */
+function customerWhatsapp(b: Booking) {
+  const digits = b.customer_phone.replace(/\D/g, "").replace(/^0/, "60");
+  const dates = `${b.check_in} to ${b.check_out}`;
+  const text =
+    b.status === "confirmed"
+      ? `Hi ${b.customer_name}, your Cat Hotel stay at Ria Pet Mart (${dates}) is confirmed. Please bring food, any medication and the vaccination record. See you!`
+      : b.status === "declined"
+        ? `Hi ${b.customer_name}, sorry, the Cat Hotel is full for ${dates}. Can we suggest other dates?`
+        : `Hi ${b.customer_name}, thanks for your Cat Hotel request (${dates}) at Ria Pet Mart.`;
+  return `https://wa.me/${digits}?text=${encodeURIComponent(text)}`;
+}
+
+const statusTone ={ pending: "warn", confirmed: "ok", declined: "bad", completed: "muted" } as const satisfies Record<Booking["status"], keyof typeof TONE>;
 
 export default async function AdminCatHotelPage() {
   const { supabase } = await requireStaff();
@@ -72,7 +85,18 @@ export default async function AdminCatHotelPage() {
               </div>
 
               <div className="grid gap-1 text-sm text-ink-2">
-                <span className="flex items-center gap-2"><Phone className="size-4 shrink-0 text-ink-3" aria-hidden />{b.customer_phone}</span>
+                <span className="flex items-center gap-2">
+                  <Phone className="size-4 shrink-0 text-ink-3" aria-hidden />
+                  {b.customer_phone}
+                  <a
+                    href={customerWhatsapp(b)}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="ml-auto inline-flex items-center gap-1 rounded-full bg-ok-bg px-3 py-1 text-xs font-bold text-ok-fg"
+                  >
+                    <MessageCircle className="size-3.5" aria-hidden /> WhatsApp
+                  </a>
+                </span>
                 <span className="flex items-center gap-2 break-all"><Mail className="size-4 shrink-0 text-ink-3" aria-hidden />{b.customer_email}</span>
                 {b.notes && <p className="mt-1 rounded-xl bg-sunk px-3 py-2">Notes: {b.notes}</p>}
               </div>

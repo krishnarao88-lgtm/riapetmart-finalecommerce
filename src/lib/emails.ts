@@ -87,6 +87,32 @@ export function catHotelRequest(b: { customerName: string; petLabel: string; che
   };
 }
 
+/** Sent when staff confirm or decline a Cat Hotel request in Admin. */
+export function catHotelReply(b: { customerName: string; petLabel: string; checkIn: string; checkOut: string }, confirmed: boolean): Email {
+  return {
+    subject: `Cat Hotel ${confirmed ? "booking confirmed" : "request update"} — ${site.name}`,
+    content: {
+      preheader: confirmed ? `Your stay from ${b.checkIn} to ${b.checkOut} is booked.` : `About your stay request for ${b.checkIn} to ${b.checkOut}.`,
+      heading: confirmed ? `You're booked in, ${b.customerName}` : `Sorry, ${b.customerName}, we're full for those dates`,
+      paragraphs: [
+        confirmed
+          ? "Your Cat Hotel stay is confirmed. Please bring your cat's food, any medication and their vaccination record at check-in."
+          : "We can't take this stay on the dates you asked for. WhatsApp us and we'll gladly look at other dates with you.",
+      ],
+      lines: [
+        { name: "Guests", detail: b.petLabel },
+        { name: "Check-in", detail: b.checkIn },
+        { name: "Check-out", detail: b.checkOut },
+      ],
+      cta: {
+        label: "WhatsApp us",
+        url: whatsappLink(`Hi ${site.name}, about my Cat Hotel ${confirmed ? "booking" : "request"} for ${b.checkIn} to ${b.checkOut}.`),
+      },
+      note: `Our shop: ${site.address.street}, ${site.address.city}. ${site.hours.days} ${site.hours.opens}–${site.hours.closes}.`,
+    },
+  };
+}
+
 export function welcomeCode(percent: number, code: string): Email {
   return {
     subject: `Your ${percent}% welcome code — ${site.name}`,

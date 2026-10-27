@@ -36,16 +36,24 @@ export async function submitCatHotelBooking(formData: FormData) {
 
   const petLabel = `${petCount} cat${petCount > 1 ? "s" : ""}${catName ? ` (${catName})` : ""}`;
   const summary = `${customerName} (${customerPhone}) — ${checkIn} to ${checkOut} — ${petLabel}`;
+  // Separate attempts: a bad customer address must not stop the shop's own alert. Resend reports failures in
+  // its result instead of throwing, so the shop email checks `error` too.
   try {
     await sendTemplate(customerEmail, catHotelRequest({ customerName, petLabel, checkIn, checkOut, notes: notes || undefined }));
-    await getResend().emails.send({
+  } catch (err) {
+    console.error("Cat Hotel customer email failed:", err);
+  }
+  try {
+    const { error: shopError } = await getResend().emails.send({
       from: FROM,
       to: site.email,
+      replyTo: customerEmail,
       subject: "New Cat Hotel booking request",
       text: `${summary}\nEmail: ${customerEmail}\nNotes: ${notes || "—"}\n\nReview it in /admin/cat-hotel.`,
     });
+    if (shopError) throw new Error(shopError.message);
   } catch (err) {
-    console.error("Cat Hotel booking email failed:", err);
+    console.error("Cat Hotel shop email failed:", err);
   }
 
   await notifyTelegram(
