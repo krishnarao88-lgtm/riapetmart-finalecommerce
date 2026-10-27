@@ -49,20 +49,21 @@ export function StayFields({ today }: { today: string }) {
       </div>
 
       <fieldset className="grid gap-2 text-sm text-choc">
-        <legend className="mb-1 font-semibold">Pick-up time</legend>
+        <legend className="mb-1 font-semibold">Pick-up time on your check-out day</legend>
         <label className="flex items-center gap-2">
           <input type="radio" name="checkout_time" value="before" checked={!late} onChange={() => setLate(false)} />
-          Before 12pm
+          Before 12pm: no extra charge
         </label>
         <label className="flex items-center gap-2">
           <input type="radio" name="checkout_time" value="after" checked={late} onChange={() => setLate(true)} />
-          After 12pm (one extra day is charged)
+          After 12pm: charged as 1 extra day
         </label>
       </fieldset>
 
-      <div aria-live="polite" className="rounded-xl bg-cream p-3 text-sm text-choc">
+      <div aria-live="polite" className="rounded-2xl border-2 border-terracotta bg-peach/30 p-4 text-sm text-choc">
+        <p className="text-xs font-bold uppercase tracking-wide text-rust">Price estimate</p>
         {!quote ? (
-          <p>Choose your dates to see the estimated price (RM{CAT_HOTEL_RATE} per cat per day).</p>
+          <p className="mt-1">Pick your check-in and check-out dates above to see your price (RM{CAT_HOTEL_RATE} per cat per day).</p>
         ) : quote.ok ? (
           <p>
             <span className="font-bubble text-xl font-extrabold">Estimated RM{quote.total}</span>
