@@ -1,8 +1,11 @@
 export type TrackItem = { item_id: string; item_name: string; item_variant?: string; price: number; quantity: number };
 
+// GA4 event -> Meta Pixel twin (null = GA4 only; Meta has no delivery-choice event).
 const events = {
   add_to_cart: "AddToCart",
   begin_checkout: "InitiateCheckout",
+  add_shipping_info: null,
+  add_payment_info: "AddPaymentInfo",
   purchase: "Purchase",
 } as const;
 
@@ -10,7 +13,7 @@ const events = {
 export function track(
   event: keyof typeof events,
   items: TrackItem[],
-  { value, transactionId }: { value?: number; transactionId?: string } = {},
+  { value, transactionId, shippingTier }: { value?: number; transactionId?: string; shippingTier?: string } = {},
 ) {
   if (typeof window === "undefined") return;
   const total = value ?? Math.round(items.reduce((n, i) => n + i.price * i.quantity, 0) * 100) / 100;
@@ -19,7 +22,10 @@ export function track(
     value: total,
     items,
     ...(transactionId && { transaction_id: transactionId }),
+    ...(shippingTier && { shipping_tier: shippingTier }),
   });
+  const metaEvent = events[event];
+  if (!metaEvent) return;
   const pixel = {
     currency: "MYR",
     value: total,
@@ -28,6 +34,6 @@ export function track(
     contents: items.map((i) => ({ id: i.item_id, quantity: i.quantity, item_price: i.price })),
     num_items: items.reduce((n, i) => n + i.quantity, 0),
   };
-  if (transactionId) window.fbq?.("track", events[event], pixel, { eventID: transactionId });
-  else window.fbq?.("track", events[event], pixel);
+  if (transactionId) window.fbq?.("track", metaEvent, pixel, { eventID: transactionId });
+  else window.fbq?.("track", metaEvent, pixel);
 }

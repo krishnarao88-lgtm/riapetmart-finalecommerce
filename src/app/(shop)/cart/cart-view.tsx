@@ -3,7 +3,7 @@
 import { CreditCard, Loader2, Lock, MapPinned, TicketPercent, Truck } from "lucide-react";
 import { Minus, Plus, ShoppingBag, Trash2 } from "lucide-react";
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { FreeShippingProgress } from "@/components/free-shipping-progress";
 import { TrustLine } from "@/components/trust-line";
 import { readAttribution } from "@/lib/attribution";
@@ -134,6 +134,31 @@ export function CartView({
       ? "Enter your mobile number to continue"
       : null;
 
+  function trackItems() {
+    return lines.map((l) => ({
+      item_id: l.variantId,
+      item_name: l.productName,
+      item_variant: l.variantTitle,
+      price: l.price,
+      quantity: l.qty,
+    }));
+  }
+
+  // Checkout funnel for GA4/Meta: begin_checkout once per visit to a non-empty cart, add_shipping_info on a
+  // delivery choice, add_payment_info on Pay now, purchase on the success page.
+  const checkoutTracked = useRef(false);
+  useEffect(() => {
+    if (checkoutTracked.current || lines.length === 0) return;
+    checkoutTracked.current = true;
+    track("begin_checkout", trackItems());
+    // fire once, when the cart first has items
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [lines.length]);
+  function chooseShipping(option: ShippingOption) {
+    setSelected({ key: quoteKey, option });
+    track("add_shipping_info", trackItems(), { shippingTier: option.method });
+  }
+
   async function getShippingOptions() {
     const key = quoteKey;
     setQuoting(true);
@@ -174,16 +199,7 @@ export function CartView({
     setPaying(true);
     setPayError(null);
     trackCart(email);
-    track(
-      "begin_checkout",
-      lines.map((l) => ({
-        item_id: l.variantId,
-        item_name: l.productName,
-        item_variant: l.variantTitle,
-        price: l.price,
-        quantity: l.qty,
-      })),
-    );
+    track("add_payment_info", trackItems());
     try {
       const res = await fetch("/api/checkout", {
         method: "POST",
@@ -385,7 +401,7 @@ export function CartView({
                   type="radio"
                   name="shipping"
                   checked={selectedShipping?.method === "pickup"}
-                  onChange={() => setSelected({ key: quoteKey, option: PICKUP })}
+                  onChange={() => chooseShipping(PICKUP)}
                 />
                 {PICKUP.label}
               </span>
@@ -464,7 +480,7 @@ export function CartView({
                     type="radio"
                     name="shipping"
                     checked={selectedShipping?.method === opt.method}
-                    onChange={() => setSelected({ key: quoteKey, option: opt })}
+                    onChange={() => chooseShipping(opt)}
                   />
                   {opt.label}
                 </span>
