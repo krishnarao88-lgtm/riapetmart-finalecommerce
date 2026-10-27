@@ -57,7 +57,7 @@ export async function POST(req: Request) {
       : charge(raw) === 0
         ? ` — free over ${formatMyr(freeMin)}`
         : ` — ${formatMyr(raw - charge(raw))} off (order over ${formatMyr(freeMin)})`;
-  const weightKg = parcelKg(cart.weightGrams);
+  const weightKg = parcelKg(cart.weightGrams, cart.volumetricGrams);
 
   const options: ShippingOption[] = [];
   const isSameDayZone = delivery.same_day_states?.includes(state) ?? false;

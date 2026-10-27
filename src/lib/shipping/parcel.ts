@@ -11,9 +11,20 @@ export function lineGrams(netGrams: number | null, qty: number, category: string
   return (netGrams ?? 500) * qty * (category === "Wet Food" ? CAN_FACTOR : BAG_FACTOR);
 }
 
-/** Declared parcel weight in kg: lines + box, rounded up to 100g, never under 0.5kg. */
-export function parcelKg(lineGramsTotal: number): number {
-  return Math.max(0.5, Math.ceil((lineGramsTotal + BOX_GRAMS) / 100) / 10);
+/** Volumetric grams couriers bill for a line: L×W×H cm / 5000 kg, i.e. mm³ / 5000 g. 0 unless all three sizes are set. */
+export function lineVolumetricGrams(
+  lengthMm: number | null,
+  widthMm: number | null,
+  heightMm: number | null,
+  qty: number,
+): number {
+  return lengthMm && widthMm && heightMm ? ((lengthMm * widthMm * heightMm) / 5000) * qty : 0;
+}
+
+/** Declared parcel weight in kg: lines + box, rounded up to 100g, never under 0.5kg.
+ *  Couriers bill max(actual, volumetric), so a higher volumetric weight wins. */
+export function parcelKg(lineGramsTotal: number, volumetricGrams = 0): number {
+  return Math.max(0.5, Math.ceil((lineGramsTotal + BOX_GRAMS) / 100) / 10, Math.ceil(volumetricGrams / 100) / 10);
 }
 
 /** Lalamove Malaysia limits: motorcycle up to 10kg (40cm box), car up to 40kg. Heavier goes by courier. */

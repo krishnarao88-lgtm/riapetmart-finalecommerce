@@ -8,7 +8,7 @@ import { EP_CANCELLED } from "@/lib/shipping/easyparcel-status";
 import { bookLalamoveOrder, cancelLalamoveOrder } from "@/lib/shipping/lalamove";
 import { MY_STATES } from "@/lib/my-states";
 import { LALAMOVE_REBOOKABLE, toE164MY } from "@/lib/shipping/lalamove-rules";
-import { lineGrams, parcelKg } from "@/lib/shipping/parcel";
+import { lineGrams, lineVolumetricGrams, parcelKg } from "@/lib/shipping/parcel";
 import { sendTemplate } from "@/lib/resend";
 import { site } from "@/lib/site";
 import { onItsWay } from "@/lib/emails";
@@ -38,17 +38,21 @@ type OrderItem = { variant_id: string; name: string; title: string; qty: number;
 async function orderParcelKg(supabase: SupabaseClient, items: OrderItem[]): Promise<number> {
   const { data: variants } = await supabase
     .from("variants")
-    .select("id, weight_grams, products(categories(name))")
+    .select("id, weight_grams, length_mm, width_mm, height_mm, products(categories(name))")
     .in("id", items.map((i) => i.variant_id));
+  type Dims = { length_mm: number | null; width_mm: number | null; height_mm: number | null };
   const byId = new Map(
-    ((variants ?? []) as unknown as { id: string; weight_grams: number | null; products: { categories: { name: string } | null } | null }[])
+    ((variants ?? []) as unknown as (Dims & { id: string; weight_grams: number | null; products: { categories: { name: string } | null } | null })[])
       .map((v) => [v.id, v]),
   );
-  const grams = items.reduce((sum, i) => {
+  let grams = 0;
+  let volumetric = 0;
+  for (const i of items) {
     const v = byId.get(i.variant_id);
-    return sum + lineGrams(v?.weight_grams ?? null, i.qty, v?.products?.categories?.name);
-  }, 0);
-  return parcelKg(grams);
+    grams += lineGrams(v?.weight_grams ?? null, i.qty, v?.products?.categories?.name);
+    volumetric += lineVolumetricGrams(v?.length_mm ?? null, v?.width_mm ?? null, v?.height_mm ?? null, i.qty);
+  }
+  return parcelKg(grams, volumetric);
 }
 type ShippingAddress = { addressLine: string; city: string; postcode: string; state: string } | null;
 

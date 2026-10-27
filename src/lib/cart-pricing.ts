@@ -4,7 +4,7 @@ import { bundleEligible, type CareProduct } from "@/lib/care-needs";
 import { discountedPrice, getExpiryBadge, type ExpirySettings } from "@/lib/expiry";
 import { todayInKL } from "@/lib/kl-time";
 import { type Promotion, promoFor, promoLabel } from "@/lib/promotions";
-import { lineGrams } from "@/lib/shipping/parcel";
+import { lineGrams, lineVolumetricGrams } from "@/lib/shipping/parcel";
 
 export type CartLineInput = { variantId: string; qty: number };
 export type PricedItem = {
@@ -20,8 +20,9 @@ export type PricedItem = {
   /** Shown next to the price, e.g. "Deepavali Sale -10%". */
   discount_label: string | null;
 };
-/** `care` describes the cart's products so callers can suggest pairings. `weightGrams` is the packed weight (see shipping/parcel). */
-export type PricedCart = { items: PricedItem[]; subtotal: number; weightGrams: number; care: CareProduct[] };
+/** `care` describes the cart's products so callers can suggest pairings. `weightGrams` is the packed weight and
+ *  `volumetricGrams` the box-size weight of lines with all three sizes set (see shipping/parcel). */
+export type PricedCart = { items: PricedItem[]; subtotal: number; weightGrams: number; volumetricGrams: number; care: CareProduct[] };
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
@@ -43,7 +44,7 @@ export async function priceCart(
   const [{ data: variants }, { data: stockRows }, { data: settingsRow }, { data: promoRows }] = await Promise.all([
     supabase
       .from("variants")
-      .select("id, title, price, weight_grams, products(id, name, highlights, pet_type, brand_id, category_id, categories(name), brands(is_house_brand), product_images(path))")
+      .select("id, title, price, weight_grams, length_mm, width_mm, height_mm, products(id, name, highlights, pet_type, brand_id, category_id, categories(name), brands(is_house_brand), product_images(path))")
       .in("id", ids),
     supabase.rpc("variant_stock", { p_variant_ids: ids }),
     supabase.from("settings").select("value").eq("key", "expiry_badges").maybeSingle(),
@@ -91,6 +92,7 @@ export async function priceCart(
   const items: PricedItem[] = [];
   let subtotal = 0;
   let weightGrams = 0;
+  let volumetricGrams = 0;
   for (const line of lines) {
     const v = variants.find((row) => row.id === line.variantId)!;
     const product = productOf(v);
@@ -134,6 +136,7 @@ export async function priceCart(
     const price = best.price;
     subtotal += price * line.qty;
     weightGrams += lineGrams(v.weight_grams, line.qty, product?.categories?.name);
+    volumetricGrams += lineVolumetricGrams(v.length_mm, v.width_mm, v.height_mm, line.qty);
     items.push({
       variant_id: v.id,
       name,
@@ -146,5 +149,5 @@ export async function priceCart(
       discount_label: best.label,
     });
   }
-  return { items, subtotal: Math.round(subtotal * 100) / 100, weightGrams, care: careProducts };
+  return { items, subtotal: Math.round(subtotal * 100) / 100, weightGrams, volumetricGrams, care: careProducts };
 }

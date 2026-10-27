@@ -16,6 +16,7 @@ import {
   PawPrint,
   MessageSquareQuote,
   Receipt,
+  ScanBarcode,
   Search,
   Settings,
   ShieldCheck,
@@ -38,6 +39,7 @@ const GROUPS: { title: string; links: NavLink[] }[] = [
       { href: "/admin", label: "Dashboard", Icon: LayoutDashboard, adminOnly: true },
       { href: "/admin/orders", label: "Orders", Icon: Receipt, adminOnly: false },
       { href: "/admin/products", label: "Products", Icon: Boxes, adminOnly: true },
+      { href: "/admin/products/shipping", label: "Weights & barcodes", Icon: ScanBarcode, adminOnly: true },
       { href: "/admin/finance", label: "Finance", Icon: ChartNoAxesCombined, adminOnly: true },
       { href: "/admin/goal", label: "Road to RM100k", Icon: Target, adminOnly: true },
       { href: "/admin/counter-card", label: "Counter card", Icon: QrCode, adminOnly: true },
@@ -76,7 +78,11 @@ export function AdminShell({
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
   const groups = GROUPS.map((g) => ({ ...g, links: g.links.filter((l) => role === "admin" || !l.adminOnly) }));
-  const current = groups.flatMap((g) => g.links).find((l) => isActive(pathname, l.href));
+  // Longest match wins, so /admin/products/shipping highlights its own link rather than Products.
+  const current = groups
+    .flatMap((g) => g.links)
+    .filter((l) => isActive(pathname, l.href))
+    .sort((a, b) => b.href.length - a.href.length)[0];
 
   // Close the phone menu after navigating.
   useEffect(() => {
@@ -90,7 +96,7 @@ export function AdminShell({
         <div key={g.title} className="grid gap-1">
           <p className="px-3 pb-1 text-[11px] font-bold uppercase tracking-[0.18em] text-peach/80">{g.title}</p>
           {g.links.map(({ href, label, Icon }) => {
-            const active = isActive(pathname, href);
+            const active = current?.href === href;
             return (
               <Link
                 key={href}
