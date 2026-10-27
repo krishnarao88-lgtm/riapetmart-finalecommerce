@@ -142,7 +142,7 @@ export function welcomeBestSellers(products: { name: string; url: string }[]): E
   };
 }
 
-export function abandonedCart(items: Required<Line>[], subtotal: number): Email {
+export function abandonedCart(items: Required<Line>[], subtotal: number, returnUrl = `${site.url}/cart`): Email {
   return {
     subject: `Your cart is saved — ${site.name}`,
     marketing: true,
@@ -152,7 +152,7 @@ export function abandonedCart(items: Required<Line>[], subtotal: number): Email 
       paragraphs: ["We've saved your cart so you can pick up where you left off."],
       lines: items.map((it) => ({ name: it.name, detail: `${it.title} × ${it.qty}`, amount: formatMyr(it.price * it.qty) })),
       total: formatMyr(subtotal),
-      cta: { label: "Return to your cart", url: `${site.url}/cart` },
+      cta: { label: "Return to your cart", url: returnUrl },
       note: "Need help choosing? Reply to this email or WhatsApp us and we'll help.",
     },
   };

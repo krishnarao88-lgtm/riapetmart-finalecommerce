@@ -133,6 +133,10 @@ export async function POST(req: Request) {
     metadata: { customer_phone: customerPhone, delivery_method: method },
     success_url: `${origin}/order/success?session_id={CHECKOUT_SESSION_ID}`,
     cancel_url: `${origin}/cart`,
+    // Unpaid checkouts close after 2 hours (Stripe's minimum is 30 min, default 24 h) so the "complete your
+    // order" email goes out the same day, with Stripe's link that reopens this exact checkout.
+    expires_at: Math.floor(Date.now() / 1000) + 2 * 60 * 60,
+    after_expiration: { recovery: { enabled: true, allow_promotion_codes: codesAllowed } },
   });
 
   const shippingAddress = isPickup

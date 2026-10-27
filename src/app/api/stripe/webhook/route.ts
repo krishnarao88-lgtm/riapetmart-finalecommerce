@@ -7,7 +7,7 @@ import { formatMyr } from "@/lib/pricing";
 import { referralLinkFor } from "@/lib/referral";
 import { sendTemplate } from "@/lib/resend";
 import { createServiceClient } from "@/lib/supabase/service";
-import { orderConfirmed, referralReward } from "@/lib/emails";
+import { abandonedCart, orderConfirmed, referralReward } from "@/lib/emails";
 import { notifyTelegram, tg } from "@/lib/telegram";
 
 type OrderItem = { variant_id: string; name: string; title: string; qty: number; price: number };
@@ -19,6 +19,30 @@ type OrderForEmail = {
   shipping_cost: number;
   total: number;
 };
+
+/**
+ * Emails Stripe's recovery link (reopens the same checkout) when a checkout expires unpaid. At most one reminder a
+ * day per email, and none if they've paid since (the same shopper often tries several times before paying).
+ */
+async function sendRecoveryEmail(supabase: ReturnType<typeof createServiceClient>, s: { id: string; customer_email: string | null; customer_details: { email: string | null } | null; after_expiration: { recovery: { url: string | null } | null } | null }) {
+  const email = s.customer_details?.email ?? s.customer_email;
+  const url = s.after_expiration?.recovery?.url;
+  if (!email || !url) return;
+  try {
+    const dayAgo = new Date(Date.now() - 86_400_000).toISOString();
+    const [{ data: paid }, { data: reminded }, { data: order }] = await Promise.all([
+      supabase.from("orders").select("id").eq("customer_email", email).eq("status", "paid").gte("created_at", dayAgo).limit(1),
+      supabase.from("abandoned_carts").select("email").eq("email", email).gte("reminded_at", dayAgo).limit(1),
+      supabase.from("orders").select("items, subtotal").eq("stripe_session_id", s.id).single(),
+    ]);
+    if (paid?.length || reminded?.length || !order) return;
+    const items = (order.items as OrderItem[]).map((it) => ({ name: it.name, title: it.title, qty: it.qty, price: it.price }));
+    await sendTemplate(email, abandonedCart(items, Number(order.subtotal), url));
+    await supabase.rpc("mark_cart_reminded", { p_email: email });
+  } catch (err) {
+    console.error("Recovery email failed:", err);
+  }
+}
 
 export async function POST(req: Request) {
   const signature = req.headers.get("stripe-signature");
@@ -45,6 +69,7 @@ export async function POST(req: Request) {
       .eq("status", "pending");
     if (error) return NextResponse.json({ error: "Could not update order" }, { status: 500 });
     const s = event.data.object;
+    await sendRecoveryEmail(supabase, s);
     await notifyTelegram(
       `⌛ <b>Checkout abandoned</b> (payment page closed or timed out)${s.customer_details?.email ? ` · ${tg(s.customer_details.email)}` : ""} · ${tg(formatMyr((s.amount_total ?? 0) / 100))}`,
     );

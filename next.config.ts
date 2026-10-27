@@ -5,11 +5,11 @@ const supabase = "https://fveawvyiyqezrrkdwmpw.supabase.co";
 // img-src allows any https host because TikTok cover images come from rotating CDN hosts.
 const csp = [
   "default-src 'self'",
-  `script-src 'self' 'unsafe-inline'${process.env.NODE_ENV === "development" ? " 'unsafe-eval'" : ""} https://js.stripe.com https://www.googletagmanager.com https://googleads.g.doubleclick.net https://www.googleadservices.com https://connect.facebook.net https://apis.google.com https://www.gstatic.com https://www.instagram.com`,
+  `script-src 'self' 'unsafe-inline'${process.env.NODE_ENV === "development" ? " 'unsafe-eval'" : ""} https://js.stripe.com https://www.googletagmanager.com https://googleads.g.doubleclick.net https://www.googleadservices.com https://connect.facebook.net https://apis.google.com https://www.gstatic.com https://www.instagram.com https://www.clarity.ms https://scripts.clarity.ms`,
   "style-src 'self' 'unsafe-inline'",
   "img-src 'self' data: blob: https:",
   "font-src 'self'",
-  `connect-src 'self' ${supabase} https://*.google-analytics.com https://*.analytics.google.com https://*.googletagmanager.com https://*.google.com https://www.googleadservices.com https://*.doubleclick.net https://www.merchant-center-analytics.goog https://www.facebook.com https://connect.facebook.net`,
+  `connect-src 'self' ${supabase} https://*.google-analytics.com https://*.analytics.google.com https://*.googletagmanager.com https://*.google.com https://www.googleadservices.com https://*.doubleclick.net https://www.merchant-center-analytics.goog https://www.facebook.com https://connect.facebook.net https://*.clarity.ms`,
   // The Meta Pixel posts events that carry product data (ViewContent, AddToCart, Purchase) through a hidden
   // form + iframe to facebook.com/tr; without these two it only gets bare PageViews.
   // apis.google.com: Google Customer Reviews opt-in dialog on the order success page.

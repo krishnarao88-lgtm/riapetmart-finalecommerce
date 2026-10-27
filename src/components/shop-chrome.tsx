@@ -1,6 +1,7 @@
 import { ActivityToast } from "@/components/activity-toast";
 import { AssistantWidget } from "@/components/assistant-widget";
 import { CartDrawer } from "@/components/cart-drawer";
+import { Clarity } from "@/components/clarity";
 import { FloatingWhatsApp } from "@/components/floating-whatsapp";
 import { SaleBanner } from "@/components/sale-banner";
 import { SiteFooter } from "@/components/site-footer";
@@ -23,6 +24,7 @@ export async function ShopChrome({ children }: { children: React.ReactNode }) {
       <SiteFooter />
       {offer.enabled && <WelcomePopup percent={offer.percent} delaySeconds={offer.delay_seconds} />}
       <FloatingWhatsApp />
+      <Clarity />
       <ActivityToast />
       {process.env.ANTHROPIC_API_KEY && <AssistantWidget />}
       <CartDrawer
