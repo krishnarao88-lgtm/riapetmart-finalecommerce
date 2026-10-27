@@ -52,7 +52,7 @@ export function CartDrawer({
                   <div className="flex size-14 shrink-0 items-center justify-center rounded-xl bg-peach/40">
                     {l.image ? (
                       // eslint-disable-next-line @next/next/no-img-element
-                      <img src={l.image} alt="" className="size-full rounded-xl object-cover" />
+                      <img src={l.image} alt="" className="size-full rounded-xl object-contain p-1 mix-blend-multiply" />
                     ) : (
                       <ShoppingBag className="size-5 text-rust/50" aria-hidden />
                     )}
