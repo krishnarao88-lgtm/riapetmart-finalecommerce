@@ -9,6 +9,8 @@ export type Guide = {
   shopLinks: { label: string; href: string }[];
   /** Live product table shown under the intro (built from the catalogue, so it never goes stale). */
   table?: { pet: "dog" | "cat"; minKg: number; maxPerKg?: number };
+  /** Products grouped by need, shown with their live price (e.g. own-brand supplements by health need). */
+  picks?: { need: string; note: string; slugs: string[] }[];
   /** Short questions and answers, also published as FAQ structured data for Google and AI answers. */
   faq?: { q: string; a: string }[];
 };
@@ -119,6 +121,7 @@ const baseGuides: Guide[] = [
     shopLinks: [
       { label: "Aniamor Skin & Coat Syrup", href: "/shop/aniamor-skin-and-coat-syrup" },
       { label: "Semua suplemen kucing", href: "/shop?pet=cat&category=supplements" },
+      { label: "Panduan vitamin ikut keperluan", href: "/guides/vitamin-supplemen-kucing-anjing" },
       { label: "Rawatan kutu (NexGard)", href: "/flea-tick" },
     ],
   },
@@ -152,6 +155,7 @@ const baseGuides: Guide[] = [
       { label: "Makanan kucing basah", href: "/shop?pet=cat&category=wet-food" },
       { label: "Tawaran pelepasan (clearance)", href: "/shop?deal=short-dated" },
       { label: "Makanan kucing murah: beg besar ikut harga sekilo", href: "/guides/makanan-kucing-murah" },
+      { label: "Vitamin & supplemen kucing", href: "/guides/vitamin-supplemen-kucing-anjing" },
     ],
   },
 ];

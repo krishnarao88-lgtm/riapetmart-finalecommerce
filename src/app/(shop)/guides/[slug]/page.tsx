@@ -53,6 +53,17 @@ async function budgetFood({ pet, minKg, maxPerKg }: NonNullable<Guide["table"]>)
   );
 }
 
+/** Name and lowest price for the products a guide recommends; unpublished ones simply drop out. */
+async function pickedProducts(slugs: string[]) {
+  const { data } = await createPublicClient()
+    .from("products")
+    .select("slug, name, variants(price)")
+    .eq("status", "published")
+    .in("slug", slugs);
+  const rows = (data ?? []) as { slug: string; name: string; variants: { price: number }[] }[];
+  return new Map(rows.map((p) => [p.slug, { name: p.name, from: Math.min(...p.variants.map((v) => Number(v.price))) }]));
+}
+
 export function generateStaticParams() {
   return guides.map((g) => ({ slug: g.slug }));
 }
@@ -70,6 +81,7 @@ export default async function GuidePage({ params }: PageProps<"/guides/[slug]">)
   if (!guide) notFound();
   const products = await guideProducts(guide.shopLinks).catch(() => []);
   const bags = guide.table ? await budgetFood(guide.table).catch(() => []) : [];
+  const picked = guide.picks ? await pickedProducts(guide.picks.flatMap((p) => p.slugs)).catch(() => new Map()) : new Map();
   const faqLd = guide.faq && {
     "@context": "https://schema.org",
     "@type": "FAQPage",
@@ -83,6 +95,30 @@ export default async function GuidePage({ params }: PageProps<"/guides/[slug]">)
       </Link>
       <h1 className="mt-2 font-bubble text-3xl font-extrabold text-choc">{guide.title}</h1>
       <p className="mt-3 text-choc-2">{guide.intro}</p>
+
+      {guide.picks?.map((group) => {
+        const items = group.slugs.flatMap((s) => (picked.has(s) ? [{ slug: s, ...picked.get(s)! }] : []));
+        if (!items.length) return null;
+        return (
+          <section key={group.need} className="mt-6 grid gap-2">
+            <h2 className="font-bubble text-xl font-extrabold text-choc">{group.need}</h2>
+            <p className="text-sm text-choc-2">{group.note}</p>
+            <ul className="grid gap-2 sm:grid-cols-2">
+              {items.map((p) => (
+                <li key={p.slug}>
+                  <Link
+                    href={`/shop/${p.slug}`}
+                    className="flex h-full items-center justify-between gap-3 rounded-2xl card-soft bg-surface p-3 hover:bg-cream"
+                  >
+                    <span className="font-bold text-choc">{titleCase(p.name)}</span>
+                    <span className="shrink-0 text-sm font-semibold text-rust">RM{p.from.toFixed(2)}</span>
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </section>
+        );
+      })}
 
       {bags.length > 0 && (
         <ol className="mt-6 grid gap-2">

@@ -4,6 +4,80 @@ import type { Guide } from "./guides.ts";
 // only: every health topic tells owners when to see a vet, and none of it is a diagnosis.
 export const moreGuides: Guide[] = [
   {
+    slug: "vitamin-supplemen-kucing-anjing",
+    title: "Vitamin & Supplemen Kucing dan Anjing di Malaysia: Pilih Ikut Keperluan",
+    description:
+      "Vitamin dan supplemen kucing & anjing yang diluluskan DVS: sendi, buah pinggang, hati, bulu gugur, perut dan pemulihan. Pilih ikut keperluan, hantar hari sama sekitar Rawang, Selangor & KL.",
+    intro:
+      "Supplemen membantu menyokong kesihatan harian kucing dan anjing, tetapi ia bukan pengganti rawatan doktor haiwan. Pilih ikut keperluan haiwan anda di bawah. Semua produk ini diluluskan DVS (Jabatan Perkhidmatan Veterinar) dan harga dikemas kini secara automatik.",
+    picks: [
+      {
+        need: "Sendi & tulang",
+        note: "Untuk haiwan tua, sendi kaku, baka aktif, atau anak kucing dan anak anjing yang sedang membesar.",
+        slugs: ["aniamor-joint-care-tablet", "aniamor-bone-and-joint-syrup", "aniamor-ortho-care-tablet", "robust-hearty-treats-hip-joint-500g"],
+      },
+      {
+        need: "Buah pinggang & saluran kencing",
+        note: "Untuk haiwan tua atau yang ada masalah buah pinggang. Gunakan bersama rawatan doktor haiwan.",
+        slugs: ["aniamor-kidney-care-tablet", "aniamor-nephro-care-tablet", "aniamor-utri-care-tablet"],
+      },
+      {
+        need: "Hati",
+        note: "Untuk penjagaan hati harian dan pemulihan selepas sakit.",
+        slugs: ["aniamor-liver-care-syrup", "aniamor-milk-thistle-tablet"],
+      },
+      {
+        need: "Bulu gugur & kulit",
+        note: "Untuk bulu kusam, gugur, kulit kering dan kelemumur. Pastikan juga kutu dirawat setiap bulan.",
+        slugs: ["aniamor-skin-and-coat-syrup", "robust-hearty-treats-skin-coat-500g"],
+      },
+      {
+        need: "Perut & pencernaan",
+        note: "Untuk cirit-birit, kembung, angin dan selepas makan antibiotik.",
+        slugs: ["aniamor-pre-and-probiotic-tablet", "aniamor-prebiotic-sachets", "aniamor-electrolyte-powder"],
+      },
+      {
+        need: "Imun & pemulihan",
+        note: "Untuk sokongan imun dan pemulihan. Parvir dan Thrombup digunakan bersama rawatan doktor haiwan.",
+        slugs: ["aniamor-herbal-care-syrup", "anvir-syrup-100ml", "parvir-syrup-100ml", "thrombup-syrup-200ml", "aniamor-neural-care-syrup"],
+      },
+      {
+        need: "Gigi & nafas (anjing)",
+        note: "Snek bakar semula jadi untuk nafas lebih segar dan kurang karang gigi.",
+        slugs: ["robust-hearty-treats-teeth-and-gum-care-500g", "robust-hearty-treats-nutritious-mix-500g"],
+      },
+    ],
+    sections: [
+      {
+        heading: "Bila perlu jumpa doktor haiwan dahulu",
+        body: "Kalau haiwan anda tidak makan lebih sehari, muntah atau cirit-birit berterusan, lemah, atau ada darah dalam najis atau kencing, jumpa doktor haiwan dahulu. Supplemen sesuai untuk sokongan dan penjagaan jangka panjang.",
+      },
+      {
+        heading: "Cara beri supplemen",
+        body: "Ikut dos pada label mengikut berat badan. Sirap boleh dicampur dalam makanan basah; tablet boleh dihancurkan atau diberi bersama snek. Beri sekurang-kurangnya 2–4 minggu sebelum menilai hasilnya.",
+      },
+    ],
+    faq: [
+      {
+        q: "Vitamin apa untuk bulu kucing gugur?",
+        a: "Supplemen omega 3 & 6 seperti Aniamor Skin & Coat Syrup membantu bulu kusam dan gugur. Pastikan juga kucing dirawat untuk kutu setiap bulan dan makan makanan lengkap.",
+      },
+      {
+        q: "Adakah supplemen ini diluluskan?",
+        a: "Ya, semua produk dalam panduan ini diluluskan DVS (Jabatan Perkhidmatan Veterinar Malaysia).",
+      },
+      {
+        q: "Boleh beri bersama ubat dari doktor haiwan?",
+        a: "Kebanyakan supplemen boleh, tetapi tanya doktor haiwan anda dahulu, terutama untuk masalah buah pinggang, hati, parvo atau platelet rendah.",
+      },
+    ],
+    shopLinks: [
+      { label: "Semua Aniamor", href: "/brands/aniamor" },
+      { label: "Semua supplemen", href: "/shop?category=supplements" },
+      { label: "Klinik haiwan berdekatan", href: "/vets" },
+    ],
+  },
+  {
     slug: "makanan-kucing-murah",
     title: "Makanan Kucing Murah di Malaysia: Beg Besar 7–15kg, Harga Sekilo",
     description:
