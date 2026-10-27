@@ -51,6 +51,8 @@ const nextConfig: NextConfig = {
       { source: "/deals", destination: "/shop?deal=short-dated", permanent: true },
       { source: "/login", destination: "/account", permanent: true },
       { source: "/privacy-policy", destination: "/privacy", permanent: true },
+      { source: "/pages/cookies", destination: "/privacy", permanent: true },
+      { source: "/faq", destination: "/delivery", permanent: true },
       { source: "/terms-and-conditions", destination: "/terms", permanent: true },
     ];
   },

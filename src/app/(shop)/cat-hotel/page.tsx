@@ -1,6 +1,7 @@
 import Image from "next/image";
 import type { Metadata } from "next";
 import { submitCatHotelBooking } from "./actions";
+import { StayFields } from "./stay-fields";
 
 export const metadata: Metadata = {
   title: "Cat Hotel Rawang – Book Cat Boarding Online",
@@ -32,10 +33,15 @@ export default async function CatHotelPage({
         <div className="grid gap-1">
           <h1 className="font-bubble text-3xl font-extrabold text-choc">Cat Hotel in Rawang: book cat boarding</h1>
           <p className="text-choc-2">
-            Boarding for your cat while you&apos;re away, right here at our Bandar Bukit Beruntung shop. Current
-            rate is RM10 per day, per cat — submit a request below and we&apos;ll confirm availability and the
-            exact rate with you on WhatsApp or phone.
+            Boarding for your cat while you&apos;re away, right here at our Bandar Bukit Beruntung shop. Submit a
+            request below and we&apos;ll confirm availability with you on WhatsApp or phone.
           </p>
+          <ul className="grid list-disc gap-1 pl-5 text-sm text-choc-2">
+            <li>RM10 per cat per day. The form works out your estimate.</li>
+            <li>Please bring your cat&apos;s own food and litter. We don&apos;t provide them.</li>
+            <li>Check-in and check-out Monday–Saturday (we&apos;re closed Sundays). A stay over Sunday counts as a day.</li>
+            <li>Check-out is before 12pm. Pick-up after 12pm is charged one extra day.</li>
+          </ul>
           <p className="text-sm text-choc-2">
             This is a booking <strong>request</strong>, not an instant confirmation — we check space before
             confirming.
@@ -51,7 +57,9 @@ export default async function CatHotelPage({
         )}
         {error && (
           <p className="rounded-xl border-2 border-bad-fg bg-bad-bg px-3 py-2 text-sm text-bad-fg">
-            Please fill in your name, contact details, and check-in/check-out dates.
+            {error === "sunday"
+              ? "We're closed on Sundays. Please choose a Monday–Saturday check-in and check-out."
+              : "Please fill in your name, contact details, and check-in/check-out dates."}
           </p>
         )}
 
@@ -86,51 +94,16 @@ export default async function CatHotelPage({
             </label>
           </div>
 
-          <div className="grid gap-4 sm:grid-cols-[1fr_auto]">
-            <label className="grid min-w-0 gap-1 text-sm font-semibold text-choc">
-              Cat&apos;s name(s) (optional)
-              <input
-                name="cat_name"
-                placeholder="e.g. Milo, Luna"
-                className="w-full min-w-0 rounded-xl border border-choc/30 bg-cream px-3 py-2 text-base font-normal text-choc"
-              />
-            </label>
-            <label className="grid gap-1 text-sm font-semibold text-choc">
-              Number of cats
-              <input
-                type="number"
-                name="pet_count"
-                min={1}
-                max={10}
-                defaultValue={1}
-                required
-                className="w-24 rounded-xl border border-choc/30 bg-cream px-3 py-2 text-base font-normal text-choc"
-              />
-            </label>
-          </div>
+          <label className="grid min-w-0 gap-1 text-sm font-semibold text-choc">
+            Cat&apos;s name(s) (optional)
+            <input
+              name="cat_name"
+              placeholder="e.g. Milo, Luna"
+              className="w-full min-w-0 rounded-xl border border-choc/30 bg-cream px-3 py-2 text-base font-normal text-choc"
+            />
+          </label>
 
-          <div className="grid gap-4 sm:grid-cols-2">
-            <label className="grid min-w-0 gap-1 text-sm font-semibold text-choc">
-              Check-in
-              <input
-                type="date"
-                name="check_in"
-                required
-                min={today}
-                className="w-full min-w-0 rounded-xl border border-choc/30 bg-cream px-3 py-2 text-base font-normal text-choc"
-              />
-            </label>
-            <label className="grid min-w-0 gap-1 text-sm font-semibold text-choc">
-              Check-out
-              <input
-                type="date"
-                name="check_out"
-                required
-                min={today}
-                className="w-full min-w-0 rounded-xl border border-choc/30 bg-cream px-3 py-2 text-base font-normal text-choc"
-              />
-            </label>
-          </div>
+          <StayFields today={today} />
 
           <label className="grid gap-1 text-sm font-semibold text-choc">
             Notes (optional)

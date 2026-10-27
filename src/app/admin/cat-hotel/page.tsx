@@ -2,6 +2,7 @@ import { ArrowRight, CalendarCheck, Cat, Check, Clock, Mail, MessageCircle, Phon
 import type { Metadata } from "next";
 import { actionBtn, CountTile, EmptyState, PageHeader, Pill, TONE } from "@/components/admin/list-parts";
 import { requireStaff } from "@/lib/auth";
+import { catHotelQuote, LATE_CHECKOUT_NOTE } from "@/lib/cat-hotel-price";
 import { updateCatHotelBookingStatus } from "../actions";
 
 export const metadata: Metadata = { title: "Cat Hotel bookings", robots: { index: false } };
@@ -83,6 +84,16 @@ export default async function AdminCatHotelPage() {
                   <span className="font-bold tabular-nums text-choc">{b.check_out}</span>
                 </div>
               </div>
+
+              {(() => {
+                const q = catHotelQuote(b.check_in, b.check_out, b.pet_count, !!b.notes?.includes(LATE_CHECKOUT_NOTE));
+                return q.ok ? (
+                  <p className="text-sm font-semibold text-choc">
+                    Estimate RM{q.total} · {q.days} day{q.days > 1 ? "s" : ""} × {b.pet_count} cat{b.pet_count > 1 ? "s" : ""}
+                    {q.lateDay && " (incl. late pick-up)"}
+                  </p>
+                ) : null;
+              })()}
 
               <div className="grid gap-1 text-sm text-ink-2">
                 <span className="flex items-center gap-2">
