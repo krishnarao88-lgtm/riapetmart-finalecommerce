@@ -1,4 +1,5 @@
 import { ActivityToast } from "@/components/activity-toast";
+import { Analytics } from "@/components/analytics";
 import { AssistantWidget } from "@/components/assistant-widget";
 import { CartDrawer } from "@/components/cart-drawer";
 import { Clarity } from "@/components/clarity";
@@ -24,6 +25,8 @@ export async function ShopChrome({ children }: { children: React.ReactNode }) {
       <SiteFooter />
       {offer.enabled && <WelcomePopup percent={offer.percent} delaySeconds={offer.delay_seconds} />}
       <FloatingWhatsApp />
+      {/* Shop pages only: staff working in Admin were most of GA4's page views and fed the ad audiences. */}
+      <Analytics />
       <Clarity />
       <ActivityToast />
       {process.env.ANTHROPIC_API_KEY && <AssistantWidget />}

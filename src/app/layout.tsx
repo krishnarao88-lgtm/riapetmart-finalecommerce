@@ -1,6 +1,5 @@
 import type { Metadata, Viewport } from "next";
 import { Baloo_2, Figtree } from "next/font/google";
-import { Analytics } from "@/components/analytics";
 import { ReferralCapture } from "@/components/referral-capture";
 import { siteKeywords } from "@/lib/seo";
 import { site } from "@/lib/site";
@@ -70,7 +69,6 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(storeJsonLd) }}
         />
-        <Analytics />
         <ReferralCapture />
         <a
           href="#main"
