@@ -28,8 +28,9 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   const brand = await getBrand(slug);
   if (!brand) return {};
   return {
-    title: `${brand.name} – Shop Online in Malaysia`,
-    description: `Shop ${brand.name} at ${site.name} in Rawang: ${brand.products.length} product${brand.products.length === 1 ? "" : "s"} with same-day Klang Valley delivery or free store pickup.`,
+    // Search Console (Oct 2026): brand searches are price-led ("nexgard price malaysia", "harga royal canin").
+    title: `${brand.name} Malaysia: Price List & Same-Day Delivery`,
+    description: `${brand.name} prices in Malaysia (harga ${brand.name}): ${brand.products.length} product${brand.products.length === 1 ? "" : "s"} in stock at ${site.name}, Rawang. Genuine stock, best-before shown, same-day delivery in Selangor & KL or free store pickup.`,
     alternates: { canonical: `/brands/${slug}` },
   };
 }
