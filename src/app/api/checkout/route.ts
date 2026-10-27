@@ -11,6 +11,7 @@ import { createClient } from "@/lib/supabase/server";
 import { createServiceClient } from "@/lib/supabase/service";
 import { notifyTelegram, tg } from "@/lib/telegram";
 import { formatMyr } from "@/lib/pricing";
+import { CODES_NOT_ON_SALE, resolvePromoCode } from "@/lib/promo-code";
 import { readWelcomeOffer } from "@/lib/welcome-offer";
 
 type ShippingInput = {
@@ -38,6 +39,7 @@ export async function POST(req: Request) {
     customerPhone?: string;
     email?: string;
     attribution?: unknown;
+    promoCode?: string;
   };
   const lines = parseLines(body.lines);
   if (!lines) return NextResponse.json({ error: "Cart is empty" }, { status: 400 });
@@ -112,11 +114,21 @@ export async function POST(req: Request) {
   // Promo codes on top of clearance/bundle/sale prices can sell below cost; the owner can switch that off.
   const offer = await readWelcomeOffer();
   const codesAllowed = offer.stack_with_discounts || !cart.items.some((it) => it.discount);
+  // A code typed in the cart is checked again here and applied for the shopper, so they don't have to find
+  // Stripe's own "Add promotion code" link. Without one, Stripe's field stays available as before.
+  const typedCode = typeof body.promoCode === "string" ? body.promoCode.trim() : "";
+  let promotionCodeId: string | null = null;
+  if (typedCode) {
+    if (!codesAllowed) return NextResponse.json({ error: CODES_NOT_ON_SALE }, { status: 400 });
+    const promo = await resolvePromoCode(typedCode);
+    if (!promo.ok) return NextResponse.json({ error: promo.error }, { status: 400 });
+    promotionCodeId = promo.id;
+  }
 
   const session = await getStripe().checkout.sessions.create({
     mode: "payment",
     line_items: lineItems,
-    allow_promotion_codes: codesAllowed,
+    ...(promotionCodeId ? { discounts: [{ promotion_code: promotionCodeId }] } : { allow_promotion_codes: codesAllowed }),
     customer_email: EMAIL.test(email) ? email : undefined,
     metadata: { customer_phone: customerPhone, delivery_method: method },
     success_url: `${origin}/order/success?session_id={CHECKOUT_SESSION_ID}`,

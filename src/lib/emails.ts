@@ -45,7 +45,7 @@ export function referralReward(code: string): Email {
       paragraphs: ["Your friend just placed their first order. As a thank-you, here's 10% off your next one."],
       code,
       cta: { label: "Shop now", url: `${site.url}/shop` },
-      note: "Enter the code at the payment step. It works once.",
+      note: "Type it in the Welcome or discount code box on your cart page before you pay. It works once.",
     },
   };
 }
@@ -98,7 +98,7 @@ export function welcomeCode(percent: number, code: string): Email {
       ],
       code,
       cta: { label: "Start shopping", url: `${site.url}/shop` },
-      note: "Enter the code at the payment step. It works once.",
+      note: "Type it in the Welcome or discount code box on your cart page before you pay. It works once.",
     },
   };
 }

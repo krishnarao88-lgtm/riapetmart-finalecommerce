@@ -1,6 +1,6 @@
 "use client";
 
-import { CreditCard, Loader2, Lock, MapPinned, Truck } from "lucide-react";
+import { CreditCard, Loader2, Lock, MapPinned, TicketPercent, Truck } from "lucide-react";
 import { Minus, Plus, ShoppingBag, Trash2 } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useState } from "react";
@@ -47,6 +47,30 @@ export function CartView({
   const subtotal = priced?.subtotal ?? localSubtotal;
   const [paying, setPaying] = useState(false);
   const [payError, setPayError] = useState<string | null>(null);
+  const [codeInput, setCodeInput] = useState("");
+  const [promo, setPromo] = useState<{ code: string; percentOff: number | null; amountOff: number | null } | null>(null);
+  const [codeError, setCodeError] = useState<string | null>(null);
+  const [checkingCode, setCheckingCode] = useState(false);
+
+  async function applyCode() {
+    setCheckingCode(true);
+    setCodeError(null);
+    try {
+      const res = await fetch("/api/promo-check", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ code: codeInput, lines: lines.map((l) => ({ variantId: l.variantId, qty: l.qty })) }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error ?? "That code can't be used");
+      setPromo(data);
+    } catch (err) {
+      setPromo(null);
+      setCodeError(err instanceof Error ? err.message : "That code can't be used");
+    } finally {
+      setCheckingCode(false);
+    }
+  }
 
   const [email, setEmail] = useState("");
   const [name, setName] = useState("");
@@ -171,6 +195,7 @@ export function CartView({
           customerPhone: phone,
           email,
           attribution: readAttribution(),
+          promoCode: promo?.code,
           referralCode: (() => {
             try {
               return localStorage.getItem("riapetmart:ref") ?? undefined;
@@ -204,6 +229,14 @@ export function CartView({
       </div>
     );
   }
+
+  // Stripe takes a coupon off the whole payment (delivery line included), so the estimate does too.
+  const beforeCode = subtotal + (selectedShipping?.price ?? 0);
+  const codeSaving = !promo
+    ? 0
+    : promo.percentOff
+      ? Math.round(beforeCode * promo.percentOff) / 100
+      : Math.min(promo.amountOff ?? 0, beforeCode);
 
   // Everything the shop needs to confirm the order in one message; blank fields are left out.
   const fullAddress = [address.addressLine, `${address.postcode} ${address.city}`.trim(), address.state]
@@ -442,6 +475,44 @@ export function CartView({
         )}
       </div>
 
+      <div className="mt-4 grid gap-2 rounded-2xl card-soft bg-surface p-4">
+        <label htmlFor="promo-code" className="flex items-center gap-2 font-bold text-choc">
+          <TicketPercent className="size-5 text-rust" aria-hidden /> Welcome or discount code
+        </label>
+        {promo ? (
+          <div className="flex items-center justify-between gap-2 rounded-xl bg-ok-bg px-3 py-2 text-sm text-ok-fg">
+            <span>
+              <span className="font-mono font-bold">{promo.code}</span> applied
+              {promo.percentOff ? `: ${promo.percentOff}% off` : promo.amountOff ? `: ${formatMyr(promo.amountOff)} off` : ""}
+            </span>
+            <button type="button" onClick={() => setPromo(null)} className="font-semibold underline">
+              Remove
+            </button>
+          </div>
+        ) : (
+          <div className="flex gap-2">
+            <input
+              id="promo-code"
+              value={codeInput}
+              onChange={(e) => setCodeInput(e.target.value.toUpperCase())}
+              onKeyDown={(e) => e.key === "Enter" && codeInput.trim() && void applyCode()}
+              placeholder="e.g. WELCOME-1A2B3C4D"
+              autoComplete="off"
+              className="min-w-0 flex-1 rounded-xl border border-choc/40 px-3 py-2 font-mono uppercase"
+            />
+            <button
+              type="button"
+              onClick={applyCode}
+              disabled={checkingCode || !codeInput.trim()}
+              className="rounded-xl bg-choc px-4 py-2 font-bold text-cream disabled:opacity-60"
+            >
+              {checkingCode ? "Checking…" : "Apply"}
+            </button>
+          </div>
+        )}
+        {codeError && <p className="text-sm font-medium text-bad-fg">{codeError}</p>}
+      </div>
+
       <div className="mt-4 grid gap-1 rounded-2xl card-soft bg-cream p-4">
         <div className="flex items-center justify-between text-choc-2">
           <span>Subtotal</span>
@@ -451,9 +522,15 @@ export function CartView({
           <span>Delivery</span>
           <span>{selectedShipping ? (selectedShipping.price > 0 ? formatMyr(selectedShipping.price) : "Free") : "—"}</span>
         </div>
+        {promo && codeSaving > 0 && (
+          <div className="flex items-center justify-between text-ok-fg">
+            <span>Code {promo.code}</span>
+            <span>-{formatMyr(codeSaving)}</span>
+          </div>
+        )}
         <div className="flex items-center justify-between border-t border-choc/20 pt-1 font-bold text-choc">
           <span>Total</span>
-          <span className="text-xl">{formatMyr(subtotal + (selectedShipping?.price ?? 0))}</span>
+          <span className="text-xl">{formatMyr(subtotal + (selectedShipping?.price ?? 0) - codeSaving)}</span>
         </div>
       </div>
 

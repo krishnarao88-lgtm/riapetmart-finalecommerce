@@ -65,7 +65,7 @@ export function CartEmailCapture({ percent }: { percent: number | null }) {
         <p className="font-bold">Cart saved. Check your inbox.</p>
         {code && (
           <p className="mt-1">
-            Your {percent}% code: <span className="font-mono font-bold">{code}</span> (paste it at checkout)
+            Your {percent}% code: <span className="font-mono font-bold">{code}</span> (type it in the code box on the cart page)
           </p>
         )}
       </div>

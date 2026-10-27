@@ -111,7 +111,7 @@ export function WelcomePopup({ percent, delaySeconds }: { percent: number; delay
 
       {code ? (
         <div className="mt-3 grid gap-3">
-          <p className="text-choc-2">Your code is ready — paste it at checkout.</p>
+          <p className="text-choc-2">Your code is ready. Type it in the “Welcome or discount code” box in your cart.</p>
           <button
             type="button"
             onClick={() => navigator.clipboard?.writeText(code)}
