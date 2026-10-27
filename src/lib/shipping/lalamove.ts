@@ -110,7 +110,11 @@ export async function getLalamoveQuote(
   const dropoff = await geocodeAddress(dropoffAddress);
   if (!dropoff) return null;
 
-  const data = await lalamoveRequest("POST", "/v3/quotations", quotationBody(dropoff, dropoffAddress, weightKg)).catch(() => null);
+  const data = await lalamoveRequest("POST", "/v3/quotations", quotationBody(dropoff, dropoffAddress, weightKg)).catch((err) => {
+    // Logged so a silently missing same-day option shows up in Vercel logs instead of going unnoticed.
+    console.error("Lalamove quotation failed:", err instanceof Error ? err.message : err);
+    return null;
+  });
 
   const total = data?.data?.priceBreakdown?.total;
   if (!total) return null;
