@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { cleanProductText } from "@/lib/product-text";
 import { requireAdmin } from "@/lib/auth";
+import { pingIndexNow } from "@/lib/indexnow";
 import { MAX_MARGIN, priceFromMargin } from "@/lib/pricing";
 
 function num(form: FormData, key: string): number | null {
@@ -23,7 +24,7 @@ export async function saveProduct(_prev: ActionState, formData: FormData) {
   const { supabase } = await requireAdmin();
   const id = String(formData.get("id"));
 
-  const { error } = await supabase
+  const { data: saved, error } = await supabase
     .from("products")
     .update({
       name: String(formData.get("name") ?? "").trim(),
@@ -45,10 +46,14 @@ export async function saveProduct(_prev: ActionState, formData: FormData) {
       seo_title: text(formData, "seo_title"),
       seo_description: text(formData, "seo_description"),
     })
-    .eq("id", id);
+    .eq("id", id)
+    .select("slug, status")
+    .single();
 
   revalidatePath(`/admin/products/${id}`);
-  return error ? { error: error.message } : { ok: "Product saved." };
+  if (error) return { error: error.message };
+  if (saved?.status === "published") await pingIndexNow([`/shop/${saved.slug}`]);
+  return { ok: "Product saved." };
 }
 
 /** Saves cost, margin and selling price for one variant. Price wins if it was typed by hand. */
