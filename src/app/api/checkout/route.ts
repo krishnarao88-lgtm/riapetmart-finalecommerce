@@ -13,6 +13,7 @@ import { notifyTelegram, tg } from "@/lib/telegram";
 import { formatMyr } from "@/lib/pricing";
 import { CODES_NOT_ON_SALE, resolvePromoCode } from "@/lib/promo-code";
 import { readWelcomeOffer } from "@/lib/welcome-offer";
+import { getFreeGift, shortDate } from "@/lib/free-gift";
 
 type ShippingInput = {
   method?: string;
@@ -159,18 +160,25 @@ export async function POST(req: Request) {
     ? null
     : { addressLine: shipping.addressLine, city: shipping.city, postcode: shipping.postcode, state: shipping.state };
 
+  // The free gift rides along at RM0 so stock is deducted when the order is paid and it shows on the packing list.
+  const gift = await getFreeGift(supabase).catch(() => null);
   const { error: rpcError } = await createServiceClient().rpc("create_pending_order", {
     p_session_id: session.id,
     // list_price + discount let Admin → Finance show what each discount cost.
-    p_items: cart.items.map(({ variant_id, name, title, qty, price, list_price, discount }) => ({
-      variant_id,
-      name,
-      title,
-      qty,
-      price,
-      list_price,
-      discount,
-    })),
+    p_items: [
+      ...cart.items.map(({ variant_id, name, title, qty, price, list_price, discount }) => ({
+        variant_id,
+        name,
+        title,
+        qty,
+        price,
+        list_price,
+        discount,
+      })),
+      ...(gift
+        ? [{ variant_id: gift.variantId, name: `FREE GIFT: ${gift.label}`, title: `best before ${shortDate(gift.bestBefore)}`, qty: 1, price: 0, list_price: 0, discount: null }]
+        : []),
+    ],
     p_subtotal: cart.subtotal,
     p_total: Math.round((cart.subtotal + shippingPrice) * 100) / 100,
     p_customer_email: null,

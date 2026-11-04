@@ -1,7 +1,7 @@
 "use client";
 
 import { CreditCard, Loader2, Lock, MapPinned, TicketPercent, Truck } from "lucide-react";
-import { Minus, Plus, ShoppingBag, Trash2 } from "lucide-react";
+import { Gift, Minus, Plus, ShoppingBag, Trash2 } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import { FreeShippingProgress } from "@/components/free-shipping-progress";
@@ -35,11 +35,14 @@ export function CartView({
   freeDeliveryCap,
   pickupEnabled,
   codesStack,
+  gift,
 }: {
   freeDeliveryMin: number | null;
   freeDeliveryCap: number | null;
   pickupEnabled: boolean;
   codesStack: boolean;
+  /** Free gift checkout adds to every order while the offer runs (settings.free_gift). */
+  gift?: { label: string; bestBefore: string } | null;
 }) {
   const { lines, subtotal: localSubtotal, setQty, remove } = useCart();
   // Server prices once they arrive (bundle / short-dated discounts); the cart's own sum until then.
@@ -342,6 +345,14 @@ export function CartView({
           </li>
         ))}
       </ul>
+      {gift && (
+        <p className="mt-3 flex items-center gap-2 rounded-2xl border-2 border-dashed border-terracotta bg-peach/40 px-4 py-3 text-sm font-semibold text-choc">
+          <Gift className="size-5 shrink-0 text-rust" aria-hidden />
+          <span>
+            FREE {gift.label} added to your order (RM0, best before {gift.bestBefore}). While stock lasts.
+          </span>
+        </p>
+      )}
 
       <CartSuggestions suggestions={priced?.suggestions ?? []} />
 

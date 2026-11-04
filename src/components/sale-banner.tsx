@@ -1,4 +1,5 @@
-import { PartyPopper } from "lucide-react";
+import { Gift, PartyPopper } from "lucide-react";
+import { getFreeGift, shortDate } from "@/lib/free-gift";
 import Link from "next/link";
 import { unstable_cache } from "next/cache";
 import { AutoBanner } from "@/components/auto-banner";
@@ -42,6 +43,22 @@ export async function SaleBanner() {
   const { promos } = await getRunningPromotions();
   const sale = [...promos].sort((a, b) => b.discount - a.discount)[0];
   const upcoming = sale ? null : await getUpcomingPromotion();
+  // A free-gift offer outranks the everyday rotation (holiday sales still come first).
+  const gift = sale ? null : await getFreeGift(createPublicClient()).catch(() => null);
+  if (gift) {
+    return (
+      <Link
+        href="/shop"
+        className="flex flex-wrap items-center justify-center gap-x-3 gap-y-1 bg-terracotta px-4 py-2 text-center text-sm font-bold text-cream hover:bg-rust"
+      >
+        <span className="inline-flex items-center gap-2">
+          <Gift className="size-4 shrink-0 motion-safe:animate-bounce" aria-hidden />
+          FREE {gift.label} with every order. Best before {shortDate(gift.bestBefore)}, while stock lasts
+        </span>
+        <SaleCountdown target={`${gift.endsOn}T23:59:59+08:00`} label="Ends in" />
+      </Link>
+    );
+  }
   if (!sale && !upcoming) {
     // No holiday sale: rotate the offers that are true right now.
     const [clearance, delivery] = await Promise.all([getClearanceSummary(), getDeliverySettings()]);
