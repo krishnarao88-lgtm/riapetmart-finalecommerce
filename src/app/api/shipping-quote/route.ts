@@ -63,36 +63,24 @@ export async function POST(req: Request) {
   const isSameDayZone = delivery.same_day_states?.includes(state) ?? false;
   const fullAddress = `${addressLine}, ${city}, ${postcode} ${state}, Malaysia`;
 
+  // Both carriers are asked at once: one after the other left the Pay button greyed out for several seconds.
   // Sandbox riders never show up, so customers are only offered Lalamove once it's live.
-  if (LALAMOVE_LIVE && isSameDayZone && delivery.lalamove_enabled !== false) {
-    try {
-      const quote = await getLalamoveQuote(fullAddress, weightKg);
-      if (quote) {
-        options.push({
-          method: "lalamove",
-          label: `${lalamoveDelivery().label}${note(quote.price)}`,
-          price: charge(quote.price),
-        });
-      }
-    } catch (err) {
-      console.error("Lalamove quote failed:", err);
-    }
-  }
-
-  if (delivery.easyparcel_enabled !== false) {
-    try {
-      const quote = await getEasyParcelQuote(postcode, state, weightKg);
-      if (quote) {
-        options.push({
-          method: "easyparcel",
-          label: `Courier — ${quote.courierName}${note(quote.price)}`,
-          price: charge(quote.price),
-          serviceId: quote.serviceId,
-        });
-      }
-    } catch (err) {
-      console.error("EasyParcel quote failed:", err);
-    }
+  const [lala, ep] = await Promise.all([
+    LALAMOVE_LIVE && isSameDayZone && delivery.lalamove_enabled !== false
+      ? getLalamoveQuote(fullAddress, weightKg).catch((err) => (console.error("Lalamove quote failed:", err), null))
+      : null,
+    delivery.easyparcel_enabled !== false
+      ? getEasyParcelQuote(postcode, state, weightKg).catch((err) => (console.error("EasyParcel quote failed:", err), null))
+      : null,
+  ]);
+  if (lala) options.push({ method: "lalamove", label: `${lalamoveDelivery().label}${note(lala.price)}`, price: charge(lala.price) });
+  if (ep) {
+    options.push({
+      method: "easyparcel",
+      label: `Courier — ${ep.courierName}${note(ep.price)}`,
+      price: charge(ep.price),
+      serviceId: ep.serviceId,
+    });
   }
 
   if (options.length === 0) {
