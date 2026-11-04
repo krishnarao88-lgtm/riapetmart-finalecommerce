@@ -1,5 +1,5 @@
 import { Gift, PartyPopper } from "lucide-react";
-import { getFreeGift, shortDate } from "@/lib/free-gift";
+import { getFreeGifts, shortDate } from "@/lib/free-gift";
 import Link from "next/link";
 import { unstable_cache } from "next/cache";
 import { AutoBanner } from "@/components/auto-banner";
@@ -44,8 +44,13 @@ export async function SaleBanner() {
   const sale = [...promos].sort((a, b) => b.discount - a.discount)[0];
   const upcoming = sale ? null : await getUpcomingPromotion();
   // A free-gift offer outranks the everyday rotation (holiday sales still come first).
-  const gift = sale ? null : await getFreeGift(createPublicClient()).catch(() => null);
-  if (gift) {
+  const gifts = sale ? null : await getFreeGifts(createPublicClient()).catch(() => null);
+  const gift = gifts?.cat ?? gifts?.dog;
+  if (gifts && gift) {
+    const text =
+      gifts.cat && gifts.dog
+        ? "FREE gift with every purchase: an Aristocat can for your cat or a Sniffly pouch for your dog, while stock lasts"
+        : `FREE ${gift.label} with every order${gift.kind === "cat" ? `. Best before ${shortDate(gift.bestBefore)}` : ""}, while stock lasts`;
     return (
       <Link
         href="/shop"
@@ -53,7 +58,7 @@ export async function SaleBanner() {
       >
         <span className="inline-flex items-center gap-2">
           <Gift className="size-4 shrink-0 motion-safe:animate-bounce" aria-hidden />
-          FREE {gift.label} with every order. Best before {shortDate(gift.bestBefore)}, while stock lasts
+          {text}
         </span>
         <SaleCountdown target={`${gift.endsOn}T23:59:59+08:00`} label="Ends in" />
       </Link>

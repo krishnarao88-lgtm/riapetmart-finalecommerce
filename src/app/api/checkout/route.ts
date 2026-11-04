@@ -13,7 +13,7 @@ import { notifyTelegram, tg } from "@/lib/telegram";
 import { formatMyr } from "@/lib/pricing";
 import { CODES_NOT_ON_SALE, resolvePromoCode } from "@/lib/promo-code";
 import { readWelcomeOffer } from "@/lib/welcome-offer";
-import { getFreeGift, shortDate } from "@/lib/free-gift";
+import { getFreeGifts, giftKindFor, shortDate } from "@/lib/free-gift";
 
 type ShippingInput = {
   method?: string;
@@ -161,7 +161,12 @@ export async function POST(req: Request) {
     : { addressLine: shipping.addressLine, city: shipping.city, postcode: shipping.postcode, state: shipping.state };
 
   // The free gift rides along at RM0 so stock is deducted when the order is paid and it shows on the packing list.
-  const gift = await getFreeGift(supabase).catch(() => null);
+  // Cat can for any cart with cat items (mixed too), dog pouch for dog-only carts.
+  const gift = await (async () => {
+    const { data: pets } = await supabase.from("variants").select("products(pet_type)").in("id", lines.map((l) => l.variantId));
+    const kind = giftKindFor(((pets ?? []) as unknown as { products: { pet_type: string } | null }[]).map((r) => r.products?.pet_type ?? ""));
+    return (await getFreeGifts(supabase))[kind];
+  })().catch(() => null);
   const { error: rpcError } = await createServiceClient().rpc("create_pending_order", {
     p_session_id: session.id,
     // list_price + discount let Admin → Finance show what each discount cost.
