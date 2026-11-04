@@ -24,6 +24,18 @@ test("bulk savings per unit, only within the same kind", () => {
   assert.equal(bulkSavings([{ id: "a", title: "Bag", price: 10 }]).size, 0);
 });
 
+test("no fake savings: dearer big pack, or pet-weight options", () => {
+  // box costs more per pouch than singles → no badge on either
+  const pricy = bulkSavings([
+    { id: "one", title: "Single Unit - 1 pouch", price: 1.6 },
+    { id: "box", title: "12 pouch - 1 box", price: 37.4 },
+  ]);
+  assert.equal(pricy.size, 0);
+  // "Cats under 4 kg" is the cat's weight, not a pack size
+  assert.equal(unitsOf("Cats under 4 kg"), null);
+  assert.equal(bulkSavings([{ id: "a", title: "Cats under 4 kg", price: 15 }, { id: "b", title: "Cats over 4 kg", price: 19.5 }]).size, 0);
+});
+
 test("courier window skips Sundays", () => {
   // Fri 6 Nov 2026, 10:00 Malaysia → shop days Sat 7, Mon 9, Tue 10, Wed 11 → "Mon 9 Nov – Wed 11 Nov"
   assert.equal(courierWindow(new Date("2026-11-06T02:00:00Z")), "Mon 9 Nov – Wed 11 Nov");
