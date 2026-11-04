@@ -548,7 +548,14 @@ export function CartView({
         </div>
         <div className="flex items-center justify-between text-choc-2">
           <span>Delivery</span>
-          <span>{selectedShipping ? (selectedShipping.price > 0 ? formatMyr(selectedShipping.price) : "Free") : "—"}</span>
+          {/* "—" read as free delivery to a WhatsApp customer (Nov 2026); say plainly it isn't added yet. */}
+          <span className={selectedShipping ? "" : "text-right text-xs font-semibold text-rust"}>
+            {selectedShipping
+              ? selectedShipping.price > 0
+                ? formatMyr(selectedShipping.price)
+                : "Free"
+              : "Not added yet: choose pickup or delivery above"}
+          </span>
         </div>
         {promo && codeSaving > 0 && (
           <div className="flex items-center justify-between text-ok-fg">
@@ -557,7 +564,7 @@ export function CartView({
           </div>
         )}
         <div className="flex items-center justify-between border-t border-choc/20 pt-1 font-bold text-choc">
-          <span>Total</span>
+          <span>{selectedShipping ? "Total" : "Total before delivery"}</span>
           <span className="text-xl">{formatMyr(subtotal + (selectedShipping?.price ?? 0) - codeSaving)}</span>
         </div>
       </div>
