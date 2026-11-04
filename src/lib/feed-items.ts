@@ -46,6 +46,14 @@ export async function loadFeedItems(): Promise<FeedItem[]> {
     const image = [...p.product_images].sort((a, b) => a.sort - b.sort)[0].path;
     const category = p.categories?.name ?? null;
     const minPrice = p.variants.length ? Math.min(...p.variants.map((v) => v.price)) : null;
+    // Shop-made barcodes (GS1 in-store range 20-29) aren't real GTINs; Google must only get manufacturer codes.
+    // A can and its carton often share the can's barcode; Google wants one item per GTIN, so the cheapest option
+    // (the single unit) keeps it and the others go without, which Google accepts.
+    const gtinOwner = new Map<string, string>();
+    for (const v of [...p.variants].sort((a, b) => a.price - b.price)) {
+      const real = v.barcode && /^\d{8,14}$/.test(v.barcode) && !/^2\d{12}$/.test(v.barcode);
+      if (real && !gtinOwner.has(v.barcode!)) gtinOwner.set(v.barcode!, v.id);
+    }
     return p.variants.map((v) => {
       const row = stock.get(v.id);
       const badge = getExpiryBadge(row?.nearest_expiry ?? null, expirySettings);
@@ -60,8 +68,7 @@ export async function loadFeedItems(): Promise<FeedItem[]> {
         salePrice: badge?.kind === "short-dated" ? discountedPrice(v.price, badge.discount) : null,
         inStock: (row?.available ?? 0) > 0,
         brand: p.brands?.name ?? null,
-        // Shop-made barcodes (GS1 in-store range 20-29) aren't real GTINs; Google must only get manufacturer codes.
-        gtin: v.barcode && /^\d{8,14}$/.test(v.barcode) && !/^2\d{12}$/.test(v.barcode) ? v.barcode : null,
+        gtin: v.barcode && gtinOwner.get(v.barcode) === v.id ? v.barcode : null,
         googleCategory: googleCategory(p.pet_type, category),
         productType: productType(p.pet_type, category),
         highlights: feedHighlights(p.highlights, category),
