@@ -76,10 +76,10 @@ export function CartSuggestions({ suggestions }: { suggestions: CartSuggestion[]
       <ul className="mt-3 grid gap-2">
         {suggestions.map((s) => (
           <li key={s.variantId} className="flex items-center gap-3 rounded-xl bg-surface p-2">
-            <div className="size-12 shrink-0 overflow-hidden rounded-lg bg-peach/40">
+            <div className="size-12 shrink-0 overflow-hidden rounded-lg bg-white">
               {s.image && (
                 // eslint-disable-next-line @next/next/no-img-element
-                <img src={s.image} alt="" className="size-full object-contain mix-blend-multiply" />
+                <img src={s.image} alt="" className="size-full object-contain p-0.5" />
               )}
             </div>
             <div className="min-w-0 flex-1">

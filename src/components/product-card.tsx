@@ -1,4 +1,6 @@
-import { PawPrint, ShieldCheck } from "lucide-react";
+import { Flame, PackageCheck, PawPrint, ShieldCheck, Trophy } from "lucide-react";
+import { bulkSavings } from "@/lib/buy-boosters";
+import { getCardHighlights } from "@/lib/top-sellers";
 import Link from "next/link";
 import { ProductTags, SizePills } from "@/components/product-tags";
 import { QuickAddButton } from "@/components/quick-add-button";
@@ -60,7 +62,7 @@ export function isShowcaseReady(p: ProductCardData, stock: VariantStock | null):
 }
 
 /** Shared card used by /shop and the homepage's featured products — same stock and expiry badges everywhere. */
-export function ProductCard({
+export async function ProductCard({
   product,
   stock,
   expirySettings,
@@ -70,6 +72,11 @@ export function ProductCard({
   expirySettings: Partial<ExpirySettings>;
 }) {
   const p = product;
+  // Badges from real data only: website sales, last week's views and the pack prices themselves.
+  const highlights = await getCardHighlights().catch(() => ({ bestSellers: [] as string[], popular: [] as string[] }));
+  const bestSeller = highlights.bestSellers.includes(p.id);
+  const popular = !bestSeller && highlights.popular.includes(p.id);
+  const bulkSave = Math.max(0, ...bulkSavings(p.variants).values());
   const minPrice = p.variants.length ? Math.min(...p.variants.map((v) => v.price)) : null;
   const { available, nearest, badge } = productStock(p.variants, stock, expirySettings);
   const soldOut = available === 0;
@@ -91,10 +98,10 @@ export function ProductCard({
       href={`/shop/${p.slug}`}
       className="reveal card-soft group flex h-full flex-col overflow-hidden rounded-2xl bg-surface transition-[transform,box-shadow] duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] hover:-translate-y-1 hover:shadow-[0_2px_4px_rgb(46_29_20/0.06),0_22px_40px_-20px_rgb(46_29_20/0.45)] active:scale-[0.98]"
     >
-      <div className="relative flex aspect-square items-center justify-center overflow-hidden bg-peach/40">
+      <div className="relative flex aspect-square items-center justify-center overflow-hidden bg-white">
         {image ? (
           // eslint-disable-next-line @next/next/no-img-element
-          <img src={image.path} alt={titleCase(image.alt || p.name)} className={`absolute inset-0 size-full object-contain mix-blend-multiply transition-transform duration-500 ease-out motion-safe:group-hover:scale-105 ${soldOut ? "opacity-60" : ""}`} />
+          <img src={image.path} alt={titleCase(image.alt || p.name)} className={`absolute inset-0 size-full object-contain p-3 transition-transform duration-500 ease-out motion-safe:group-hover:scale-105 ${soldOut ? "opacity-60" : ""}`} />
         ) : (
           <span className="grid justify-items-center gap-2 text-rust/70">
             <span className="grid size-14 place-items-center rounded-full bg-cream/80 ring-1 ring-rust/15">
@@ -142,6 +149,25 @@ export function ProductCard({
           <span className="text-xs font-semibold uppercase tracking-wide text-rust">{p.categoryLabel}</span>
         )}
         <span className="line-clamp-2 text-sm font-bold text-choc">{name}</span>
+        {(bestSeller || popular || bulkSave > 0) && !soldOut && (
+          <span className="flex flex-wrap gap-1">
+            {bestSeller && (
+              <span className="inline-flex items-center gap-1 rounded-full bg-amber-100 px-2 py-0.5 text-[11px] font-bold text-amber-800">
+                <Trophy className="size-3" aria-hidden /> Best seller
+              </span>
+            )}
+            {popular && (
+              <span className="inline-flex items-center gap-1 rounded-full bg-rose-100 px-2 py-0.5 text-[11px] font-bold text-rose-700">
+                <Flame className="size-3" aria-hidden /> Popular this week
+              </span>
+            )}
+            {bulkSave > 0 && (
+              <span className="inline-flex items-center gap-1 rounded-full bg-ok-bg px-2 py-0.5 text-[11px] font-bold text-ok-fg">
+                <PackageCheck className="size-3" aria-hidden /> Bulk save {bulkSave}%
+              </span>
+            )}
+          </span>
+        )}
         <SizePills sizes={p.size_display} compact />
         <div className="mt-1">
           <ProductTags petType={p.pet_type} highlights={p.highlights} max={2} compact />

@@ -4,6 +4,7 @@ import { BadgeCheck, Cat, Dog, FlaskConical, Info, MessageCircle, PawPrint, Pill
 import Link from "next/link";
 import { notFound, permanentRedirect } from "next/navigation";
 import { AddToCart } from "@/components/add-to-cart";
+import { BuyBoosters, RatingLine } from "@/components/buy-boosters";
 import { DealStrip, ViewCount } from "@/components/deal-strip";
 import { PaymentBadges } from "@/components/payment-badges";
 import { promoFor, promoLabel } from "@/lib/promotions";
@@ -296,10 +297,10 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
       </nav>
       {cheapest && <TrackViewItem id={cheapest.id} name={name} price={cheapest.price} />}
       <div className="grid gap-8 md:grid-cols-2">
-        <div className="relative mx-auto flex aspect-square w-full max-h-[45vh] items-center justify-center overflow-hidden rounded-3xl card-soft bg-peach/40 sm:max-h-none">
+        <div className="relative mx-auto flex aspect-square w-full max-h-[45vh] items-center justify-center overflow-hidden rounded-3xl card-soft bg-white sm:max-h-none">
           {image ? (
             // eslint-disable-next-line @next/next/no-img-element
-            <img src={image.path} alt={titleCase(image.alt || product.name)} className="absolute inset-0 size-full object-contain mix-blend-multiply" />
+            <img src={image.path} alt={titleCase(image.alt || product.name)} className="absolute inset-0 size-full object-contain p-4" />
           ) : (
             <PawPrint className="size-16 text-rust/50" aria-hidden />
           )}
@@ -315,6 +316,7 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
             {category && <span>· {category}</span>}
           </div>
           <h1 className="font-bubble text-2xl font-extrabold text-choc">{name}</h1>
+          <RatingLine productId={product.id} />
           <SizePills sizes={product.size_display} />
           <ProductTags petType={product.pet_type} highlights={product.highlights} />
           {product.is_dvs_approved && (
@@ -353,6 +355,7 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
               variants={variants}
             />
           </div>
+          <BuyBoosters variants={variants} />
           <PaymentBadges />
           <TrustLine />
           <a
@@ -466,10 +469,10 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
                     href={`/shop/${p.slug}`}
                     className="flex h-full flex-col overflow-hidden rounded-2xl card-soft bg-surface transition-transform hover:-translate-y-0.5"
                   >
-                    <div className="relative flex aspect-square items-center justify-center overflow-hidden bg-peach/40">
+                    <div className="relative flex aspect-square items-center justify-center overflow-hidden bg-white">
                       {relImage ? (
                         // eslint-disable-next-line @next/next/no-img-element
-                        <img src={relImage.path} alt={titleCase(relImage.alt || p.name)} className="absolute inset-0 size-full object-contain mix-blend-multiply" />
+                        <img src={relImage.path} alt={titleCase(relImage.alt || p.name)} className="absolute inset-0 size-full object-contain p-4" />
                       ) : (
                         <PawPrint className="size-10 text-rust/50" aria-hidden />
                       )}

@@ -49,10 +49,10 @@ export function CartDrawer({
             <ul className="grid gap-3">
               {lines.map((l) => (
                 <li key={l.variantId} className="flex items-center gap-3 rounded-2xl border border-choc/20 p-2">
-                  <div className="flex size-14 shrink-0 items-center justify-center rounded-xl bg-peach/40">
+                  <div className="flex size-14 shrink-0 items-center justify-center rounded-xl bg-white ring-1 ring-line">
                     {l.image ? (
                       // eslint-disable-next-line @next/next/no-img-element
-                      <img src={l.image} alt="" className="size-full rounded-xl object-contain p-1 mix-blend-multiply" />
+                      <img src={l.image} alt="" className="size-full rounded-xl object-contain p-1" />
                     ) : (
                       <ShoppingBag className="size-5 text-rust/50" aria-hidden />
                     )}
