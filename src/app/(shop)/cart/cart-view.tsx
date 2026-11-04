@@ -356,7 +356,8 @@ export function CartView({
 
       <CartSuggestions suggestions={priced?.suggestions ?? []} />
 
-      <div className="mt-6 grid gap-3 rounded-2xl card-soft bg-surface p-4">
+      {/* Customer details stay masked in Clarity recordings whatever the project's masking level. */}
+      <div data-clarity-mask="true" className="mt-6 grid gap-3 rounded-2xl card-soft bg-surface p-4">
         <div className="flex items-center justify-between gap-2">
           <h2 className="font-bold text-choc">Your details</h2>
           {remembered && (
@@ -402,7 +403,7 @@ export function CartView({
         </p>
       </div>
 
-      <div className="mt-4 grid gap-3 rounded-2xl card-soft bg-surface p-4">
+      <div data-clarity-mask="true" className="mt-4 grid gap-3 rounded-2xl card-soft bg-surface p-4">
         <h2 className="flex items-center gap-2 font-bold text-choc">
           <MapPinned className="size-5 text-rust" aria-hidden />
           {pickupEnabled ? "Pickup or delivery" : "Delivery address"}
