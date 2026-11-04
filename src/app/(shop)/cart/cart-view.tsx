@@ -273,6 +273,8 @@ export function CartView({
     `Subtotal: ${formatMyr(subtotal)}`,
     selectedShipping && `${selectedShipping.label}: ${selectedShipping.price ? formatMyr(selectedShipping.price) : "Free"}`,
     selectedShipping && `Total: ${formatMyr(subtotal + selectedShipping.price)}`,
+    // Without a chosen option the subtotal was being paid as the total (Nov 2026).
+    !selectedShipping && "Delivery fee: please confirm the total with me before I pay",
     "",
     name.trim() && `Name: ${name.trim()}`,
     phone.trim() && `Phone: ${phone.trim()}`,
